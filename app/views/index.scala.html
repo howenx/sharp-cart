@@ -1,0 +1,14 @@
+@(publickey: String,privatekey:String,origin:String,encrypt:String,decrypt:String)
+
+@main("Welcome to Play") {
+
+
+    <ul>
+        <li><label>公钥:</label><span>@publickey</span></li>
+        <li><label>私钥:</label><span>@privatekey</span></li>
+        <li><label>原始值:</label><span>@origin</span></li>
+        <li><label>加密后:</label><span>@encrypt</span></li>
+        <li><label>解密后:</label><span>@decrypt</span></li>
+    </ul>
+    @play20.welcome("Test", style = "Java")
+}
