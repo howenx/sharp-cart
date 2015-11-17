@@ -1,15 +1,12 @@
 package controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.xerces.impl.dv.util.Base64;
+import net.spy.memcached.MemcachedClient;
 import play.Logger;
-import play.api.cache.Cache;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
-import net.spy.memcached.MemcachedClient;
 
-import javax.crypto.Cipher;
 import java.io.IOException;
 
 public class Application extends Controller {
