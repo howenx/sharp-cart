@@ -1,5 +1,6 @@
-name := """style-shopping                                                                                            """
-
+import play.routes.compiler.InjectedRoutesGenerator
+import play.sbt.PlayJava
+name := """style-shopping"""
 version := "0.1.0"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
