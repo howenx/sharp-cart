@@ -1,4 +1,4 @@
-name := """style-cart"""
+name := """style-shopping                                                                                            """
 
 version := "0.1.0"
 
