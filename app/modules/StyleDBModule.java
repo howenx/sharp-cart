@@ -3,10 +3,13 @@ package modules;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
+import mapper.SkuMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.mybatis.guice.session.SqlSessionManagerProvider;
 import play.db.DBApi;
+import service.SkuService;
+import service.SkuServiceImpl;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -31,7 +34,7 @@ public class StyleDBModule extends PrivateModule{
 
                 bindDataSourceProviderType(DevDataSourceProvider.class);
                 bindTransactionFactoryType(JdbcTransactionFactory.class);
-//                addMapperClass(ThemeMapper.class);
+                addMapperClass(SkuMapper.class);
             }
         });
 
@@ -44,8 +47,8 @@ public class StyleDBModule extends PrivateModule{
         /**
          * bind service for controller or other service inject.
          */
-//        bind(ThemeService.class).to(ThemeServiceImpl.class);
-//        expose(ThemeService.class);
+        bind(SkuService.class).to(SkuServiceImpl.class);
+        expose(SkuService.class);
 
     }
 

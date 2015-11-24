@@ -3,10 +3,13 @@ package modules;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
+import mapper.ShoppingCartMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.mybatis.guice.session.SqlSessionManagerProvider;
 import play.db.DBApi;
+import service.CartService;
+import service.CartServiceImpl;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -31,7 +34,7 @@ public class ShoppingDBModule extends PrivateModule{
 
                 bindDataSourceProviderType(DevDataSourceProvider.class);
                 bindTransactionFactoryType(JdbcTransactionFactory.class);
-//                addMapperClass(ThemeMapper.class);
+                addMapperClass(ShoppingCartMapper.class);
             }
         });
 
@@ -44,9 +47,8 @@ public class ShoppingDBModule extends PrivateModule{
         /**
          * bind service for controller or other service inject.
          */
-//        bind(ThemeService.class).to(ThemeServiceImpl.class);
-//        expose(ThemeService.class);
-
+        bind(CartService.class).to(CartServiceImpl.class);
+        expose(CartService.class);
     }
 
     @Singleton

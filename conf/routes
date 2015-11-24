@@ -3,9 +3,9 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index()
 GET     /client/public/key          controllers.Application.getKey()
 GET     /client/token               controllers.Application.getToken()
+GET     /client/cart/list           controllers.Application.cartList()
 POST    /client/cart                controllers.Application.cart()
 
 # Map static resources from the /public folder to the /assets URL path

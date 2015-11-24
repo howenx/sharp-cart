@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.SkuMapper">
+
+    <!--enable mybatis default cache configure reference:
+        https://mybatis.github.io/mybatis-3/zh/sqlmap-xml.html#cache
+    -->
+    <!--<cache/>-->
+
+    <sql id="invColumns">
+        ${alias}.id                  ,
+        ${alias}.item_id             ,
+        ${alias}.item_color          ,
+        ${alias}.item_size           ,
+        ${alias}.amount              ,
+        ${alias}.item_src_price      ,
+        ${alias}.item_price          ,
+        ${alias}.item_cost_price     ,
+        ${alias}.item_discount       ,
+        ${alias}.sold_amount         ,
+        ${alias}.rest_amount         ,
+        ${alias}.inv_img             ,
+        ${alias}.item_preview_imgs::text   ,
+        ${alias}.or_destroy          ,
+        ${alias}.destroy_at          ,
+        ${alias}.update_at           ,
+        ${alias}.create_at           ,
+        ${alias}.or_master_inv       ,
+        ${alias}.state               ,
+        ${alias}.ship_fee            ,
+        ${alias}.inv_area            ,
+        ${alias}.restrict_amount     ,
+        ${alias}.inv_title
+    </sql>
+
+    <!---  获取用户购物车,以用户ID或者CartID    -->
+
+    <select id="getInv" resultType="domain.Sku" parameterType="domain.Sku">
+        select
+        <include refid="invColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from inventories t where 1=1
+        <if test="id != null and id!=''">
+            and t.id=#{id}
+        </if>
+        <if test="itemId != null and itemId!=''">
+            and t.item_id=#{itemId}
+        </if>
+    </select>
+
+    <update id="updateInv" parameterType="domain.Sku">
+        update inventories set update_at= CURRENT_TIMESTAMP(0)
+        <if test="soldAmount != null and soldAmount!=''">
+            ,t.sold_amount=#{soldAmount}
+        </if>
+        <if test="restAmount != null and restAmount!=''">
+            ,t.rest_amount=#{restAmount}
+        </if>
+        <if test="orSoldOut != null and orSoldOut!=''">
+            ,t.or_sold_out=#{orSoldOut}
+        </if>
+        where 1=1
+        <if test="id != null and id!=''">
+            and t.id=#{id}
+        </if>
+    </update>
+
+</mapper>
