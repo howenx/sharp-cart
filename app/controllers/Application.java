@@ -35,6 +35,11 @@ public class Application extends Controller {
     final static ObjectMapper mapper = new ObjectMapper();
 
 
+    /**
+     * 用户登陆后同步所有购物车商品
+     *
+     * @return json
+     */
     @Security.Authenticated(UserAuth.class)
     public Result cart() {
         JsonNode json = request().body().asJson();
@@ -86,6 +91,11 @@ public class Application extends Controller {
         }
     }
 
+    /**
+     * 登录状态下获取用户的购物车列表
+     *
+     * @return json
+     */
     @Security.Authenticated(UserAuth.class)
     public Result cartList() {
         ObjectNode result = Json.newObject();
@@ -131,6 +141,56 @@ public class Application extends Controller {
             return ok(result);
         }
     }
+
+
+    /**
+     * 未校验用户情形下返回所有sku信息
+     * @return  购物车商品库存信息
+     */
+    public Result getCartSku() {
+        JsonNode json = request().body().asJson();
+        ObjectNode result = Json.newObject();
+        List<CartListDto> cartListDto = new ArrayList<>();
+        try {
+            List<CartDto> cartDtoList = mapper.readValue(json.toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
+
+            for (CartDto cartDto : cartDtoList) {
+
+                Sku sku = new Sku();
+                sku.setId(cartDto.getSkuId());
+                sku = skuService.getInv(sku);
+
+                //返回数据组装
+                CartListDto cartList = new CartListDto();
+                cartList.setSkuId(sku.getId());
+                cartList.setAmount(cartDto.getAmount());
+                cartList.setItemColor(sku.getItemColor());
+                cartList.setItemSize(sku.getItemSize());
+                cartList.setItemPrice(sku.getItemPrice());
+                cartList.setState(cartDto.getState());
+                cartList.setShipFee(sku.getShipFee());
+                cartList.setInvArea(sku.getInvArea());
+                cartList.setRestrictAmount(sku.getRestrictAmount());
+                cartList.setRestAmount(sku.getRestAmount());
+                cartList.setInvImg(IMAGE_URL + sku.getInvImg());
+                cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                cartList.setInvTitle(sku.getInvTitle());
+                cartListDto.add(cartList);
+
+            }
+
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            result.putPOJO("cartList", Json.toJson(cartListDto));
+            Logger.error("返回数据" + result.toString());
+            return ok(result);
+
+        } catch (Exception ex) {
+            Logger.error("server exception:" + ex.toString());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+    }
+
 
     private List<CartListDto> cartAll(Long userId) throws Exception {
 
