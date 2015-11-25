@@ -86,6 +86,7 @@ public class Application extends Controller {
 
             }
 
+            Logger.error("用户的ID:"+userId);
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("cartList", Json.toJson(cartAll(userId)));
             Logger.error("返回数据" + result.toString());
@@ -169,7 +170,9 @@ public class Application extends Controller {
 
                 //返回数据组装
                 CartListDto cartList = new CartListDto();
-                cartList.setSkuId(sku.getId());
+
+                cartList.setCartId(cartDto.getCartId());
+                cartList.setSkuId(cartDto.getSkuId());
                 cartList.setAmount(cartDto.getAmount());
                 cartList.setItemColor(sku.getItemColor());
                 cartList.setItemSize(sku.getItemSize());
@@ -181,6 +184,10 @@ public class Application extends Controller {
                 cartList.setRestAmount(sku.getRestAmount());
                 cartList.setInvImg(IMAGE_URL + sku.getInvImg());
                 cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+
+                if(cartDto.getCartId()==0){
+                    cartList.setCartDelUrl("");
+                }else cartList.setCartDelUrl(DEPLOY_URL + "/client/cart/del/" + cartDto.getCartId());
                 cartList.setInvTitle(sku.getInvTitle());
                 cartListDto.add(cartList);
 
@@ -234,8 +241,12 @@ public class Application extends Controller {
 
                     //获取每个库存信息
                     Sku sku = new Sku();
+
+
                     sku.setId(cart.getSkuId());
                     sku = skuService.getInv(sku);
+
+                    Logger.error("测试库存单元:"+sku.toString());
                     //组装返回的订单商品明细
                     skuDto.setSkuId(cart.getSkuId());
                     skuDto.setAmount(cart.getAmount());
@@ -284,6 +295,8 @@ public class Application extends Controller {
 
         //返回数据组装,根据用户id查询出所有可显示的购物车数据
         List<Cart> listCart = cartService.getCarts(c);
+
+        Logger.error("尼玛的:"+listCart);
 
         for (Cart cart : listCart) {
 
