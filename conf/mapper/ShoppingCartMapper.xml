@@ -29,7 +29,7 @@
         ${alias}.user_id           ,
         ${alias}.pay_total         ,
         ${alias}.pay_method         ,
-        ${alias}.order_create_at   ,
+        to_char(${alias}.order_create_at, 'YYYY-MM-DD HH24:MI:SS') order_create_at,
         ${alias}.order_ip          ,
         ${alias}.pg_trade_no       ,
         ${alias}.order_status      ,
@@ -49,7 +49,7 @@
             <property name="alias" value="t"/>
         </include>
         from sp_cart t
-        where 1=1 and t.status in ('I','S','G')
+        where 1=1
         <if test="cartId!=null and cartId !=''">
             and t.cart_id = #{cartId}
         </if>
@@ -57,7 +57,11 @@
             and t.user_id = #{userId}
         </if>
         <if test="orderId!=null and orderId !=''">
+            and t.status in ('O')
             and t.order_id = #{orderId}
+        </if>
+        <if test="orderId==null and orderId ==''">
+            and t.status in ('I','S','G')
         </if>
         ORDER BY t.add_at DESC
     </select>

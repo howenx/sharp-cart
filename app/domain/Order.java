@@ -17,7 +17,7 @@ public class Order implements Serializable {
     private Long                userId;//用户ID
     private BigDecimal          payTotal;//这笔订单的实际需要支付的总费用
     private String              payMethod;//充值渠道
-    private Timestamp           orderCreateAt;//用户创建订单时间
+    private String              orderCreateAt;//用户创建订单时间
     @JsonIgnore
     private String              orderIp;//订单IP
     @JsonIgnore
@@ -35,7 +35,7 @@ public class Order implements Serializable {
     public Order() {
     }
 
-    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, Timestamp orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee) {
+    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee) {
         this.orderId = orderId;
         this.userId = userId;
         this.payTotal = payTotal;
@@ -84,11 +84,11 @@ public class Order implements Serializable {
         this.payMethod = payMethod;
     }
 
-    public Timestamp getOrderCreateAt() {
+    public String getOrderCreateAt() {
         return orderCreateAt;
     }
 
-    public void setOrderCreateAt(Timestamp orderCreateAt) {
+    public void setOrderCreateAt(String orderCreateAt) {
         this.orderCreateAt = orderCreateAt;
     }
 
@@ -171,7 +171,7 @@ public class Order implements Serializable {
                 ", userId=" + userId +
                 ", payTotal=" + payTotal +
                 ", payMethod='" + payMethod + '\'' +
-                ", orderCreateAt=" + orderCreateAt +
+                ", orderCreateAt='" + orderCreateAt + '\'' +
                 ", orderIp='" + orderIp + '\'' +
                 ", pgTradeNo='" + pgTradeNo + '\'' +
                 ", orderStatus='" + orderStatus + '\'' +

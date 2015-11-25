@@ -38,6 +38,12 @@ public class Application extends Controller {
     //发布服务器url
     public static final String DEPLOY_URL = play.Play.application().configuration().getString("deploy.server.url");
 
+    //shopping服务器url
+    public static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
+
+    //id服务器url
+    public static final String ID_URL = play.Play.application().configuration().getString("id.server.url");
+
     //将Json串转换成List
     final static ObjectMapper mapper = new ObjectMapper();
 
@@ -162,6 +168,8 @@ public class Application extends Controller {
         try {
             List<CartDto> cartDtoList = mapper.readValue(json.toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
 
+            Logger.error("又问问题:"+cartDtoList.toString());
+
             for (CartDto cartDto : cartDtoList) {
 
                 Sku sku = new Sku();
@@ -209,12 +217,12 @@ public class Application extends Controller {
      * 用户查询订单接口
      * @return 返回所有订单数据
      */
-//    @Security.Authenticated(UserAuth.class)
-    public Result order(){
+    @Security.Authenticated(UserAuth.class)
+    public Result shoppingOrder(){
         ObjectNode result = Json.newObject();
         try{
-//            Long userId = (Long) ctx().args.get("userId");
-            Long userId =  ((Integer)1000012).longValue();
+            Long userId = (Long) ctx().args.get("userId");
+//            Long userId =  ((Integer)1000012).longValue();
             Order order = new Order();
             order.setUserId(userId);
             List<Order> orderList  = cartService.getOrderBy(order);
@@ -248,10 +256,10 @@ public class Application extends Controller {
 
                     Logger.error("测试库存单元:"+sku.toString());
                     //组装返回的订单商品明细
-                    skuDto.setSkuId(cart.getSkuId());
+                    skuDto.setSkuId(sku.getId());
                     skuDto.setAmount(cart.getAmount());
                     skuDto.setPrice(cart.getPrice());
-                    skuDto.setSkuTitle(cart.getSkuTitle());
+                    skuDto.setSkuTitle(sku.getInvTitle());
                     skuDto.setInvImg(IMAGE_URL +sku.getInvImg());
                     skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
                     skuDto.setItemColor(sku.getItemColor());
@@ -324,7 +332,7 @@ public class Application extends Controller {
             cartList.setRestAmount(sku.getRestAmount());
             cartList.setInvImg(IMAGE_URL + sku.getInvImg());
             cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
-            cartList.setCartDelUrl(DEPLOY_URL + "/client/cart/del/" + cart.getCartId());
+            cartList.setCartDelUrl(SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
             cartList.setInvTitle(sku.getInvTitle());
             cartListDto.add(cartList);
         }
