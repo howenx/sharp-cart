@@ -6,4 +6,4 @@
 GET     /client/cart/list                           controllers.Application.cartList()
 GET     /client/cart/del/$cartId<[0-9]+>            controllers.Application.delCart(cartId:Long)
 POST    /client/cart                                controllers.Application.cart()
-POST    /client/cart/get/sku/list                   controllers.getCartSku()
+POST    /client/cart/get/sku/list                   controllers.Application.getCartSku()
