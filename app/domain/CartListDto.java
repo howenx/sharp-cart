@@ -23,11 +23,12 @@ public class CartListDto implements Serializable{
     private     String          invImg;//sku主图
     private     String          invUrl;//用于方便前段获取库存跳转链接
     private     String          invTitle;//sku标题
+    private     String          cartDelUrl;//用于删除操作的链接
 
     public CartListDto() {
     }
 
-    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle) {
+    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl) {
         this.cartId = cartId;
         this.skuId = skuId;
         this.amount = amount;
@@ -42,6 +43,7 @@ public class CartListDto implements Serializable{
         this.invImg = invImg;
         this.invUrl = invUrl;
         this.invTitle = invTitle;
+        this.cartDelUrl = cartDelUrl;
     }
 
     public Long getCartId() {
@@ -156,6 +158,14 @@ public class CartListDto implements Serializable{
         this.invTitle = invTitle;
     }
 
+    public String getCartDelUrl() {
+        return cartDelUrl;
+    }
+
+    public void setCartDelUrl(String cartDelUrl) {
+        this.cartDelUrl = cartDelUrl;
+    }
+
     @Override
     public String toString() {
         return "CartListDto{" +
@@ -173,6 +183,7 @@ public class CartListDto implements Serializable{
                 ", invImg='" + invImg + '\'' +
                 ", invUrl='" + invUrl + '\'' +
                 ", invTitle='" + invTitle + '\'' +
+                ", cartDelUrl='" + cartDelUrl + '\'' +
                 '}';
     }
 }

@@ -44,40 +44,40 @@
 
     <!-- 更新价格,状态,数量,删除 -->
     <update id="updateCart" parameterType="domain.Cart">
-        update shopping_cart set update_at= CURRENT_TIMESTAMP(0)
+        update shopping_cart  set update_at= CURRENT_TIMESTAMP(0)
         <if test="userId != null and userId!=''">
-            ,t.user_id=#{userId}
+            ,user_id=#{userId}
         </if>
         <if test="skuId != null and skuId!=''">
-            ,t.sku_id=#{skuId}
+            ,sku_id=#{skuId}
         </if>
         <if test="itemId != null and itemId!=''">
-            ,t.item_id=#{itemId}
+            ,item_id=#{itemId}
         </if>
         <if test="amount != null and amount!=''">
-            ,t.amount=#{amount}
+            ,amount=#{amount}
         </if>
         <if test="price != null and price!=''">
-            ,t.price=#{price}
+            ,price=#{price}
         </if>
         <if test="destroyAt != null and destroyAt!=''">
-            ,t.destroy_at=CURRENT_TIMESTAMP(0)
+            ,destroy_at=CURRENT_TIMESTAMP(0)
         </if>
         <if test="orderId != null and orderId!=''">
-            ,t.order_id=#{orderId}
+            ,order_id=#{orderId}
         </if>
         <if test="status != null and status!=''">
-            ,t.status=#{status}
+            ,status=#{status}
         </if>
         <if test="skuTitle != null and skuTitle!=''">
-            ,t.sku_title=#{skuTitle}
+            ,sku_title=#{skuTitle}
         </if>
         where 1=1
         <if test="cartId!=null and cartId !=''">
-            and t.cart_id = #{cartId}
+            and cart_id = #{cartId}
         </if>
         <if test="userId!=null and userId !=''">
-            and t.user_id = #{userId}
+            and user_id = #{userId}
         </if>
     </update>
 
