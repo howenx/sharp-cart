@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.IdMapper">
+
+    <!--enable mybatis default cache configure reference:
+        https://mybatis.github.io/mybatis-3/zh/sqlmap-xml.html#cache
+    -->
+    <!--<cache/>-->
+
+    <sql id="addressColumns">
+        ${alias}.add_id,
+        ${alias}.or_default,
+        ${alias}.tel,
+        ${alias}.name,
+        ${alias}.delivery_city,
+        ${alias}.delivery_detail
+    </sql>
+
+    <select id="getAddress" resultType="domain.Address" parameterType="domain.Address">
+        select
+        <include refid="addressColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from id_address t
+        where 1=1 and t.or_destroy=false
+        <if test="userId != null and userId!=''">
+            and t.user_id = #{userId}
+        </if>
+        <if test="addId != null and addId!=''">
+            and t.add_id = #{addId}
+        </if>
+        ORDER BY t.or_default DESC
+    </select>
+</mapper>

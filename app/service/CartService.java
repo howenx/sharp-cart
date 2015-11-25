@@ -2,6 +2,7 @@ package service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import domain.Cart;
+import domain.Order;
 import domain.Sku;
 
 import java.util.List;
@@ -12,9 +13,11 @@ import java.util.List;
  */
 public interface CartService {
 
-    List<Cart> getCarts(Long userId) throws Exception;
+    List<Cart> getCarts(Cart cart) throws Exception;
 
     Integer updateCart(Cart cart) throws Exception;
 
     Integer addCart(Cart cart) throws Exception;
+
+    List<Order> getOrderBy(Order order) throws Exception;
 }

@@ -24,6 +24,23 @@
         ,${alias}.status
     </sql>
 
+    <sql id="orderColumns">
+        ${alias}.order_id          ,
+        ${alias}.user_id           ,
+        ${alias}.pay_total         ,
+        ${alias}.pay_method         ,
+        ${alias}.order_create_at   ,
+        ${alias}.order_ip          ,
+        ${alias}.pg_trade_no       ,
+        ${alias}.order_status      ,
+        ${alias}.error_str         ,
+        ${alias}.discount          ,
+        ${alias}.updated_at        ,
+        ${alias}.order_desc        ,
+        ${alias}.add_id            ,
+        ${alias}.ship_fee
+    </sql>
+
     <!---  获取用户购物车,以用户ID或者CartID    -->
 
     <select id="getCartByID" resultType="domain.Cart" parameterType="domain.Cart">
@@ -31,7 +48,7 @@
         <include refid="shoppingCartColumns">
             <property name="alias" value="t"/>
         </include>
-        from shopping_cart t
+        from sp_cart t
         where 1=1 and t.status in ('I','S','G')
         <if test="cartId!=null and cartId !=''">
             and t.cart_id = #{cartId}
@@ -39,12 +56,15 @@
         <if test="userId!=null and userId !=''">
             and t.user_id = #{userId}
         </if>
+        <if test="orderId!=null and orderId !=''">
+            and t.order_id = #{orderId}
+        </if>
         ORDER BY t.add_at DESC
     </select>
 
     <!-- 更新价格,状态,数量,删除 -->
     <update id="updateCart" parameterType="domain.Cart">
-        update shopping_cart  set update_at= CURRENT_TIMESTAMP(0)
+        update sp_cart  set update_at= CURRENT_TIMESTAMP(0)
         <if test="userId != null and userId!=''">
             ,user_id=#{userId}
         </if>
@@ -82,7 +102,7 @@
     </update>
 
     <insert id="addCart" parameterType="domain.Cart" useGeneratedKeys="true" keyProperty="cartId">
-        insert into shopping_cart (user_id
+        insert into sp_cart (user_id
         ,sku_id
         ,item_id
         ,amount
@@ -115,4 +135,20 @@
         CURRENT_TIMESTAMP(0)
         )
     </insert>
+
+    <!--查询用户订单-->
+    <select id="getOrderBy" parameterType="domain.Order" resultType="domain.Order">
+        select
+        <include refid="orderColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from sp_order t
+        where 1=1
+        <if test="userId!=null and userId !=''">
+            and t.user_id = #{userId}
+        </if>
+        <if test="orderId!=null and orderId !=''">
+            and t.order_id = #{orderId}
+        </if>
+    </select>
 </mapper>

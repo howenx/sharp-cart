@@ -2,6 +2,7 @@ package service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import domain.Cart;
+import domain.Order;
 import domain.Sku;
 import mapper.ShoppingCartMapper;
 import mapper.SkuMapper;
@@ -23,9 +24,8 @@ public class CartServiceImpl  implements CartService{
     private ShoppingCartMapper shoppingCartMapper;
 
     @Override
-    public List<Cart> getCarts(Long userId) throws Exception{
-        Cart cart = new Cart();
-        cart.setUserId(userId);
+    public List<Cart> getCarts(Cart cart) throws Exception{
+
         return shoppingCartMapper.getCartByID(cart);
     }
 
@@ -37,5 +37,10 @@ public class CartServiceImpl  implements CartService{
     @Override
     public Integer addCart(Cart cart) throws Exception {
         return shoppingCartMapper.addCart(cart);
+    }
+
+    @Override
+    public List<Order> getOrderBy(Order order) throws Exception {
+        return shoppingCartMapper.getOrderBy(order);
     }
 }

@@ -11,11 +11,15 @@ import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
 import service.CartService;
+import service.IdService;
 import service.SkuService;
 
 import javax.inject.Inject;
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Application extends Controller {
 
@@ -24,6 +28,9 @@ public class Application extends Controller {
 
     @Inject
     private CartService cartService;
+
+    @Inject
+    private IdService idService;
 
     //图片服务器url
     public static final String IMAGE_URL = play.Play.application().configuration().getString("image.server.url");
@@ -191,18 +198,103 @@ public class Application extends Controller {
         }
     }
 
+    /**
+     * 用户查询订单接口
+     * @return 返回所有订单数据
+     */
+//    @Security.Authenticated(UserAuth.class)
+    public Result order(){
+        ObjectNode result = Json.newObject();
+        try{
+//            Long userId = (Long) ctx().args.get("userId");
+            Long userId =  ((Integer)1000012).longValue();
+            Order order = new Order();
+            order.setUserId(userId);
+            List<Order> orderList  = cartService.getOrderBy(order);
+
+            //返回总数据
+            List<Map> mapList = new ArrayList<>();
+
+            for (Order o:orderList){
+
+                //用于保存每个订单对应的明细list和地址信息
+                Map<String,Object> map = new HashMap<>();
+
+                //根据订单ID获取所有购物车内容
+                Cart c = new Cart();
+                c.setUserId(userId);
+                c.setOrderId(o.getOrderId());
+                List<Cart> carts = cartService.getCarts(c);
+
+                //每个订单对应的商品明细
+                List<CartSkuDto> skuDtoList = new ArrayList<>();
+
+                for (Cart cart:carts){
+                    CartSkuDto skuDto = new CartSkuDto();
+
+                    //获取每个库存信息
+                    Sku sku = new Sku();
+                    sku.setId(cart.getSkuId());
+                    sku = skuService.getInv(sku);
+                    //组装返回的订单商品明细
+                    skuDto.setSkuId(cart.getSkuId());
+                    skuDto.setAmount(cart.getAmount());
+                    skuDto.setPrice(cart.getPrice());
+                    skuDto.setSkuTitle(cart.getSkuTitle());
+                    skuDto.setInvImg(IMAGE_URL +sku.getInvImg());
+                    skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                    skuDto.setItemColor(sku.getItemColor());
+                    skuDto.setItemSize(sku.getItemSize());
+
+                    skuDtoList.add(skuDto);
+
+                }
+
+                //获取地址信息
+                Address address = new Address();
+                address.setAddId(o.getAddId());
+                address = idService.getAddress(address);
+
+                //组装每个订单对应的明细和地址
+                map.put("order",o);
+                map.put("sku",skuDtoList);
+                map.put("address",address);
+
+                mapList.add(map);
+            }
+
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            result.putPOJO("orderList", Json.toJson(mapList));
+            Logger.error("返回数据" + result.toString());
+            return ok(result);
+        }catch (Exception ex){
+            Logger.error("server exception:" + ex.toString());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+    }
+
 
     private List<CartListDto> cartAll(Long userId) throws Exception {
 
         List<CartListDto> cartListDto = new ArrayList<>();
+
+        Cart c =new Cart();
+        c.setUserId(userId);
+
         //返回数据组装,根据用户id查询出所有可显示的购物车数据
-        List<Cart> listCart = cartService.getCarts(userId);
+        List<Cart> listCart = cartService.getCarts(c);
 
         for (Cart cart : listCart) {
 
             Sku sku = new Sku();
             sku.setId(cart.getSkuId());
             sku = skuService.getInv(sku);
+
+            //先确定商品状态是正常,否则直接存为失效商品
+            if (!sku.getState().equals("Y")) {
+                cart.setStatus("S");
+            }
 
             //返回数据组装
             CartListDto cartList = new CartListDto();
