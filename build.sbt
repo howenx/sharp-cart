@@ -59,7 +59,7 @@ resolvers ++= Seq(
 )
 // 检查代码中使用的过时类细节
 javacOptions += "-Xlint:deprecation"
-javacOptions += "-Xlint:unchecked"
+
 //// "Add mapper xml files to classpath" -- blank line necessary for SBT
 //unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "app")
 //

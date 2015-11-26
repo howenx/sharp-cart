@@ -217,7 +217,7 @@ public class Application extends Controller {
      * 用户查询订单接口
      * @return 返回所有订单数据
      */
-    @Security.Authenticated(UserAuth.class)
+//    @Security.Authenticated(UserAuth.class)
     public Result shoppingOrder(){
         ObjectNode result = Json.newObject();
         try{

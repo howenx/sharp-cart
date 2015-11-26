@@ -12,7 +12,7 @@ import java.sql.Timestamp;
  */
 public class Order implements Serializable {
 
-    private Long orderId;//订单ID
+    private Long                orderId;//订单ID
     @JsonIgnore
     private Long                userId;//用户ID
     private BigDecimal          payTotal;//这笔订单的实际需要支付的总费用
@@ -22,7 +22,7 @@ public class Order implements Serializable {
     private String              orderIp;//订单IP
     @JsonIgnore
     private String              pgTradeNo;//支付订单号
-    private String             orderStatus;//I:初始化，S:成功，C：取消，F:失败
+    private String              orderStatus;//I:初始化，S:成功，C：取消，F:失败
     @JsonIgnore
     private String              errorStr;//支付返回的错误信息
     private BigDecimal          discount;//优惠了多少钱
@@ -31,11 +31,12 @@ public class Order implements Serializable {
     private String              orderDesc;//订单备注
     private Long                addId;//用户订单地址
     private BigDecimal          shipFee;//邮费
+    private String              orderDetailUrl;//订单相信页面url
 
     public Order() {
     }
 
-    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee) {
+    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String orderDetailUrl) {
         this.orderId = orderId;
         this.userId = userId;
         this.payTotal = payTotal;
@@ -50,6 +51,7 @@ public class Order implements Serializable {
         this.orderDesc = orderDesc;
         this.addId = addId;
         this.shipFee = shipFee;
+        this.orderDetailUrl = orderDetailUrl;
     }
 
     public Long getOrderId() {
@@ -164,6 +166,14 @@ public class Order implements Serializable {
         this.shipFee = shipFee;
     }
 
+    public String getOrderDetailUrl() {
+        return orderDetailUrl;
+    }
+
+    public void setOrderDetailUrl(String orderDetailUrl) {
+        this.orderDetailUrl = orderDetailUrl;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -181,6 +191,7 @@ public class Order implements Serializable {
                 ", orderDesc='" + orderDesc + '\'' +
                 ", addId=" + addId +
                 ", shipFee=" + shipFee +
+                ", orderDetailUrl='" + orderDetailUrl + '\'' +
                 '}';
     }
 }

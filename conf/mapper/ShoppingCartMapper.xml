@@ -60,7 +60,7 @@
             and t.status in ('O')
             and t.order_id = #{orderId}
         </if>
-        <if test="orderId==null and orderId ==''">
+        <if test="orderId==null or orderId ==''">
             and t.status in ('I','S','G')
         </if>
         ORDER BY t.add_at DESC
