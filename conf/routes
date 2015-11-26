@@ -8,4 +8,4 @@ GET     /client/cart/del/$cartId<[0-9]+>            controllers.Application.delC
 POST    /client/cart                                controllers.Application.cart()
 POST    /client/cart/get/sku/list                   controllers.Application.getCartSku()
 GET     /client/order                               controllers.Application.shoppingOrder()
-POST   /client/order/state/update                   controllers.Application.updateOrderState()
+POST    /client/order/state/update                   controllers.Application.updateOrderState()
