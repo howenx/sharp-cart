@@ -293,6 +293,29 @@ public class Application extends Controller {
         }
     }
 
+    /**
+     * 只供更改订单状态使用
+     * @return 返回更新是否成功
+     */
+    public Result updateOrderState(){
+        JsonNode json = request().body().asJson();//{"orderId":1231231,"status":"C"}
+        ObjectNode result = Json.newObject();
+        try{
+            Long userId = (Long) ctx().args.get("userId");
+            Order order = new Order();
+            order.setUserId(userId);
+            order.setOrderId(Long.valueOf(json.get("orderId").toString()));
+            order.setOrderStatus(json.get("status").toString());
+            if (cartService.updateOrder(order)){
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            }else result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.DATABASE_EXCEPTION.getIndex()), Message.ErrorCode.DATABASE_EXCEPTION.getIndex())));
+            return ok(result);
+        }catch (Exception ex){
+            Logger.error("server exception:" + ex.toString());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+    }
 
     private List<CartListDto> cartAll(Long userId) throws Exception {
 

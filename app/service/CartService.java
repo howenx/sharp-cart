@@ -20,4 +20,6 @@ public interface CartService {
     Integer addCart(Cart cart) throws Exception;
 
     List<Order> getOrderBy(Order order) throws Exception;
+
+    Boolean updateOrder(Order order) throws Exception;
 }

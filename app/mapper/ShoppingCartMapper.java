@@ -20,4 +20,6 @@ public interface ShoppingCartMapper {
 
     List<Order> getOrderBy(Order order) throws Exception;
 
+    Integer updateOrder(Order order) throws Exception;
+
 }

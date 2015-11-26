@@ -43,4 +43,10 @@ public class CartServiceImpl  implements CartService{
     public List<Order> getOrderBy(Order order) throws Exception {
         return shoppingCartMapper.getOrderBy(order);
     }
+
+    @Override
+    public Boolean updateOrder(Order order) throws Exception {
+
+        return shoppingCartMapper.updateOrder(order) > 0;
+    }
 }
