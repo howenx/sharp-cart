@@ -63,7 +63,7 @@
         <if test="orderId==null or orderId ==''">
             and t.status in ('I','S','G')
         </if>
-        ORDER BY t.update_at DESC
+        ORDER BY t.add_at DESC
     </select>
 
     <!-- 更新价格,状态,数量,删除 -->
