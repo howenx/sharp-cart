@@ -1,7 +1,10 @@
 package domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 
 /**
  * 用于返回购物车列表的DTO
@@ -24,11 +27,12 @@ public class CartListDto implements Serializable{
     private     String          invUrl;//用于方便前段获取库存跳转链接
     private     String          invTitle;//sku标题
     private     String          cartDelUrl;//用于删除操作的链接
+    private Timestamp createAt;
 
     public CartListDto() {
     }
 
-    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl) {
+    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt) {
         this.cartId = cartId;
         this.skuId = skuId;
         this.amount = amount;
@@ -44,6 +48,7 @@ public class CartListDto implements Serializable{
         this.invUrl = invUrl;
         this.invTitle = invTitle;
         this.cartDelUrl = cartDelUrl;
+        this.createAt = createAt;
     }
 
     public Long getCartId() {
@@ -166,6 +171,14 @@ public class CartListDto implements Serializable{
         this.cartDelUrl = cartDelUrl;
     }
 
+    public Timestamp getCreateAt() {
+        return createAt;
+    }
+
+    public void setCreateAt(Timestamp createAt) {
+        this.createAt = createAt;
+    }
+
     @Override
     public String toString() {
         return "CartListDto{" +
@@ -184,6 +197,7 @@ public class CartListDto implements Serializable{
                 ", invUrl='" + invUrl + '\'' +
                 ", invTitle='" + invTitle + '\'' +
                 ", cartDelUrl='" + cartDelUrl + '\'' +
+                ", createAt=" + createAt +
                 '}';
     }
 }

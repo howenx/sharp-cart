@@ -15,10 +15,8 @@ import service.IdService;
 import service.SkuService;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Application extends Controller {
 
@@ -91,7 +89,7 @@ public class Application extends Controller {
 
             }
 
-            Logger.error("用户的ID:"+userId);
+            Logger.error("用户的ID:" + userId);
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("cartList", Json.toJson(cartAll(userId)));
             Logger.error("返回数据" + result.toString());
@@ -158,7 +156,8 @@ public class Application extends Controller {
 
     /**
      * 未校验用户情形下返回所有sku信息
-     * @return  购物车商品库存信息
+     *
+     * @return 购物车商品库存信息
      */
     public Result getCartSku() {
         JsonNode json = request().body().asJson();
@@ -167,7 +166,7 @@ public class Application extends Controller {
         try {
             List<CartDto> cartDtoList = mapper.readValue(json.toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
 
-            Logger.error("又问问题:"+cartDtoList.toString());
+            Logger.error("又问问题:" + cartDtoList.toString());
 
             for (CartDto cartDto : cartDtoList) {
 
@@ -192,9 +191,9 @@ public class Application extends Controller {
                 cartList.setInvImg(IMAGE_URL + sku.getInvImg());
                 cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
 
-                if(cartDto.getCartId()==0){
+                if (cartDto.getCartId() == 0) {
                     cartList.setCartDelUrl("");
-                }else cartList.setCartDelUrl(DEPLOY_URL + "/client/cart/del/" + cartDto.getCartId());
+                } else cartList.setCartDelUrl(DEPLOY_URL + "/client/cart/del/" + cartDto.getCartId());
                 cartList.setInvTitle(sku.getInvTitle());
                 cartListDto.add(cartList);
 
@@ -214,25 +213,26 @@ public class Application extends Controller {
 
     /**
      * 用户查询订单接口
+     *
      * @return 返回所有订单数据
      */
     @Security.Authenticated(UserAuth.class)
-    public Result shoppingOrder(){
+    public Result shoppingOrder() {
         ObjectNode result = Json.newObject();
-        try{
+        try {
             Long userId = (Long) ctx().args.get("userId");
 //            Long userId =  ((Integer)1000012).longValue();
             Order order = new Order();
             order.setUserId(userId);
-            List<Order> orderList  = cartService.getOrderBy(order);
+            List<Order> orderList = cartService.getOrderBy(order);
 
             //返回总数据
             List<Map> mapList = new ArrayList<>();
 
-            for (Order o:orderList){
+            for (Order o : orderList) {
 
                 //用于保存每个订单对应的明细list和地址信息
-                Map<String,Object> map = new HashMap<>();
+                Map<String, Object> map = new HashMap<>();
 
                 //根据订单ID获取所有购物车内容
                 Cart c = new Cart();
@@ -243,7 +243,7 @@ public class Application extends Controller {
                 //每个订单对应的商品明细
                 List<CartSkuDto> skuDtoList = new ArrayList<>();
 
-                for (Cart cart:carts){
+                for (Cart cart : carts) {
                     CartSkuDto skuDto = new CartSkuDto();
 
                     //获取每个库存信息
@@ -253,13 +253,13 @@ public class Application extends Controller {
                     sku.setId(cart.getSkuId());
                     sku = skuService.getInv(sku);
 
-                    Logger.error("测试库存单元:"+sku.toString());
+                    Logger.error("测试库存单元:" + sku.toString());
                     //组装返回的订单商品明细
                     skuDto.setSkuId(sku.getId());
                     skuDto.setAmount(cart.getAmount());
                     skuDto.setPrice(cart.getPrice());
                     skuDto.setSkuTitle(sku.getInvTitle());
-                    skuDto.setInvImg(IMAGE_URL +sku.getInvImg());
+                    skuDto.setInvImg(IMAGE_URL + sku.getInvImg());
                     skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
                     skuDto.setItemColor(sku.getItemColor());
                     skuDto.setItemSize(sku.getItemSize());
@@ -274,9 +274,9 @@ public class Application extends Controller {
                 address = idService.getAddress(address);
 
                 //组装每个订单对应的明细和地址
-                map.put("order",o);
-                map.put("sku",skuDtoList);
-                map.put("address",address);
+                map.put("order", o);
+                map.put("sku", skuDtoList);
+                map.put("address", address);
 
                 mapList.add(map);
             }
@@ -285,7 +285,7 @@ public class Application extends Controller {
             result.putPOJO("orderList", Json.toJson(mapList));
             Logger.error("返回数据" + result.toString());
             return ok(result);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             Logger.error("server exception:" + ex.toString());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
@@ -294,23 +294,25 @@ public class Application extends Controller {
 
     /**
      * 只供更改订单状态使用
+     *
      * @return 返回更新是否成功
      */
     @Security.Authenticated(UserAuth.class)
-    public Result updateOrderState(){
+    public Result updateOrderState() {
         JsonNode json = request().body().asJson();//{"orderId":1231231,"status":"C"}
         ObjectNode result = Json.newObject();
-        try{
+        try {
             Long userId = (Long) ctx().args.get("userId");
             Order order = new Order();
             order.setUserId(userId);
             order.setOrderId(Long.valueOf(json.get("orderId").toString()));
             order.setOrderStatus(json.get("status").toString());
-            if (cartService.updateOrder(order)){
+            if (cartService.updateOrder(order)) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-            }else result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.DATABASE_EXCEPTION.getIndex()), Message.ErrorCode.DATABASE_EXCEPTION.getIndex())));
+            } else
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.DATABASE_EXCEPTION.getIndex()), Message.ErrorCode.DATABASE_EXCEPTION.getIndex())));
             return ok(result);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             Logger.error("server exception:" + ex.toString());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
@@ -321,13 +323,13 @@ public class Application extends Controller {
 
         List<CartListDto> cartListDto = new ArrayList<>();
 
-        Cart c =new Cart();
+        Cart c = new Cart();
         c.setUserId(userId);
 
         //返回数据组装,根据用户id查询出所有可显示的购物车数据
         List<Cart> listCart = cartService.getCarts(c);
 
-        Logger.error("尼玛的:"+listCart);
+        Logger.error("尼玛的:" + listCart);
 
         for (Cart cart : listCart) {
 
@@ -357,8 +359,28 @@ public class Application extends Controller {
             cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
             cartList.setCartDelUrl(SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
             cartList.setInvTitle(sku.getInvTitle());
+            cartList.setCreateAt(cart.getCreateAt());
             cartListDto.add(cartList);
         }
+
+//        Comparator<CartListDto> byCreateDate = new Comparator<CartListDto>() {
+//            public int compare(CartListDto left, CartListDto right) {
+//                if (left.getCreateAt().before(right.getCreateAt())) {
+//                    return 1;
+//                } else {
+//                    return -1;
+//                }
+//            }
+//        };
+//        Logger.error("排序前的:" + listCart);
+//        cartListDto = cartListDto
+//                .parallelStream()
+//                .sorted((e1, e2) -> e1.getCreateAt().compareTo(e2.getCreateAt()))
+//                .sorted((e1, e2) -> e1.getSkuId().compareTo(e2.getSkuId()))
+//                .collect(Collectors.toList());
+
+//        Logger.error("排序后的:" + listCart);
+
         return cartListDto;
     }
 }

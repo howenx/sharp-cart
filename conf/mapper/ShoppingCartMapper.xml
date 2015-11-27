@@ -17,7 +17,7 @@
         ,${alias}.item_id
         ,${alias}.amount
         ,${alias}.price
-        ,${alias}.add_at
+        ,${alias}.create_at
         ,${alias}.destroy_at
         ,${alias}.update_at
         ,${alias}.order_id
@@ -63,7 +63,7 @@
         <if test="orderId==null or orderId ==''">
             and t.status in ('I','S','G')
         </if>
-        ORDER BY t.add_at DESC
+        ORDER BY t.create_at DESC,t.sku_id
     </select>
 
     <!-- 更新价格,状态,数量,删除 -->
@@ -113,7 +113,7 @@
         ,price
         ,status
         ,sku_title
-        ,add_at)
+        ,create_at)
         values(#{userId},
         #{skuId},
         #{itemId},

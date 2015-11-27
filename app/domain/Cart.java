@@ -20,7 +20,7 @@ public class Cart implements Serializable{
     @JsonIgnore
     private BigDecimal   price;
     @JsonIgnore
-    private Timestamp    addAt;
+    private Timestamp    createAt;
     @JsonIgnore
     private Timestamp    destroyAt;
     @JsonIgnore
@@ -32,14 +32,14 @@ public class Cart implements Serializable{
     public Cart() {
     }
 
-    public Cart(Long cartId, Long userId, Long skuId, Long itemId, Integer amount, BigDecimal price, Timestamp addAt, Timestamp destroyAt, Timestamp updateAt, Long orderId, String status, String skuTitle) {
+    public Cart(Long cartId, Long userId, Long skuId, Long itemId, Integer amount, BigDecimal price, Timestamp createAt, Timestamp destroyAt, Timestamp updateAt, Long orderId, String status, String skuTitle) {
         this.cartId = cartId;
         this.userId = userId;
         this.skuId = skuId;
         this.itemId = itemId;
         this.amount = amount;
         this.price = price;
-        this.addAt = addAt;
+        this.createAt = createAt;
         this.destroyAt = destroyAt;
         this.updateAt = updateAt;
         this.orderId = orderId;
@@ -95,12 +95,12 @@ public class Cart implements Serializable{
         this.price = price;
     }
 
-    public Timestamp getAddAt() {
-        return addAt;
+    public Timestamp getCreateAt() {
+        return createAt;
     }
 
-    public void setAddAt(Timestamp addAt) {
-        this.addAt = addAt;
+    public void setCreateAt(Timestamp createAt) {
+        this.createAt = createAt;
     }
 
     public Timestamp getDestroyAt() {
@@ -152,7 +152,7 @@ public class Cart implements Serializable{
                 ", itemId=" + itemId +
                 ", amount=" + amount +
                 ", price=" + price +
-                ", addAt=" + addAt +
+                ", createAt=" + createAt +
                 ", destroyAt=" + destroyAt +
                 ", updateAt=" + updateAt +
                 ", orderId=" + orderId +
