@@ -15,7 +15,6 @@ import service.IdService;
 import service.SkuService;
 
 import javax.inject.Inject;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -146,7 +145,7 @@ public class Application extends Controller {
             cartService.updateCart(cartu);
 
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-            result.putPOJO("cartList", Json.toJson(cartAll(userId)));
+//            result.putPOJO("cartList", Json.toJson(cartAll(userId)));
             Logger.error("返回数据" + result.toString());
             return ok(result);
         } catch (Exception ex) {
