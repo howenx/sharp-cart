@@ -73,6 +73,7 @@ public class Application extends Controller {
 
                     cart.setItemId(sku.getItemId());
                     cart.setSkuTitle(sku.getInvTitle());
+                    cart.setSkuImg(sku.getInvImg());
 
                     //先确定商品状态是正常,否则直接存为失效商品
                     if (!sku.getState().equals("Y")) {

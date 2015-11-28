@@ -136,6 +136,7 @@
         ,price
         ,status
         ,sku_title
+        ,sku_img
         ,create_at)
         values(#{userId},
         #{skuId},
@@ -157,6 +158,12 @@
             #{skuTitle},
         </if>
         <if test="skuTitle == null or skuTitle==''">
+            default,
+        </if>
+        <if test="skuImg != null and skuImg!=''">
+            #{skuImg},
+        </if>
+        <if test="skuImg == null or skuImg==''">
             default,
         </if>
         CURRENT_TIMESTAMP(0)

@@ -28,11 +28,12 @@ public class Cart implements Serializable{
     private Long         orderId;
     private String       status;    //I:初始化，O：已下单，F：已完成，N：已删除，S:失效，G:勾选状态
     private String       skuTitle;  //sku标题
+    private String       skuImg;//sku图片
 
     public Cart() {
     }
 
-    public Cart(Long cartId, Long userId, Long skuId, Long itemId, Integer amount, BigDecimal price, Timestamp createAt, Timestamp destroyAt, Timestamp updateAt, Long orderId, String status, String skuTitle) {
+    public Cart(Long cartId, Long userId, Long skuId, Long itemId, Integer amount, BigDecimal price, Timestamp createAt, Timestamp destroyAt, Timestamp updateAt, Long orderId, String status, String skuTitle, String skuImg) {
         this.cartId = cartId;
         this.userId = userId;
         this.skuId = skuId;
@@ -45,6 +46,7 @@ public class Cart implements Serializable{
         this.orderId = orderId;
         this.status = status;
         this.skuTitle = skuTitle;
+        this.skuImg = skuImg;
     }
 
     public Long getCartId() {
@@ -143,6 +145,14 @@ public class Cart implements Serializable{
         this.skuTitle = skuTitle;
     }
 
+    public String getSkuImg() {
+        return skuImg;
+    }
+
+    public void setSkuImg(String skuImg) {
+        this.skuImg = skuImg;
+    }
+
     @Override
     public String toString() {
         return "Cart{" +
@@ -158,6 +168,7 @@ public class Cart implements Serializable{
                 ", orderId=" + orderId +
                 ", status='" + status + '\'' +
                 ", skuTitle='" + skuTitle + '\'' +
+                ", skuImg='" + skuImg + '\'' +
                 '}';
     }
 }
