@@ -57,7 +57,7 @@ public class Application extends Controller {
         ObjectNode result = Json.newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
-            if (json.isPresent()) {
+            if (json.isPresent() && json.get().size()>0) {
                 List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
 
                 for (CartDto cartDto : cartDtoList) {
