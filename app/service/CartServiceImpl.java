@@ -49,4 +49,9 @@ public class CartServiceImpl  implements CartService{
 
         return shoppingCartMapper.updateOrder(order) > 0;
     }
+
+    @Override
+    public List<Cart> getCartByUserSku(Cart cart) throws Exception {
+        return shoppingCartMapper.getCartByUserSku(cart);
+    }
 }

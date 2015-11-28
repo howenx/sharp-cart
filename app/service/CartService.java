@@ -22,4 +22,6 @@ public interface CartService {
     List<Order> getOrderBy(Order order) throws Exception;
 
     Boolean updateOrder(Order order) throws Exception;
+
+    List<Cart> getCartByUserSku (Cart cart) throws Exception;
 }

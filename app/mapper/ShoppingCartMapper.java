@@ -22,4 +22,5 @@ public interface ShoppingCartMapper {
 
     Integer updateOrder(Order order) throws Exception;
 
+    List<Cart> getCartByUserSku (Cart cart) throws Exception;
 }

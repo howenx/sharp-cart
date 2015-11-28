@@ -16,7 +16,6 @@ import service.SkuService;
 
 import javax.inject.Inject;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Application extends Controller {
 
@@ -46,49 +45,62 @@ public class Application extends Controller {
 
 
     /**
-     * 用户登陆后同步所有购物车商品
+     * 用户登陆后同步所有购物车商品,以及详细页面点击Add时候掉用接口
      *
      * @return json
      */
     @Security.Authenticated(UserAuth.class)
     public Result cart() {
-        JsonNode json = request().body().asJson();
+
+        Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
+
         ObjectNode result = Json.newObject();
         try {
-            List<CartDto> cartDtoList = mapper.readValue(json.toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
             Long userId = (Long) ctx().args.get("userId");
+            if (json.isPresent()) {
+                List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
 
-            for (CartDto cartDto : cartDtoList) {
+                for (CartDto cartDto : cartDtoList) {
 
-                Cart cart = new Cart();
-                cart.setSkuId(cartDto.getSkuId());
-                cart.setUserId(userId);
-                cart.setAmount(cartDto.getAmount());
+                    Cart cart = new Cart();
+                    cart.setSkuId(cartDto.getSkuId());
+                    cart.setUserId(userId);
+                    cart.setAmount(cartDto.getAmount());
 
-                Sku sku = new Sku();
-                sku.setId(cartDto.getSkuId());
-                sku = skuService.getInv(sku);
+                    Sku sku = new Sku();
+                    sku.setId(cartDto.getSkuId());
+                    sku = skuService.getInv(sku);
 
-                cart.setItemId(sku.getItemId());
-                cart.setSkuTitle(sku.getInvTitle());
+                    cart.setItemId(sku.getItemId());
+                    cart.setSkuTitle(sku.getInvTitle());
 
-                //先确定商品状态是正常,否则直接存为失效商品
-                if (!sku.getState().equals("Y")) {
-                    cart.setStatus("S");
-                } else {
-                    cart.setStatus(cartDto.getState());
+                    //先确定商品状态是正常,否则直接存为失效商品
+                    if (!sku.getState().equals("Y")) {
+                        cart.setStatus("S");
+                    } else {
+                        cart.setStatus(cartDto.getState());
+                    }
+
+                    if (cartDto.getCartId() == 0) {
+                        if (cart.getStatus().equals("I") || cart.getStatus().equals("G")) {
+
+                            List<Cart> carts = cartService.getCartByUserSku(cart);
+                            //cartId为0,有两种情况,1种情况是,当购物车中没有出现同一个userId,skuId,状态为I,G的商品时候才去insert,否则是update
+                            if (carts.size() > 0) {
+                                cart.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
+                                cart.setAmount(cart.getAmount() + carts.get(0).getAmount());//购买数量累加
+                                cartService.updateCart(cart);
+                            } else {
+                                //cartId为0,有两种情况,1种情况是,当购物车中没有出现同一个userId,skuId,状态为I,G的商品时候才去insert
+                                cartService.addCart(cart);
+                            }
+                        }
+                    } else {
+                        cart.setCartId(cartDto.getCartId());
+                        cartService.updateCart(cart);
+                    }
                 }
-
-                //cartId为0,insert,否则update
-                if (cartDto.getCartId() == 0) {
-                    cartService.addCart(cart);
-                } else {
-                    cart.setCartId(cartDto.getCartId());
-                    cartService.updateCart(cart);
-                }
-
             }
-
             Logger.error("用户的ID:" + userId);
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("cartList", Json.toJson(cartAll(userId)));
@@ -123,7 +135,6 @@ public class Application extends Controller {
         }
 
     }
-
 
     /**
      * 删除购物车

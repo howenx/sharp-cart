@@ -66,6 +66,29 @@
         ORDER BY t.create_at DESC,t.sku_id
     </select>
 
+
+    <select id="getCartByUserSku" resultType="domain.Cart" parameterType="domain.Cart">
+        select
+        <include refid="shoppingCartColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from sp_cart t
+        where 1=1 and t.status in ('I','G')
+        <if test="cartId!=null and cartId !=''">
+            and t.cart_id = #{cartId}
+        </if>
+        <if test="userId!=null and userId !=''">
+            and t.user_id = #{userId}
+        </if>
+        <if test="skuId!=null and skuId !=''">
+            and t.sku_id = #{skuId}
+        </if>
+        <if test="itemId!=null and itemId !=''">
+            and t.item_id = #{itemId}
+        </if>
+        ORDER BY t.create_at DESC,t.sku_id
+    </select>
+
     <!-- 更新价格,状态,数量,删除 -->
     <update id="updateCart" parameterType="domain.Cart">
         update sp_cart  set update_at= CURRENT_TIMESTAMP(0)
