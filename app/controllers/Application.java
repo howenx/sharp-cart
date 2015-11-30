@@ -395,4 +395,27 @@ public class Application extends Controller {
 
         return cartListDto;
     }
+
+    public Result verifySkuAmount(Long skuId,Integer amount){
+        ObjectNode result = Json.newObject();
+        try {
+            Sku sku = new Sku();
+            sku.setId(skuId);
+            sku = skuService.getInv(sku);
+            if(sku.getState().equals("S")){
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
+                return ok(result);
+            }else  if(amount>sku.getRestAmount()){
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
+                return ok(result);
+            }else {
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                return ok(result);
+            }
+        }catch (Exception ex) {
+            Logger.error("server exception:" + ex.toString());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+    }
 }
