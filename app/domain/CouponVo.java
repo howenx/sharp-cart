@@ -8,7 +8,7 @@ import java.sql.Timestamp;
  * 优惠券
  * Created by howen on 15/12/1.
  */
-public class Coupon implements Serializable {
+public class CouponVo implements Serializable {
 
     private String coupId;
     private Long userId;
@@ -20,10 +20,10 @@ public class Coupon implements Serializable {
     private Long orderId;
     private Timestamp useAt;
 
-    public Coupon() {
+    public CouponVo() {
     }
 
-    public Coupon(String coupId, Long userId, Long cateId, BigDecimal denomination, Timestamp startAt, Timestamp endAt, String state, Long orderId, Timestamp useAt) {
+    public CouponVo(String coupId, Long userId, Long cateId, BigDecimal denomination, Timestamp startAt, Timestamp endAt, String state, Long orderId, Timestamp useAt) {
         this.coupId = coupId;
         this.userId = userId;
         this.cateId = cateId;
@@ -109,7 +109,7 @@ public class Coupon implements Serializable {
 
     @Override
     public String toString() {
-        return "Coupon{" +
+        return "CouponVo{" +
                 "coupId='" + coupId + '\'' +
                 ", userId=" + userId +
                 ", cateId=" + cateId +

@@ -211,14 +211,14 @@
         ${alias}.order_id       ,
         ${alias}.use_at
     </sql>
-    <select id="getUserCoupon" parameterType="domain.Coupon" resultType="domain.Coupon">
+    <select id="getUserCoupon" parameterType="domain.CouponVo" resultType="domain.CouponVo">
         select
         <include refid="couponColumns">
             <property name="alias" value="t"/>
         </include>
         from sp_coupons t
     </select>
-    <insert id ="insertCoupon" parameterType="domain.Coupon" >
+    <insert id ="insertCoupon" parameterType="domain.CouponVo" >
         insert into sp_coupons (coup_id,
             user_id,
             cate_id,
@@ -237,7 +237,7 @@
         )
     </insert>
 
-    <update id="updateCoupon" parameterType="domain.Coupon">
+    <update id="updateCoupon" parameterType="domain.CouponVo">
         update sp_coupons set coup_id = coup_id
         <if test="userId!=null and userId!=''">
             ,user_id = #{userId}
