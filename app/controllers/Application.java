@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
 import filters.UserAuth;
+import net.spy.memcached.MemcachedClient;
 import play.Logger;
 import play.libs.Json;
 import play.mvc.Controller;
@@ -27,6 +28,9 @@ public class Application extends Controller {
 
     @Inject
     private IdService idService;
+
+    @Inject
+    private MemcachedClient cache;
 
     //图片服务器url
     public static final String IMAGE_URL = play.Play.application().configuration().getString("image.server.url");
@@ -53,6 +57,8 @@ public class Application extends Controller {
     public Result cart() {
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
+
+        Logger.error(json.toString());
 
         ObjectNode result = Json.newObject();
         try {
@@ -134,7 +140,6 @@ public class Application extends Controller {
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
-
     }
 
     /**
@@ -195,7 +200,13 @@ public class Application extends Controller {
                 cartList.setItemColor(sku.getItemColor());
                 cartList.setItemSize(sku.getItemSize());
                 cartList.setItemPrice(sku.getItemPrice());
-                cartList.setState(cartDto.getState());
+
+                //先确定商品状态是正常,否则直接存为失效商品
+                if (!sku.getState().equals("Y")) {
+                    cartList.setState("S");
+                } else {
+                    cartList.setState(cartDto.getState());
+                }
                 cartList.setShipFee(sku.getShipFee());
                 cartList.setInvArea(sku.getInvArea());
                 cartList.setRestrictAmount(sku.getRestrictAmount());
@@ -396,6 +407,12 @@ public class Application extends Controller {
         return cartListDto;
     }
 
+    /**
+     * 登录与未登录状态下校验加入购物车数量是否超出或者商品是否失效
+     * @param skuId 库存ID
+     * @param amount  数量
+     * @return result
+     */
     public Result verifySkuAmount(Long skuId,Integer amount){
         ObjectNode result = Json.newObject();
         try {
@@ -409,6 +426,26 @@ public class Application extends Controller {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
                 return ok(result);
             }else {
+                Cart c = new Cart();
+                c.setSkuId(skuId);
+                c.setAmount(amount);
+                Optional<String> header = Optional.ofNullable(request().getHeader("id-token"));
+                if (header.isPresent()) {
+                    Optional<String> token = Optional.ofNullable(cache.get(header.get()).toString());
+                    if (token.isPresent()) {
+                        JsonNode userJson = Json.parse(cache.get(header.get()).toString());
+
+                        Long userId = Long.valueOf(userJson.findValue("id").asText());
+                        c.setUserId(userId);
+                        List<Cart> carts = cartService.getCartByUserSku(c);
+                        //cartId为0,有两种情况,1种情况是,当购物车中没有出现同一个userId,skuId,状态为I,G的商品时候才去insert,否则是update
+                        if (carts.size() > 0) {
+                            c.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
+                            c.setAmount(c.getAmount() + carts.get(0).getAmount());//购买数量累加
+                            cartService.updateCart(c);
+                        }
+                    }
+                }
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
             }

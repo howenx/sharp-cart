@@ -126,6 +126,9 @@
         <if test="userId!=null and userId !=''">
             and user_id = #{userId}
         </if>
+        <if test="status!=null and status !=''">
+            and status in ('I','G')
+        </if>
     </update>
 
     <insert id="addCart" parameterType="domain.Cart" useGeneratedKeys="true" keyProperty="cartId">
@@ -193,6 +196,82 @@
         </if>
         <if test="orderId!=null and orderId !=''">
             and order_id = #{orderId}
+        </if>
+    </update>
+
+    <!---优惠券-->
+    <sql id="couponColumns">
+        ${alias}.coup_id        ,
+        ${alias}.user_id        ,
+        ${alias}.cate_id        ,
+        ${alias}.denomination   ,
+        ${alias}.start_at,
+        ${alias}.end_at,
+        ${alias}.state          ,
+        ${alias}.order_id       ,
+        ${alias}.use_at
+    </sql>
+    <select id="getUserCoupon" parameterType="domain.Coupon" resultType="domain.Coupon">
+        select
+        <include refid="couponColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from sp_coupons t
+    </select>
+    <insert id ="insertCoupon" parameterType="domain.Coupon" >
+        insert into sp_coupons (coup_id,
+            user_id,
+            cate_id,
+            denomination,
+            start_at,
+            end_at,
+            state
+        ) values(
+            #{coupId},
+            #{userId},
+            #{cateId},
+            #{denomination},
+            #{startAt},
+            #{endAt},
+            #{state}
+        )
+    </insert>
+
+    <update id="updateCoupon" parameterType="domain.Coupon">
+        update sp_coupons set coup_id = coup_id
+        <if test="userId!=null and userId!=''">
+            ,user_id = #{userId}
+        </if>
+        <if test="cateId!=null and cateId!=''">
+            ,cate_id = #{cateId}
+        </if>
+        <if test="denomination!=null and denomination!=''">
+            ,denomination = #{denomination}
+        </if>
+        <if test="startAt!=null and startAt!=''">
+            ,start_at = #{startAt}
+        </if>
+        <if test="endAt!=null and endAt!=''">
+            ,end_at = #{endAt}
+        </if>
+        <if test="state!=null and state!=''">
+            ,state =#{state}
+        </if>
+        <if test="useAt!=null and useAt!=''">
+            ,use_at=#{useAt}
+        </if>
+        where 1= 1
+        <if test="coupId!=null and coupId !=''">
+            and coup_id = #{coupId}
+        </if>
+        <if test="userId!=null and userId!=''">
+            and user_id =#{userId}
+        </if>
+        <if test="state!=null and state!=''">
+            and state = #{state}
+        </if>
+        <if test="cateId!=null and cateId!=''">
+            and cate_id =#{cateId}
         </if>
     </update>
 

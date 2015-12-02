@@ -33,7 +33,9 @@
         ${alias}.ship_fee            ,
         ${alias}.inv_area            ,
         ${alias}.restrict_amount     ,
-        ${alias}.inv_title
+        ${alias}.inv_title           ,
+        ${alias}.inv_customs         ,
+        ${alias}.postal_tax_code
     </sql>
 
     <!---  获取用户购物车,以用户ID或者CartID    -->
