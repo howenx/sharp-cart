@@ -1,9 +1,9 @@
 package controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import domain.CouponVo;
-import domain.Message;
+import domain.*;
 import net.spy.memcached.MemcachedClient;
 import play.Logger;
 import play.libs.Json;
@@ -15,7 +15,10 @@ import util.GenCouponCode;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * 订单相关,提交订单,优惠券
@@ -56,64 +59,76 @@ public class OrderCtrl extends Controller {
 //    @Security.Authenticated(UserAuth.class)
     public Result settle(){
 
-//        Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
+        Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
 
         ObjectNode result = Json.newObject();
         try {
-//            Long userId = (Long) ctx().args.get("userId");
-//            if (json.isPresent() && json.get().size() > 0) {
-//                List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
-//
-//                for (CartDto cartDto : cartDtoList) {
-//
-//                    Cart cart = new Cart();
-//                    cart.setSkuId(cartDto.getSkuId());
-//                    cart.setUserId(userId);
-//                    cart.setAmount(cartDto.getAmount());
-//                    cart.setCartId(cartDto.getCartId());
-//
-//                    Sku sku = new Sku();
-//                    sku.setId(cartDto.getSkuId());
-//                    sku = skuService.getInv(sku);
-//
-//
-//                    //先确定商品状态是正常,然后确定商品结算数量是否超出库存量
-//                    if (!sku.getState().equals("Y")) {
-//                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
-//                        return ok(result);
-//                    } else  if(cartDto.getAmount()>sku.getRestAmount()){
-//                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
-//                        return ok(result);
-//                    }else{
+            Long userId = (Long) ctx().args.get("userId");
+            if (json.isPresent() && json.get().size() > 0) {
+                List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
 
-                        CouponVo couponVo = new CouponVo();
-                        couponVo.setUserId(((Integer)1000012).longValue());
-                        couponVo.setDenomination((BigDecimal.valueOf(20)));
-                        Date timeDate = new Date();
-                        Timestamp dateTime = new Timestamp(timeDate.getTime());
-                        couponVo.setStartAt(dateTime);
-                        couponVo.setEndAt(new Timestamp(timeDate.getTime()+10*24*60*60*1000));
-                        String coupId = GenCouponCode.GetCode(GenCouponCode.CouponClassCode.ACCESSORIES.getIndex(),8);
-                        Logger.error(coupId);
-                        couponVo.setCoupId(coupId);
-                        couponVo.setCateId(((Integer)GenCouponCode.CouponClassCode.ACCESSORIES.getIndex()).longValue());
-                        couponVo.setState("N");
-                        cartService.insertCoupon(couponVo);
-                        //计算用户的优惠券费用,邮费,行邮税
+                //运费
+                BigDecimal shipFee = new BigDecimal(0);
+                //行邮税
+                BigDecimal portalFee = new BigDecimal(0);
 
 
-//                    }
-//                }
+
+
+                for (CartDto cartDto : cartDtoList) {
+
+                    Cart cart = new Cart();
+                    cart.setSkuId(cartDto.getSkuId());
+                    cart.setUserId(userId);
+                    cart.setAmount(cartDto.getAmount());
+                    cart.setCartId(cartDto.getCartId());
+
+                    Sku sku = new Sku();
+                    sku.setId(cartDto.getSkuId());
+                    sku = skuService.getInv(sku);
+
+
+                    //先确定商品状态是正常,然后确定商品结算数量是否超出库存量
+                    if (!sku.getState().equals("Y")) {
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
+                        return ok(result);
+                    } else  if(cartDto.getAmount()>sku.getRestAmount()){
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
+                        return ok(result);
+                    }else{
+
+                        //累加邮费
+                        shipFee=shipFee.add(sku.getShipFee());
+                        //计算行邮税,行邮税加和
+                        portalFee =portalFee.add(new BigDecimal(sku.getPostalTaxRate()).multiply(sku.getItemPrice()).multiply(new BigDecimal(cart.getAmount())));
+
+                    }
+                }
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
-//            }else {
-//                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
-//                return ok(result);
-//            }
+            }else {
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
+                return ok(result);
+            }
         }catch (Exception ex){
             return null;
         }
     }
 
-
+    //发放优惠券
+    private void publicCoupons() throws Exception{
+        CouponVo couponVo = new CouponVo();
+        couponVo.setUserId(((Integer)1000012).longValue());
+        couponVo.setDenomination((BigDecimal.valueOf(20)));
+        Date timeDate = new Date();
+        Timestamp dateTime = new Timestamp(timeDate.getTime());
+        couponVo.setStartAt(dateTime);
+        couponVo.setEndAt(new Timestamp(timeDate.getTime()+10*24*60*60*1000));
+        String coupId = GenCouponCode.GetCode(GenCouponCode.CouponClassCode.ACCESSORIES.getIndex(),8);
+        Logger.error(coupId);
+        couponVo.setCoupId(coupId);
+        couponVo.setCateId(((Integer)GenCouponCode.CouponClassCode.ACCESSORIES.getIndex()).longValue());
+        couponVo.setState("N");
+        cartService.insertCoupon(couponVo);
+    }
 }
