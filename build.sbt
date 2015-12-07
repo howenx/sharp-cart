@@ -33,7 +33,10 @@ libraryDependencies += "com.aliyun.oss" % "aliyun-sdk-oss" % "2.0.1" withSources
 libraryDependencies += "com.typesafe.play" %% "anorm" % "2.5.0" withSources() withJavadoc()
 
 resolvers ++= Seq(
-  "Apache" at "https://repo1.maven.org/maven2/"
+  "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
+  "Apache" at "http://repo1.maven.org/maven2/",
+  "jBCrypt Repository" at "http://repo1.maven.org/maven2/org/",
+  "Sonatype OSS Snasphots" at "http://oss.sonatype.org/content/repositories/snapshots"
 )
 
 javacOptions += "-Xlint:deprecation"
