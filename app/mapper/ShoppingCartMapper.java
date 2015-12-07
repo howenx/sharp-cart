@@ -1,8 +1,8 @@
 package mapper;
 
 import domain.Cart;
+import domain.CouponVo;
 import domain.Order;
-import scala.collection.generic.OrderedTraversableFactory;
 
 import java.util.List;
 
@@ -23,4 +23,10 @@ public interface ShoppingCartMapper {
     Integer updateOrder(Order order) throws Exception;
 
     List<Cart> getCartByUserSku (Cart cart) throws Exception;
+
+    List<CouponVo> getUserCoupon(CouponVo c) throws Exception;
+
+    int insertCoupon(CouponVo c) throws Exception;
+
+    int updateCoupon(CouponVo c) throws Exception;
 }

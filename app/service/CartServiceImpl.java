@@ -2,6 +2,7 @@ package service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import domain.Cart;
+import domain.CouponVo;
 import domain.Order;
 import domain.Sku;
 import mapper.ShoppingCartMapper;
@@ -47,11 +48,26 @@ public class CartServiceImpl  implements CartService{
     @Override
     public Boolean updateOrder(Order order) throws Exception {
 
-        return shoppingCartMapper.updateOrder(order) > 0;
+        return shoppingCartMapper.updateOrder(order) >= 0;
     }
 
     @Override
     public List<Cart> getCartByUserSku(Cart cart) throws Exception {
         return shoppingCartMapper.getCartByUserSku(cart);
+    }
+
+    @Override
+    public List<CouponVo> getUserCoupon(CouponVo c) throws Exception {
+        return shoppingCartMapper.getUserCoupon(c);
+    }
+
+    @Override
+    public Boolean insertCoupon(CouponVo c) throws Exception {
+        return shoppingCartMapper.insertCoupon(c)>=0;
+    }
+
+    @Override
+    public Boolean updateCoupon(CouponVo c) throws Exception {
+        return shoppingCartMapper.updateCoupon(c)>=0;
     }
 }

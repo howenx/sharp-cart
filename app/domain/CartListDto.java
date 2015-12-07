@@ -27,12 +27,14 @@ public class CartListDto implements Serializable{
     private     String          invUrl;//用于方便前段获取库存跳转链接
     private     String          invTitle;//sku标题
     private     String          cartDelUrl;//用于删除操作的链接
-    private Timestamp createAt;
+    private     Timestamp       createAt;
+    private     String          invCustoms;//报关单位
+    private     String          postalTaxRate;//税率
 
     public CartListDto() {
     }
 
-    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt) {
+    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate) {
         this.cartId = cartId;
         this.skuId = skuId;
         this.amount = amount;
@@ -49,6 +51,8 @@ public class CartListDto implements Serializable{
         this.invTitle = invTitle;
         this.cartDelUrl = cartDelUrl;
         this.createAt = createAt;
+        this.invCustoms = invCustoms;
+        this.postalTaxRate = postalTaxRate;
     }
 
     public Long getCartId() {
@@ -179,6 +183,22 @@ public class CartListDto implements Serializable{
         this.createAt = createAt;
     }
 
+    public String getInvCustoms() {
+        return invCustoms;
+    }
+
+    public void setInvCustoms(String invCustoms) {
+        this.invCustoms = invCustoms;
+    }
+
+    public String getPostalTaxRate() {
+        return postalTaxRate;
+    }
+
+    public void setPostalTaxRate(String postalTaxRate) {
+        this.postalTaxRate = postalTaxRate;
+    }
+
     @Override
     public String toString() {
         return "CartListDto{" +
@@ -198,6 +218,8 @@ public class CartListDto implements Serializable{
                 ", invTitle='" + invTitle + '\'' +
                 ", cartDelUrl='" + cartDelUrl + '\'' +
                 ", createAt=" + createAt +
+                ", invCustoms='" + invCustoms + '\'' +
+                ", postalTaxRate='" + postalTaxRate + '\'' +
                 '}';
     }
 }

@@ -63,7 +63,7 @@ public class Application extends Controller {
         ObjectNode result = Json.newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
-            if (json.isPresent() && json.get().size()>0) {
+            if (json.isPresent() && json.get().size() > 0) {
                 List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
 
                 for (CartDto cartDto : cartDtoList) {
@@ -201,6 +201,7 @@ public class Application extends Controller {
                 cartList.setItemSize(sku.getItemSize());
                 cartList.setItemPrice(sku.getItemPrice());
 
+
                 //先确定商品状态是正常,否则直接存为失效商品
                 if (!sku.getState().equals("Y")) {
                     cartList.setState("S");
@@ -213,6 +214,8 @@ public class Application extends Controller {
                 cartList.setRestAmount(sku.getRestAmount());
                 cartList.setInvImg(IMAGE_URL + sku.getInvImg());
                 cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                cartList.setInvCustoms(sku.getInvCustoms());
+                cartList.setPostalTaxRate(sku.getPostalTaxRate());
 
                 if (cartDto.getCartId() == 0) {
                     cartList.setCartDelUrl("");
@@ -271,7 +274,6 @@ public class Application extends Controller {
 
                     //获取每个库存信息
                     Sku sku = new Sku();
-
 
                     sku.setId(cart.getSkuId());
                     sku = skuService.getInv(sku);
@@ -383,6 +385,8 @@ public class Application extends Controller {
             cartList.setCartDelUrl(SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
             cartList.setInvTitle(sku.getInvTitle());
             cartList.setCreateAt(cart.getCreateAt());
+            cartList.setInvCustoms(sku.getInvCustoms());
+            cartList.setPostalTaxRate(sku.getPostalTaxRate());
             cartListDto.add(cartList);
         }
 
@@ -409,47 +413,48 @@ public class Application extends Controller {
 
     /**
      * 登录与未登录状态下校验加入购物车数量是否超出或者商品是否失效
-     * @param skuId 库存ID
-     * @param amount  数量
+     *
+     * @param skuId  库存ID
+     * @param amount 数量
      * @return result
      */
-    public Result verifySkuAmount(Long skuId,Integer amount){
+    public Result verifySkuAmount(Long skuId, Integer amount) {
         ObjectNode result = Json.newObject();
         try {
             Sku sku = new Sku();
             sku.setId(skuId);
             sku = skuService.getInv(sku);
-            if(sku.getState().equals("S")){
+            if (sku.getState().equals("S")) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
                 return ok(result);
-            }else  if(amount>sku.getRestAmount()){
+            } else if (amount > sku.getRestAmount()) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
                 return ok(result);
-            }else {
-                Cart c = new Cart();
-                c.setSkuId(skuId);
-                c.setAmount(amount);
-                Optional<String> header = Optional.ofNullable(request().getHeader("id-token"));
-                if (header.isPresent()) {
-                    Optional<String> token = Optional.ofNullable(cache.get(header.get()).toString());
-                    if (token.isPresent()) {
-                        JsonNode userJson = Json.parse(cache.get(header.get()).toString());
-
-                        Long userId = Long.valueOf(userJson.findValue("id").asText());
-                        c.setUserId(userId);
-                        List<Cart> carts = cartService.getCartByUserSku(c);
-                        //cartId为0,有两种情况,1种情况是,当购物车中没有出现同一个userId,skuId,状态为I,G的商品时候才去insert,否则是update
-                        if (carts.size() > 0) {
-                            c.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
-                            c.setAmount(c.getAmount() + carts.get(0).getAmount());//购买数量累加
-                            cartService.updateCart(c);
-                        }
-                    }
-                }
+            } else {
+//                Cart c = new Cart();
+//                c.setSkuId(skuId);
+//                c.setAmount(amount);
+//                Optional<String> header = Optional.ofNullable(request().getHeader("id-token"));
+//                if (header.isPresent()) {
+//                    Optional<String> token = Optional.ofNullable(cache.get(header.get()).toString());
+//                    if (token.isPresent()) {
+//                        JsonNode userJson = Json.parse(cache.get(header.get()).toString());
+//
+//                        Long userId = Long.valueOf(userJson.findValue("id").asText());
+//                        c.setUserId(userId);
+//                        List<Cart> carts = cartService.getCartByUserSku(c);
+//                        //cartId为0,有两种情况,1种情况是,当购物车中没有出现同一个userId,skuId,状态为I,G的商品时候才去insert,否则是update
+//                        if (carts.size() > 0) {
+//                            c.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
+//                            c.setAmount(c.getAmount() + carts.get(0).getAmount());//购买数量累加
+//                            cartService.updateCart(c);
+//                        }
+//                    }
+//                }
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
             }
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             Logger.error("server exception:" + ex.toString());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);

@@ -216,7 +216,19 @@
         <include refid="couponColumns">
             <property name="alias" value="t"/>
         </include>
-        from sp_coupons t
+        from sp_coupons t where 1=1
+        <if test="userId!=null and userId!=''">
+            and user_id = #{userId}
+        </if>
+        <if test="coupId!=null and coupId!=''">
+            and coup_id = #{coupId}
+        </if>
+        <if test="cateId!=null and cateId!=''">
+            and cate_id = #{cateId}
+        </if>
+        <if test="state!=null and state!=''">
+            and state = #{state}
+        </if>
     </select>
     <insert id ="insertCoupon" parameterType="domain.CouponVo" >
         insert into sp_coupons (coup_id,

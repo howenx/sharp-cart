@@ -31,11 +31,12 @@
         ${alias}.or_master_inv       ,
         ${alias}.state               ,
         ${alias}.ship_fee            ,
-        ${alias}.inv_area            ,
+        case when ${alias}.inv_area='H' then '杭州保税区'  when ${alias}.inv_area='G' then '广州保税区' when ${alias}.inv_area='Z' then '韩国直邮' else '自营' end as inv_area,
         ${alias}.restrict_amount     ,
         ${alias}.inv_title           ,
         ${alias}.inv_customs         ,
-        ${alias}.postal_tax_code
+        ${alias}.inv_weight          ,
+        COALESCE(${alias}.postal_tax_rate,(select f.rate from tax_code f where f.code = t.postal_tax_code)) as postal_tax_rate
     </sql>
 
     <!---  获取用户购物车,以用户ID或者CartID    -->

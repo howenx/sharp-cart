@@ -2,6 +2,7 @@ package service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import domain.Cart;
+import domain.CouponVo;
 import domain.Order;
 import domain.Sku;
 
@@ -24,4 +25,10 @@ public interface CartService {
     Boolean updateOrder(Order order) throws Exception;
 
     List<Cart> getCartByUserSku (Cart cart) throws Exception;
+
+    List<CouponVo> getUserCoupon(CouponVo c) throws Exception;
+
+    Boolean insertCoupon(CouponVo c) throws Exception;
+
+    Boolean updateCoupon(CouponVo c) throws Exception;
 }
