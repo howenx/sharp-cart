@@ -52,11 +52,6 @@ libraryDependencies += "com.typesafe.play" %% "anorm" % "2.5.0" withSources() wi
 /**
   *************************** resolvers ****************************************************
   */
-resolvers ++= Seq(
-  "Apache" at "http://repo1.maven.org/maven2/",
-  "jBCrypt Repository" at "http://repo1.maven.org/maven2/org/",
-  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
-)
 // 检查代码中使用的过时类细节
 javacOptions += "-Xlint:deprecation"
 
