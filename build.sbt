@@ -32,7 +32,9 @@ libraryDependencies += "com.aliyun.oss" % "aliyun-sdk-oss" % "2.0.1" withSources
 
 libraryDependencies += "com.typesafe.play" %% "anorm" % "2.5.0" withSources() withJavadoc()
 
-resolvers += "Apache" at "https://repo1.maven.org/maven2/"
+resolvers ++= Seq(
+  "Apache" at "https://repo1.maven.org/maven2/"
+)
 
 javacOptions += "-Xlint:deprecation"
 
