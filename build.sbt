@@ -14,11 +14,6 @@ libraryDependencies ++= Seq(
   filters
 )
 
-/**********************************************************************************************/
-
-/**
-  *************************** Library Dependencies ********************************************
-  */
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4" withSources() withJavadoc()
 
 libraryDependencies += "org.postgresql" % "postgresql" % "9.4-1205-jdbc42" withSources() withJavadoc()
@@ -37,30 +32,7 @@ libraryDependencies += "com.aliyun.oss" % "aliyun-sdk-oss" % "2.0.1" withSources
 
 libraryDependencies += "com.typesafe.play" %% "anorm" % "2.5.0" withSources() withJavadoc()
 
-//Code Review
-//libraryDependencies += "com.puppycrawl.tools" % "checkstyle" % "6.7" withSources() withJavadoc()
-//
-//libraryDependencies += "net.sourceforge.pmd" % "pmd" % "5.0.0" withSources() withJavadoc()
 
-//Test
-//libraryDependencies += "org.mockito" % "mockito-core" % "2.0.13-beta" % "test" withSources() withJavadoc()
-//
-//dependencyOverrides += "junit" % "junit" % "4.12" % "test" withSources() withJavadoc()
-
-/** ******************************************************************************************/
-
-/**
-  *************************** resolvers ****************************************************
-  */
-// 检查代码中使用的过时类细节
 javacOptions += "-Xlint:deprecation"
 
-//// "Add mapper xml files to classpath" -- blank line necessary for SBT
-//unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "app")
-//
-//// but filter out java and html files that would then also be copied to the classpath
-//excludeFilter in Compile in unmanagedResources :=  "*.java" || "*.html"||"*.scala"
-
-// Play provides two styles of routers, one expects its actions to be injected, the
-// other, legacy style, accesses its actions statically.
 routesGenerator := InjectedRoutesGenerator
