@@ -61,6 +61,10 @@ public class Application extends Controller {
 
         Logger.error(json.toString());
 
+        Boolean S_FLAG = false;
+
+        List<Long> sCartIds = new ArrayList<>();
+
         ObjectNode result = Json.newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
@@ -72,7 +76,6 @@ public class Application extends Controller {
                     Cart cart = new Cart();
                     cart.setSkuId(cartDto.getSkuId());
                     cart.setUserId(userId);
-                    cart.setAmount(cartDto.getAmount());
 
                     Sku sku = new Sku();
                     sku.setId(cartDto.getSkuId());
@@ -85,9 +88,15 @@ public class Application extends Controller {
                     //先确定商品状态是正常,否则直接存为失效商品
                     if (!sku.getState().equals("Y")) {
                         cart.setStatus("S");
+                        S_FLAG=true;
+
                     } else {
                         cart.setStatus(cartDto.getState());
                     }
+
+                    if(sku.getRestrictAmount()>=cartDto.getAmount()){
+                        cart.setAmount(sku.getRestrictAmount());
+                    }else cart.setAmount(cartDto.getAmount());
 
                     if (cartDto.getCartId() == 0) {
                         if (cart.getStatus().equals("I") || cart.getStatus().equals("G")) {
@@ -98,9 +107,12 @@ public class Application extends Controller {
                                 cart.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
                                 cart.setAmount(cart.getAmount() + carts.get(0).getAmount());//购买数量累加
                                 cartService.updateCart(cart);
+                                if (cart.getStatus().equals("S")) sCartIds.add(cart.getCartId());
+
                             } else {
                                 //cartId为0,有两种情况,1种情况是,当购物车中没有出现同一个userId,skuId,状态为I,G的商品时候才去insert
                                 cartService.addCart(cart);
+                                if (cart.getStatus().equals("S")) sCartIds.add(cart.getCartId());
                             }
                         }
                     } else {
@@ -109,14 +121,22 @@ public class Application extends Controller {
                     }
                 }
             }
-            Logger.error("用户的ID:" + userId);
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("cartList", Json.toJson(cartAllMap(userId)));
-            Logger.error("返回数据" + result.toString());
+
+            if (S_FLAG){
+                for (Long s:sCartIds) {
+                    Cart cart = new Cart();
+                    cart.setCartId(s);
+                    cart.setStatus("N");
+                    cartService.updateCart(cart);
+                }
+            }
+
             return ok(result);
 
         } catch (Exception ex) {
-            Logger.error("server exception:" + ex.toString());
+            Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
@@ -133,11 +153,11 @@ public class Application extends Controller {
         try {
             Long userId = (Long) ctx().args.get("userId");
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-            result.putPOJO("cartList", Json.toJson(cartAll(userId)));
+            result.putPOJO("cartList", Json.toJson(cartAllMap(userId)));
             Logger.error("返回数据" + result.toString());
             return ok(result);
         } catch (Exception ex) {
-            Logger.error("server exception:" + ex.toString());
+            Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
@@ -165,7 +185,7 @@ public class Application extends Controller {
             Logger.error("返回数据" + result.toString());
             return ok(result);
         } catch (Exception ex) {
-            Logger.error("server exception:" + ex.toString());
+            Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
@@ -226,13 +246,58 @@ public class Application extends Controller {
 
             }
 
+            Map<String, List<CartListDto>> cartListMap = cartListDto
+                    .stream()
+                    .collect(Collectors.groupingBy(CartListDto::getInvCustoms));
+
+            List<Map<String,Object>> list = new ArrayList<>();
+
+            cartListMap
+                    .forEach((invCustoms, p) -> {
+
+                        switch (invCustoms) {
+                            case "shanghai": {
+                                Map<String, Object> mapResult = new HashMap<>();
+                                mapResult.put("invCustoms", invCustoms);
+                                mapResult.put("invArea", "韩国直邮");
+                                mapResult.put("carts", p);
+                                list.add(mapResult);
+                                break;
+                            }
+                            case "guangzhou": {
+                                Map<String, Object> mapResult = new HashMap<>();
+                                mapResult.put("invCustoms", invCustoms);
+                                mapResult.put("invArea", "广州保税区");
+                                mapResult.put("carts", p);
+                                list.add(mapResult);
+                                break;
+                            }
+                            case "hangzhou": {
+                                Map<String, Object> mapResult = new HashMap<>();
+                                mapResult.put("invCustoms", invCustoms);
+                                mapResult.put("invArea", "杭州保税区");
+                                mapResult.put("carts", p);
+                                list.add(mapResult);
+                                break;
+                            }
+                            default: {
+                                Map<String, Object> mapResult = new HashMap<>();
+                                mapResult.put("invCustoms", invCustoms);
+                                mapResult.put("invArea", "海外直邮");
+                                mapResult.put("carts", p);
+                                list.add(mapResult);
+                                break;
+                            }
+                        }
+                    });
+
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-            result.putPOJO("cartList", Json.toJson(cartListDto));
+            result.putPOJO("cartList", Json.toJson(list));
             Logger.error("返回数据" + result.toString());
             return ok(result);
 
         } catch (Exception ex) {
-            Logger.error("server exception:" + ex.toString());
+            Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
@@ -248,7 +313,6 @@ public class Application extends Controller {
         ObjectNode result = Json.newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
-//            Long userId =  ((Integer)1000012).longValue();
             Order order = new Order();
             order.setUserId(userId);
             List<Order> orderList = cartService.getOrderBy(order);
@@ -312,7 +376,7 @@ public class Application extends Controller {
             Logger.error("返回数据" + result.toString());
             return ok(result);
         } catch (Exception ex) {
-            Logger.error("server exception:" + ex.toString());
+            Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
@@ -339,81 +403,10 @@ public class Application extends Controller {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.DATABASE_EXCEPTION.getIndex()), Message.ErrorCode.DATABASE_EXCEPTION.getIndex())));
             return ok(result);
         } catch (Exception ex) {
-            Logger.error("server exception:" + ex.toString());
+            Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
-    }
-
-    private List<CartListDto> cartAll(Long userId) throws Exception {
-
-        List<CartListDto> cartListDto = new ArrayList<>();
-
-        Cart c = new Cart();
-        c.setUserId(userId);
-
-        //返回数据组装,根据用户id查询出所有可显示的购物车数据
-        List<Cart> listCart = cartService.getCarts(c);
-
-        Logger.error("尼玛的:" + listCart);
-
-        for (Cart cart : listCart) {
-
-            Sku sku = new Sku();
-            sku.setId(cart.getSkuId());
-            sku = skuService.getInv(sku);
-
-            //先确定商品状态是正常,否则直接存为失效商品
-            if (!sku.getState().equals("Y")) {
-                cart.setStatus("S");
-            }
-
-            //返回数据组装
-            CartListDto cartList = new CartListDto();
-            cartList.setCartId(cart.getCartId());
-            cartList.setSkuId(cart.getSkuId());
-            cartList.setAmount(cart.getAmount());
-            cartList.setItemColor(sku.getItemColor());
-            cartList.setItemSize(sku.getItemSize());
-            cartList.setItemPrice(sku.getItemPrice());
-            cartList.setState(cart.getStatus());
-            cartList.setShipFee(sku.getShipFee());
-            cartList.setInvArea(sku.getInvArea());
-            cartList.setRestrictAmount(sku.getRestrictAmount());
-            cartList.setRestAmount(sku.getRestAmount());
-            cartList.setInvImg(IMAGE_URL + sku.getInvImg());
-            cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
-            cartList.setCartDelUrl(SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
-            cartList.setInvTitle(sku.getInvTitle());
-            cartList.setCreateAt(cart.getCreateAt());
-            cartList.setInvCustoms(sku.getInvCustoms());
-            cartList.setPostalTaxRate(sku.getPostalTaxRate());
-            cartListDto.add(cartList);
-        }
-
-        Map<String, List<CartListDto>> cartListMap = cartListDto
-                .stream()
-                .collect(Collectors.groupingBy(CartListDto::getInvCustoms));
-
-//        Comparator<CartListDto> byCreateDate = new Comparator<CartListDto>() {
-//            public int compare(CartListDto left, CartListDto right) {
-//                if (left.getCreateAt().before(right.getCreateAt())) {
-//                    return 1;
-//                } else {
-//                    return -1;
-//                }
-//            }
-//        };
-//        Logger.error("排序前的:" + listCart);
-//        cartListDto = cartListDto
-//                .parallelStream()
-//                .sorted((e1, e2) -> e1.getCreateAt().compareTo(e2.getCreateAt()))
-//                .sorted((e1, e2) -> e1.getSkuId().compareTo(e2.getSkuId()))
-//                .collect(Collectors.toList());
-
-//        Logger.error("排序后的:" + listCart);
-
-        return cartListDto;
     }
 
     private List<Map<String,Object>> cartAllMap(Long userId) throws Exception {
@@ -459,17 +452,13 @@ public class Application extends Controller {
             cartList.setCreateAt(cart.getCreateAt());
             cartList.setInvCustoms(sku.getInvCustoms());
             cartList.setPostalTaxRate(sku.getPostalTaxRate());
+            cartList.setPostalStandard(sku.getPostalStandard());
             cartListDto.add(cartList);
         }
 
         Map<String, List<CartListDto>> cartListMap = cartListDto
                 .stream()
                 .collect(Collectors.groupingBy(CartListDto::getInvCustoms));
-
-        cartListMap
-                .forEach((invCustoms, p) -> System.out.format("age %s: %s\n", invCustoms, p));
-
-
 
         List<Map<String,Object>> list = new ArrayList<>();
 
@@ -512,25 +501,6 @@ public class Application extends Controller {
                     }
                 });
 
-
-//        Comparator<CartListDto> byCreateDate = new Comparator<CartListDto>() {
-//            public int compare(CartListDto left, CartListDto right) {
-//                if (left.getCreateAt().before(right.getCreateAt())) {
-//                    return 1;
-//                } else {
-//                    return -1;
-//                }
-//            }
-//        };
-//        Logger.error("排序前的:" + listCart);
-//        cartListDto = cartListDto
-//                .parallelStream()
-//                .sorted((e1, e2) -> e1.getCreateAt().compareTo(e2.getCreateAt()))
-//                .sorted((e1, e2) -> e1.getSkuId().compareTo(e2.getSkuId()))
-//                .collect(Collectors.toList());
-
-//        Logger.error("排序后的:" + listCart);
-
         return list;
     }
 
@@ -555,31 +525,11 @@ public class Application extends Controller {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
                 return ok(result);
             } else {
-//                Cart c = new Cart();
-//                c.setSkuId(skuId);
-//                c.setAmount(amount);
-//                Optional<String> header = Optional.ofNullable(request().getHeader("id-token"));
-//                if (header.isPresent()) {
-//                    Optional<String> token = Optional.ofNullable(cache.get(header.get()).toString());
-//                    if (token.isPresent()) {
-//                        JsonNode userJson = Json.parse(cache.get(header.get()).toString());
-//
-//                        Long userId = Long.valueOf(userJson.findValue("id").asText());
-//                        c.setUserId(userId);
-//                        List<Cart> carts = cartService.getCartByUserSku(c);
-//                        //cartId为0,有两种情况,1种情况是,当购物车中没有出现同一个userId,skuId,状态为I,G的商品时候才去insert,否则是update
-//                        if (carts.size() > 0) {
-//                            c.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
-//                            c.setAmount(c.getAmount() + carts.get(0).getAmount());//购买数量累加
-//                            cartService.updateCart(c);
-//                        }
-//                    }
-//                }
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
             }
         } catch (Exception ex) {
-            Logger.error("server exception:" + ex.toString());
+            Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }

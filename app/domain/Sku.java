@@ -29,30 +29,32 @@ public class Sku {
     private     String              invTitle;//sku标题
     private     String              invCustoms;//报关单位
     private     String              postalTaxRate;//税率
+    private     String              postalStandard;//关税收费标准
+    private     String              postalLimit;//海关规定的单笔订单金额不能超过的量值
 
-
     @JsonIgnore
-    private     Long        itemId;
+    private     Long                itemId;
     @JsonIgnore
-    private     Integer     amount;//库存总量
+    private     Integer             amount;//库存总量
     @JsonIgnore
-    private     BigDecimal  itemCostPrice; //商品成本价
+    private     BigDecimal          itemCostPrice; //商品成本价
     @JsonIgnore
-    private     Integer     soldAmount;
+    private     Integer             soldAmount;
     @JsonIgnore
-    private     Boolean     orDestroy;
+    private     Boolean             orDestroy;
     @JsonIgnore
-    private     Timestamp   destroyAt;
+    private     Timestamp           destroyAt;
     @JsonIgnore
-    private     Timestamp   updateAt;
+    private     Timestamp           updateAt;
     @JsonIgnore
-    private     Timestamp   createAt;
-
+    private     Timestamp           createAt;
+    @JsonIgnore
+    private     String              carriageModelCode;
 
     public Sku() {
     }
 
-    public Sku(Long id, String itemColor, String itemSize, BigDecimal itemSrcPrice, BigDecimal itemPrice, BigDecimal itemDiscount, Boolean orMasterInv, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String itemPreviewImgs, String invUrl, String invTitle, String invCustoms, String postalTaxRate, Long itemId, Integer amount, BigDecimal itemCostPrice, Integer soldAmount, Boolean orDestroy, Timestamp destroyAt, Timestamp updateAt, Timestamp createAt) {
+    public Sku(Long id, String itemColor, String itemSize, BigDecimal itemSrcPrice, BigDecimal itemPrice, BigDecimal itemDiscount, Boolean orMasterInv, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String itemPreviewImgs, String invUrl, String invTitle, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, Long itemId, Integer amount, BigDecimal itemCostPrice, Integer soldAmount, Boolean orDestroy, Timestamp destroyAt, Timestamp updateAt, Timestamp createAt, String carriageModelCode) {
         this.id = id;
         this.itemColor = itemColor;
         this.itemSize = itemSize;
@@ -71,6 +73,8 @@ public class Sku {
         this.invTitle = invTitle;
         this.invCustoms = invCustoms;
         this.postalTaxRate = postalTaxRate;
+        this.postalStandard = postalStandard;
+        this.postalLimit = postalLimit;
         this.itemId = itemId;
         this.amount = amount;
         this.itemCostPrice = itemCostPrice;
@@ -79,6 +83,7 @@ public class Sku {
         this.destroyAt = destroyAt;
         this.updateAt = updateAt;
         this.createAt = createAt;
+        this.carriageModelCode = carriageModelCode;
     }
 
     public Long getId() {
@@ -225,6 +230,22 @@ public class Sku {
         this.postalTaxRate = postalTaxRate;
     }
 
+    public String getPostalStandard() {
+        return postalStandard;
+    }
+
+    public void setPostalStandard(String postalStandard) {
+        this.postalStandard = postalStandard;
+    }
+
+    public String getPostalLimit() {
+        return postalLimit;
+    }
+
+    public void setPostalLimit(String postalLimit) {
+        this.postalLimit = postalLimit;
+    }
+
     public Long getItemId() {
         return itemId;
     }
@@ -289,6 +310,14 @@ public class Sku {
         this.createAt = createAt;
     }
 
+    public String getCarriageModelCode() {
+        return carriageModelCode;
+    }
+
+    public void setCarriageModelCode(String carriageModelCode) {
+        this.carriageModelCode = carriageModelCode;
+    }
+
     @Override
     public String toString() {
         return "Sku{" +
@@ -310,6 +339,8 @@ public class Sku {
                 ", invTitle='" + invTitle + '\'' +
                 ", invCustoms='" + invCustoms + '\'' +
                 ", postalTaxRate='" + postalTaxRate + '\'' +
+                ", postalStandard='" + postalStandard + '\'' +
+                ", postalLimit='" + postalLimit + '\'' +
                 ", itemId=" + itemId +
                 ", amount=" + amount +
                 ", itemCostPrice=" + itemCostPrice +
@@ -318,6 +349,7 @@ public class Sku {
                 ", destroyAt=" + destroyAt +
                 ", updateAt=" + updateAt +
                 ", createAt=" + createAt +
+                ", carriageModelCode='" + carriageModelCode + '\'' +
                 '}';
     }
 }

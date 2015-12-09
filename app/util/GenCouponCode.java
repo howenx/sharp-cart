@@ -36,7 +36,8 @@ public class GenCouponCode {
 
         COSMETICS("化妆品", 153),
         ACCESSORIES("配饰", 172),
-        CLOTHES("服饰", 165);
+        CLOTHES("服饰", 165),
+        SHIP_FREE("邮费", 999);
 
         // 成员变量
         private String name;

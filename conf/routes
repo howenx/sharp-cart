@@ -11,3 +11,4 @@ GET           /client/cart/verify/amount/$skuId<[0-9]+>/$amount<[0-9]+>         
 GET           /client/order                                                             controllers.Application.shoppingOrder()
 POST          /client/order/state/update                                                controllers.Application.updateOrderState()
 POST          /client/settle                                                            controllers.OrderCtrl.settle()
+GET           /client/coupons/list                                                      controllers.OrderCtrl.couponsList()

@@ -1,8 +1,6 @@
 package mapper;
 
-import domain.Cart;
-import domain.CouponVo;
-import domain.Order;
+import domain.*;
 
 import java.util.List;
 
@@ -29,4 +27,5 @@ public interface ShoppingCartMapper {
     int insertCoupon(CouponVo c) throws Exception;
 
     int updateCoupon(CouponVo c) throws Exception;
+
 }

@@ -30,11 +30,13 @@ public class CartListDto implements Serializable{
     private     Timestamp       createAt;
     private     String          invCustoms;//报关单位
     private     String          postalTaxRate;//税率
+    private     String          postalStandard;//关税收费标准
+    private     String          postalLimit;//海关规定的单笔订单金额不能超过的量值
 
     public CartListDto() {
     }
 
-    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate) {
+    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit) {
         this.cartId = cartId;
         this.skuId = skuId;
         this.amount = amount;
@@ -53,6 +55,8 @@ public class CartListDto implements Serializable{
         this.createAt = createAt;
         this.invCustoms = invCustoms;
         this.postalTaxRate = postalTaxRate;
+        this.postalStandard = postalStandard;
+        this.postalLimit = postalLimit;
     }
 
     public Long getCartId() {
@@ -199,6 +203,22 @@ public class CartListDto implements Serializable{
         this.postalTaxRate = postalTaxRate;
     }
 
+    public String getPostalStandard() {
+        return postalStandard;
+    }
+
+    public void setPostalStandard(String postalStandard) {
+        this.postalStandard = postalStandard;
+    }
+
+    public String getPostalLimit() {
+        return postalLimit;
+    }
+
+    public void setPostalLimit(String postalLimit) {
+        this.postalLimit = postalLimit;
+    }
+
     @Override
     public String toString() {
         return "CartListDto{" +
@@ -220,6 +240,8 @@ public class CartListDto implements Serializable{
                 ", createAt=" + createAt +
                 ", invCustoms='" + invCustoms + '\'' +
                 ", postalTaxRate='" + postalTaxRate + '\'' +
+                ", postalStandard='" + postalStandard + '\'' +
+                ", postalLimit='" + postalLimit + '\'' +
                 '}';
     }
 }

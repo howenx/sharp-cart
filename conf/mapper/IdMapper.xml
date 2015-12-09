@@ -15,7 +15,7 @@
         ${alias}.or_default,
         ${alias}.tel,
         ${alias}.name,
-        ${alias}.delivery_city,
+        ${alias}.delivery_city::text,
         ${alias}.delivery_detail
     </sql>
 
@@ -31,6 +31,9 @@
         </if>
         <if test="addId != null and addId!=''">
             and t.add_id = #{addId}
+        </if>
+        <if test="orDefault != null and orDefault!=''">
+            and t.or_default = #{orDefault}
         </if>
         ORDER BY t.or_default DESC
     </select>

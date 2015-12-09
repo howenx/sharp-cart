@@ -1,5 +1,7 @@
 package domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -11,28 +13,22 @@ import java.sql.Timestamp;
 public class CouponVo implements Serializable {
 
     private String coupId;
+    @JsonIgnore
     private Long userId;
+    @JsonIgnore
     private Long cateId;
     private BigDecimal denomination;
     private Timestamp startAt;
     private Timestamp endAt;
     private String state;
+    @JsonIgnore
     private Long orderId;
+    @JsonIgnore
     private Timestamp useAt;
+    private BigDecimal limitQuota;
+
 
     public CouponVo() {
-    }
-
-    public CouponVo(String coupId, Long userId, Long cateId, BigDecimal denomination, Timestamp startAt, Timestamp endAt, String state, Long orderId, Timestamp useAt) {
-        this.coupId = coupId;
-        this.userId = userId;
-        this.cateId = cateId;
-        this.denomination = denomination;
-        this.startAt = startAt;
-        this.endAt = endAt;
-        this.state = state;
-        this.orderId = orderId;
-        this.useAt = useAt;
     }
 
     public String getCoupId() {
@@ -107,6 +103,27 @@ public class CouponVo implements Serializable {
         this.useAt = useAt;
     }
 
+    public BigDecimal getLimitQuota() {
+        return limitQuota;
+    }
+
+    public void setLimitQuota(BigDecimal limitQuota) {
+        this.limitQuota = limitQuota;
+    }
+
+    public CouponVo(String coupId, Long userId, Long cateId, BigDecimal denomination, Timestamp startAt, Timestamp endAt, String state, Long orderId, Timestamp useAt, BigDecimal limitQuota) {
+        this.coupId = coupId;
+        this.userId = userId;
+        this.cateId = cateId;
+        this.denomination = denomination;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.state = state;
+        this.orderId = orderId;
+        this.useAt = useAt;
+        this.limitQuota = limitQuota;
+    }
+
     @Override
     public String toString() {
         return "CouponVo{" +
@@ -119,6 +136,7 @@ public class CouponVo implements Serializable {
                 ", state='" + state + '\'' +
                 ", orderId=" + orderId +
                 ", useAt=" + useAt +
+                ", limitQuota=" + limitQuota +
                 '}';
     }
 }

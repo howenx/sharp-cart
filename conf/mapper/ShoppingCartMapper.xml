@@ -209,7 +209,8 @@
         ${alias}.end_at,
         ${alias}.state          ,
         ${alias}.order_id       ,
-        ${alias}.use_at
+        ${alias}.use_at         ,
+        ${alias}.limit_quota
     </sql>
     <select id="getUserCoupon" parameterType="domain.CouponVo" resultType="domain.CouponVo">
         select
@@ -229,7 +230,12 @@
         <if test="state!=null and state!=''">
             and state = #{state}
         </if>
+        <if test="limitQuota!=null and limitQuota!=''">
+            and limit_quota = #{limitQuota}
+        </if>
+        and start_at &lt;=CURRENT_TIMESTAMP(0) and end_at &gt;=CURRENT_TIMESTAMP(0)
     </select>
+
     <insert id ="insertCoupon" parameterType="domain.CouponVo" >
         insert into sp_coupons (coup_id,
             user_id,
@@ -237,7 +243,8 @@
             denomination,
             start_at,
             end_at,
-            state
+            state,
+            limit_quota
         ) values(
             #{coupId},
             #{userId},
@@ -245,7 +252,8 @@
             #{denomination},
             #{startAt},
             #{endAt},
-            #{state}
+            #{state},
+            #{limitQuota}
         )
     </insert>
 
