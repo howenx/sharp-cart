@@ -20,7 +20,7 @@ public class Sku {
     private     BigDecimal          itemSrcPrice;//商品原价
     @JsonSerialize(using = MoneySerializer.class)
     private     BigDecimal          itemPrice;//商品价格
-    @JsonSerialize(using = MoneySerializer.class)
+
     private     BigDecimal          itemDiscount;//商品折扣
     private     Boolean             orMasterInv;//是否主商品
     private     String              state;//状态
