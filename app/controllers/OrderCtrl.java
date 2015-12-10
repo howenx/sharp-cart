@@ -252,10 +252,14 @@ public class OrderCtrl extends Controller {
                 couponVo.setState("N");
                 List<CouponVo> lists = cartService.getUserCoupon(couponVo);
 
+                Logger.error("前:"+lists.toString());
+
                 final BigDecimal sum = sumAmount;
 
                 //优惠券,只列出当前满足条件优惠的优惠券,购买金额要大于限制金额且是未使用的,有效的
                 lists = lists.stream().filter(s -> s.getLimitQuota().compareTo(sum) <= 0).collect(Collectors.toList());
+
+                Logger.error("后:"+lists.toString());
 
                 resultMap.put("coupons", lists);
 
@@ -301,7 +305,7 @@ public class OrderCtrl extends Controller {
             CouponVo couponVo = new CouponVo();
             couponVo.setUserId(userId);
             couponVo.setState("N");
-            List<CouponVo> lists = cartService.getUserCoupon(couponVo);
+            List<CouponVo> lists = cartService.getUserCouponAll(couponVo);
 
             result.putPOJO("coupons", Json.toJson(lists));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));

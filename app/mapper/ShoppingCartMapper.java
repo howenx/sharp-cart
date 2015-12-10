@@ -28,4 +28,6 @@ public interface ShoppingCartMapper {
 
     int updateCoupon(CouponVo c) throws Exception;
 
+    List<CouponVo> getUserCouponAll(CouponVo c) throws Exception;
+
 }

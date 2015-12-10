@@ -70,4 +70,9 @@ public class CartServiceImpl  implements CartService{
     public Boolean updateCoupon(CouponVo c) throws Exception {
         return shoppingCartMapper.updateCoupon(c)>=0;
     }
+
+    @Override
+    public List<CouponVo> getUserCouponAll(CouponVo c) throws Exception {
+        return shoppingCartMapper.getUserCouponAll(c);
+    }
 }
