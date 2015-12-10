@@ -1,6 +1,8 @@
 package domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.MoneySerializer;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -17,6 +19,7 @@ public class CouponVo implements Serializable {
     private Long userId;
     @JsonIgnore
     private Long cateId;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal denomination;
     private Timestamp startAt;
     private Timestamp endAt;
@@ -25,6 +28,7 @@ public class CouponVo implements Serializable {
     private Long orderId;
     @JsonIgnore
     private Timestamp useAt;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal limitQuota;
 
 

@@ -1,6 +1,8 @@
 package domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.MoneySerializer;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -14,11 +16,15 @@ public class Sku {
     private     Long                id;//库存ID
     private     String              itemColor;//颜色
     private     String              itemSize;//尺码
+    @JsonSerialize(using = MoneySerializer.class)
     private     BigDecimal          itemSrcPrice;//商品原价
+    @JsonSerialize(using = MoneySerializer.class)
     private     BigDecimal          itemPrice;//商品价格
+    @JsonSerialize(using = MoneySerializer.class)
     private     BigDecimal          itemDiscount;//商品折扣
     private     Boolean             orMasterInv;//是否主商品
     private     String              state;//状态
+    @JsonSerialize(using = MoneySerializer.class)
     private     BigDecimal          shipFee;//邮费
     private     String              invArea;//库存区域区分：'B'保税区仓库发货，‘Z’韩国直邮
     private     Integer             restrictAmount;//限购数量

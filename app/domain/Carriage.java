@@ -1,5 +1,8 @@
 package domain;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.MoneySerializer;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -11,8 +14,10 @@ public class Carriage implements Serializable {
 
     private Long id;
     private Integer firstNum;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal firstFee;
     private Integer addNum;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal addFee;
     private String modelName;
     private String cityCode;

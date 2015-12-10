@@ -1,6 +1,8 @@
 package domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.MoneySerializer;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -17,8 +19,10 @@ public class CartListDto implements Serializable{
     private     Integer         amount;//购物车数量
     private     String          itemColor;//颜色
     private     String          itemSize;//尺码
+    @JsonSerialize(using = MoneySerializer.class)
     private     BigDecimal      itemPrice;//商品价格
     private     String          state;//状态
+    @JsonSerialize(using = MoneySerializer.class)
     private     BigDecimal      shipFee;//邮费
     private     String          invArea;//库存区域区分：'B'保税区仓库发货，‘Z’韩国直邮
     private     Integer         restrictAmount;//限购数量

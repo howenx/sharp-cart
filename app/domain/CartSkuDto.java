@@ -1,6 +1,8 @@
 package domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.MoneySerializer;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -14,6 +16,7 @@ public class CartSkuDto implements Serializable{
 
     private     Long            skuId;
     private     Integer         amount;//购买数量
+    @JsonSerialize(using = MoneySerializer.class)
     private     BigDecimal      price;//下单时价格
     private     String          skuTitle;  //sku标题
     private     String          invImg;//sku主图

@@ -1,6 +1,8 @@
 package domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.MoneySerializer;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -15,6 +17,7 @@ public class Order implements Serializable {
     private Long                orderId;//订单ID
     @JsonIgnore
     private Long                userId;//用户ID
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal          payTotal;//这笔订单的实际需要支付的总费用
     private String              payMethod;//充值渠道
     private String              orderCreateAt;//用户创建订单时间
@@ -25,11 +28,13 @@ public class Order implements Serializable {
     private String              orderStatus;//I:初始化，S:成功，C：取消，F:失败
     @JsonIgnore
     private String              errorStr;//支付返回的错误信息
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal          discount;//优惠了多少钱
     @JsonIgnore
     private Timestamp           updatedAt;//订单最后修改时间
     private String              orderDesc;//订单备注
     private Long                addId;//用户订单地址
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal          shipFee;//邮费
     private String              orderDetailUrl;//订单相信页面url
 
