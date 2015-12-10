@@ -2,7 +2,9 @@ package controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import domain.*;
 import filters.UserAuth;
 import net.spy.memcached.MemcachedClient;
@@ -18,6 +20,7 @@ import util.GenCouponCode;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -55,17 +58,17 @@ public class OrderCtrl extends Controller {
     //将Json串转换成List
     final static ObjectMapper mapper = new ObjectMapper();
 
-    //行邮税收税标准
-    public final String POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
-
-    //海关规定购买单笔订单金额限制
-    public final String POSTAL_LIMIT = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_LIMIT")).getParameterVal();
-
-    //达到多少免除邮费
-    public final String FREE_SHIP = skuService.getSysParameter(new SysParameter(null, null, null, "FREE_SHIP")).getParameterVal();
-
     @Security.Authenticated(UserAuth.class)
     public Result settle() {
+
+        //行邮税收税标准
+         final String POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
+
+        //海关规定购买单笔订单金额限制
+         final String POSTAL_LIMIT = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_LIMIT")).getParameterVal();
+
+        //达到多少免除邮费
+         final String FREE_SHIP = skuService.getSysParameter(new SysParameter(null, null, null, "FREE_SHIP")).getParameterVal();
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
 
@@ -77,7 +80,6 @@ public class OrderCtrl extends Controller {
             if (json.isPresent() && json.get().size() > 0) {
                 List<SettleDTO> settleDTOs = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, SettleDTO.class));
 
-                Logger.error(settleDTOs.toString());
                 //运费
                 BigDecimal shipFee = new BigDecimal(0);
                 //行邮税
@@ -275,7 +277,6 @@ public class OrderCtrl extends Controller {
         couponVo.setStartAt(dateTime);
         couponVo.setEndAt(new Timestamp(timeDate.getTime() + 10 * 24 * 60 * 60 * 1000));
         String coupId = GenCouponCode.GetCode(GenCouponCode.CouponClassCode.ACCESSORIES.getIndex(), 8);
-        Logger.error(coupId);
         couponVo.setCoupId(coupId);
         couponVo.setCateId(((Integer) GenCouponCode.CouponClassCode.ACCESSORIES.getIndex()).longValue());
         couponVo.setState("N");

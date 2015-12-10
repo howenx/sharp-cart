@@ -48,7 +48,6 @@ public class Application extends Controller {
     //将Json串转换成List
     final static ObjectMapper mapper = new ObjectMapper();
 
-
     /**
      * 用户登陆后同步所有购物车商品,以及详细页面点击Add时候掉用接口
      *
@@ -58,8 +57,6 @@ public class Application extends Controller {
     public Result cart() {
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
-
-        Logger.error(json.toString());
 
         Boolean S_FLAG = false;
 
@@ -133,6 +130,7 @@ public class Application extends Controller {
                 }
             }
 
+            Logger.error("购物车最终结果:"+result.toString());
             return ok(result);
 
         } catch (Exception ex) {
@@ -154,7 +152,6 @@ public class Application extends Controller {
             Long userId = (Long) ctx().args.get("userId");
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("cartList", Json.toJson(cartAllMap(userId)));
-            Logger.error("返回数据" + result.toString());
             return ok(result);
         } catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
@@ -182,7 +179,6 @@ public class Application extends Controller {
 
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
 //            result.putPOJO("cartList", Json.toJson(cartAll(userId)));
-            Logger.error("返回数据" + result.toString());
             return ok(result);
         } catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
@@ -203,8 +199,6 @@ public class Application extends Controller {
         List<CartListDto> cartListDto = new ArrayList<>();
         try {
             List<CartDto> cartDtoList = mapper.readValue(json.toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
-
-            Logger.error("又问问题:" + cartDtoList.toString());
 
             for (CartDto cartDto : cartDtoList) {
 
@@ -293,7 +287,6 @@ public class Application extends Controller {
 
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("cartList", Json.toJson(list));
-            Logger.error("返回数据" + result.toString());
             return ok(result);
 
         } catch (Exception ex) {
@@ -343,7 +336,6 @@ public class Application extends Controller {
                     sku.setId(cart.getSkuId());
                     sku = skuService.getInv(sku);
 
-                    Logger.error("测试库存单元:" + sku.toString());
                     //组装返回的订单商品明细
                     skuDto.setSkuId(sku.getId());
                     skuDto.setAmount(cart.getAmount());
@@ -418,8 +410,6 @@ public class Application extends Controller {
 
         //返回数据组装,根据用户id查询出所有可显示的购物车数据
         List<Cart> listCart = cartService.getCarts(c);
-
-        Logger.error("尼玛的:" + listCart);
 
         for (Cart cart : listCart) {
 
