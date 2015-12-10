@@ -217,13 +217,18 @@ public class OrderCtrl extends Controller {
                     //每个海关邮费统计
                     map.put("shipSingleCustomsFee", shipSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
 
+                    //每个海关的实际邮费统计
+                    if (sumAmount.compareTo(new BigDecimal(FREE_SHIP)) > 0) {
+                        map.put("factSingleCustomsShipFee", 0);//实际邮费
+                    } else map.put("factSingleCustomsShipFee", shipSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());//每次计算出的邮费
+
                     //每个海关的关税统计
                     map.put("portalSingleCustomsFee", portalSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
 
                     //统计如果各个海关的实际关税,如果关税小于50元,则免税
                     if (portalSingleCustomsFee.compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
-                        map.put("freePortalFeeSingleCustoms", 0);
-                    else map.put("freePortalFeeSingleCustoms", portalSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
+                        map.put("factPortalFeeSingleCustoms", 0);
+                    else map.put("factPortalFeeSingleCustoms", portalSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
 
                     returnFee.add(map);
                 }
@@ -233,7 +238,10 @@ public class OrderCtrl extends Controller {
                 } else resultMap.put("factShipFee", shipFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());//每次计算出的邮费
                 resultMap.put("shipFee", shipFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
                 resultMap.put("portalFee", portalFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
-                resultMap.put("freePortalFee", portalFeeFree.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
+                //统计如果各个海关的实际关税,如果关税小于50元,则免税
+                if (portalFeeFree.compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
+                    resultMap.put("factPortalFee",0);
+                else resultMap.put("factPortalFee", portalFeeFree.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
                 resultMap.put("address", address);
 
                 //将各个海关下的费用统计返回

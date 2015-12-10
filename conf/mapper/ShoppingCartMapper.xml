@@ -210,7 +210,8 @@
         ${alias}.state          ,
         ${alias}.order_id       ,
         ${alias}.use_at         ,
-        ${alias}.limit_quota
+        ${alias}.limit_quota,
+        ${alias}.cate_nm
     </sql>
     <select id="getUserCoupon" parameterType="domain.CouponVo" resultType="domain.CouponVo">
         select
@@ -244,7 +245,8 @@
             start_at,
             end_at,
             state,
-            limit_quota
+            limit_quota,
+            cate_nm
         ) values(
             #{coupId},
             #{userId},
@@ -253,7 +255,8 @@
             #{startAt},
             #{endAt},
             #{state},
-            #{limitQuota}
+            #{limitQuota},
+            #{cate_nm}
         )
     </insert>
 

@@ -21,7 +21,9 @@ public class CouponVo implements Serializable {
     private Long cateId;
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal denomination;
+    @JsonIgnore
     private Timestamp startAt;
+    @JsonIgnore
     private Timestamp endAt;
     private String state;
     @JsonIgnore
@@ -30,9 +32,24 @@ public class CouponVo implements Serializable {
     private Timestamp useAt;
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal limitQuota;
+    private String cateNm;
 
 
     public CouponVo() {
+    }
+
+    public CouponVo(String coupId, Long userId, Long cateId, BigDecimal denomination, Timestamp startAt, Timestamp endAt, String state, Long orderId, Timestamp useAt, BigDecimal limitQuota, String cateNm) {
+        this.coupId = coupId;
+        this.userId = userId;
+        this.cateId = cateId;
+        this.denomination = denomination;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.state = state;
+        this.orderId = orderId;
+        this.useAt = useAt;
+        this.limitQuota = limitQuota;
+        this.cateNm = cateNm;
     }
 
     public String getCoupId() {
@@ -115,17 +132,12 @@ public class CouponVo implements Serializable {
         this.limitQuota = limitQuota;
     }
 
-    public CouponVo(String coupId, Long userId, Long cateId, BigDecimal denomination, Timestamp startAt, Timestamp endAt, String state, Long orderId, Timestamp useAt, BigDecimal limitQuota) {
-        this.coupId = coupId;
-        this.userId = userId;
-        this.cateId = cateId;
-        this.denomination = denomination;
-        this.startAt = startAt;
-        this.endAt = endAt;
-        this.state = state;
-        this.orderId = orderId;
-        this.useAt = useAt;
-        this.limitQuota = limitQuota;
+    public String getCateNm() {
+        return cateNm;
+    }
+
+    public void setCateNm(String cateNm) {
+        this.cateNm = cateNm;
     }
 
     @Override
@@ -141,6 +153,7 @@ public class CouponVo implements Serializable {
                 ", orderId=" + orderId +
                 ", useAt=" + useAt +
                 ", limitQuota=" + limitQuota +
+                ", cateNm='" + cateNm + '\'' +
                 '}';
     }
 }
