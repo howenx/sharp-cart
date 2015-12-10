@@ -100,14 +100,16 @@ public class OrderCtrl extends Controller {
                 Address address = new Address();
                 for (SettleDTO settleDTO : settleDTOs) {
 
+                    Logger.error(settleDTO.getAddressId().toString());
                     //如果没有用户地址ID,那么就查找用户默认地址,否则就去查找用户指定的地址
-                    if (settleDTO.getAddressId() != null && settleDTO.getAddressId() != 0) {
+                    if (settleDTO.getAddressId() != null && settleDTO.getAddressId()!=0) {
+                        address.setAddId(settleDTO.getAddressId());
+                    } else {
                         address.setUserId(userId);
                         address.setOrDefault(true);
-                    } else {
-                        address.setAddId(settleDTO.getAddressId());
                     }
 
+                    Logger.error(address.toString());
                     Address address_search = idService.getAddress(address);
                     if (address_search != null) {
                         address = address_search;
@@ -207,31 +209,31 @@ public class OrderCtrl extends Controller {
                         return ok(result);
                     }
                     //每个海关的总费用统计
-                    map.put("singleCustomsSumFee", sumAmountSingleCustoms);
+                    map.put("singleCustomsSumFee", sumAmountSingleCustoms.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
 
                     //每个海关购买的总数量
                     map.put("singleCustomsSumAmount", skuAmountSingleCustoms);
 
                     //每个海关邮费统计
-                    map.put("shipSingleCustomsFee", shipSingleCustomsFee);
+                    map.put("shipSingleCustomsFee", shipSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
 
                     //每个海关的关税统计
-                    map.put("portalSingleCustomsFee", portalSingleCustomsFee);
+                    map.put("portalSingleCustomsFee", portalSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
 
                     //统计如果各个海关的实际关税,如果关税小于50元,则免税
                     if (portalSingleCustomsFee.compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
                         map.put("freePortalFeeSingleCustoms", 0);
-                    else map.put("freePortalFeeSingleCustoms", portalSingleCustomsFee);
+                    else map.put("freePortalFeeSingleCustoms", portalSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
 
                     returnFee.add(map);
                 }
 
                 if (sumAmount.compareTo(new BigDecimal(FREE_SHIP)) > 0) {
                     resultMap.put("factShipFee", 0);//实际邮费
-                } else resultMap.put("factShipFee", shipFee);//每次计算出的邮费
-                resultMap.put("shipFee", shipFee);
-                resultMap.put("portalFee", portalFee);
-                resultMap.put("freePortalFee", portalFeeFree);
+                } else resultMap.put("factShipFee", shipFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());//每次计算出的邮费
+                resultMap.put("shipFee", shipFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
+                resultMap.put("portalFee", portalFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
+                resultMap.put("freePortalFee", portalFeeFree.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
                 resultMap.put("address", address);
 
                 //将各个海关下的费用统计返回
@@ -252,6 +254,7 @@ public class OrderCtrl extends Controller {
                 result.putPOJO("settle", Json.toJson(resultMap));
 
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                Logger.error(result.toString());
                 return ok(result);
             } else {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
