@@ -194,6 +194,16 @@ public class Application extends Controller {
      * @return 购物车商品库存信息
      */
     public Result getCartSku() {
+
+        //行邮税收税标准
+        final String POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
+
+        //海关规定购买单笔订单金额限制
+        final String POSTAL_LIMIT = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_LIMIT")).getParameterVal();
+
+        //达到多少免除邮费
+        final String FREE_SHIP = skuService.getSysParameter(new SysParameter(null, null, null, "FREE_SHIP")).getParameterVal();
+
         JsonNode json = request().body().asJson();
         ObjectNode result = Json.newObject();
         List<CartListDto> cartListDto = new ArrayList<>();
@@ -255,6 +265,9 @@ public class Application extends Controller {
                                 mapResult.put("invCustoms", invCustoms);
                                 mapResult.put("invArea", "韩国直邮");
                                 mapResult.put("carts", p);
+                                mapResult.put("postalStandard", POSTAL_STANDARD);
+                                mapResult.put("postalLimit", POSTAL_LIMIT);
+                                mapResult.put("freeShip", FREE_SHIP);
                                 list.add(mapResult);
                                 break;
                             }
@@ -262,6 +275,9 @@ public class Application extends Controller {
                                 Map<String, Object> mapResult = new HashMap<>();
                                 mapResult.put("invCustoms", invCustoms);
                                 mapResult.put("invArea", "广州保税区");
+                                mapResult.put("postalStandard", POSTAL_STANDARD);
+                                mapResult.put("postalLimit", POSTAL_LIMIT);
+                                mapResult.put("freeShip", FREE_SHIP);
                                 mapResult.put("carts", p);
                                 list.add(mapResult);
                                 break;
@@ -271,6 +287,9 @@ public class Application extends Controller {
                                 mapResult.put("invCustoms", invCustoms);
                                 mapResult.put("invArea", "杭州保税区");
                                 mapResult.put("carts", p);
+                                mapResult.put("postalStandard", POSTAL_STANDARD);
+                                mapResult.put("postalLimit", POSTAL_LIMIT);
+                                mapResult.put("freeShip", FREE_SHIP);
                                 list.add(mapResult);
                                 break;
                             }
@@ -279,6 +298,9 @@ public class Application extends Controller {
                                 mapResult.put("invCustoms", invCustoms);
                                 mapResult.put("invArea", "海外直邮");
                                 mapResult.put("carts", p);
+                                mapResult.put("postalStandard", POSTAL_STANDARD);
+                                mapResult.put("postalLimit", POSTAL_LIMIT);
+                                mapResult.put("freeShip", FREE_SHIP);
                                 list.add(mapResult);
                                 break;
                             }
@@ -403,6 +425,15 @@ public class Application extends Controller {
 
     private List<Map<String,Object>> cartAllMap(Long userId) throws Exception {
 
+        //行邮税收税标准
+        final String POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
+
+        //海关规定购买单笔订单金额限制
+        final String POSTAL_LIMIT = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_LIMIT")).getParameterVal();
+
+        //达到多少免除邮费
+        final String FREE_SHIP = skuService.getSysParameter(new SysParameter(null, null, null, "FREE_SHIP")).getParameterVal();
+
         List<CartListDto> cartListDto = new ArrayList<>();
 
         Cart c = new Cart();
@@ -461,6 +492,9 @@ public class Application extends Controller {
                             mapResult.put("invCustoms", invCustoms);
                             mapResult.put("invArea", "韩国直邮");
                             mapResult.put("carts", p);
+                            mapResult.put("postalStandard", POSTAL_STANDARD);
+                            mapResult.put("postalLimit", POSTAL_LIMIT);
+                            mapResult.put("freeShip", FREE_SHIP);
                             list.add(mapResult);
                             break;
                         }
@@ -469,6 +503,9 @@ public class Application extends Controller {
                             mapResult.put("invCustoms", invCustoms);
                             mapResult.put("invArea", "广州保税区");
                             mapResult.put("carts", p);
+                            mapResult.put("postalStandard", POSTAL_STANDARD);
+                            mapResult.put("postalLimit", POSTAL_LIMIT);
+                            mapResult.put("freeShip", FREE_SHIP);
                             list.add(mapResult);
                             break;
                         }
@@ -477,6 +514,9 @@ public class Application extends Controller {
                             mapResult.put("invCustoms", invCustoms);
                             mapResult.put("invArea", "杭州保税区");
                             mapResult.put("carts", p);
+                            mapResult.put("postalStandard", POSTAL_STANDARD);
+                            mapResult.put("postalLimit", POSTAL_LIMIT);
+                            mapResult.put("freeShip", FREE_SHIP);
                             list.add(mapResult);
                             break;
                         }
@@ -485,6 +525,9 @@ public class Application extends Controller {
                             mapResult.put("invCustoms", invCustoms);
                             mapResult.put("invArea", "海外直邮");
                             mapResult.put("carts", p);
+                            mapResult.put("postalStandard", POSTAL_STANDARD);
+                            mapResult.put("postalLimit", POSTAL_LIMIT);
+                            mapResult.put("freeShip", FREE_SHIP);
                             list.add(mapResult);
                             break;
                         }
