@@ -21,15 +21,15 @@ public class CouponVo implements Serializable {
     private Long cateId;
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal denomination;
-    @JsonIgnore
-    private Timestamp startAt;
-    @JsonIgnore
-    private Timestamp endAt;
+
+    private String startAt;
+
+    private String endAt;
     private String state;
     @JsonIgnore
     private Long orderId;
-    @JsonIgnore
-    private Timestamp useAt;
+
+    private String useAt;
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal limitQuota;
     private String cateNm;
@@ -38,7 +38,7 @@ public class CouponVo implements Serializable {
     public CouponVo() {
     }
 
-    public CouponVo(String coupId, Long userId, Long cateId, BigDecimal denomination, Timestamp startAt, Timestamp endAt, String state, Long orderId, Timestamp useAt, BigDecimal limitQuota, String cateNm) {
+    public CouponVo(String coupId, Long userId, Long cateId, BigDecimal denomination, String startAt, String endAt, String state, Long orderId, String useAt, BigDecimal limitQuota, String cateNm) {
         this.coupId = coupId;
         this.userId = userId;
         this.cateId = cateId;
@@ -84,19 +84,19 @@ public class CouponVo implements Serializable {
         this.denomination = denomination;
     }
 
-    public Timestamp getStartAt() {
+    public String getStartAt() {
         return startAt;
     }
 
-    public void setStartAt(Timestamp startAt) {
+    public void setStartAt(String startAt) {
         this.startAt = startAt;
     }
 
-    public Timestamp getEndAt() {
+    public String getEndAt() {
         return endAt;
     }
 
-    public void setEndAt(Timestamp endAt) {
+    public void setEndAt(String endAt) {
         this.endAt = endAt;
     }
 
@@ -116,11 +116,11 @@ public class CouponVo implements Serializable {
         this.orderId = orderId;
     }
 
-    public Timestamp getUseAt() {
+    public String getUseAt() {
         return useAt;
     }
 
-    public void setUseAt(Timestamp useAt) {
+    public void setUseAt(String useAt) {
         this.useAt = useAt;
     }
 
@@ -147,11 +147,11 @@ public class CouponVo implements Serializable {
                 ", userId=" + userId +
                 ", cateId=" + cateId +
                 ", denomination=" + denomination +
-                ", startAt=" + startAt +
-                ", endAt=" + endAt +
+                ", startAt='" + startAt + '\'' +
+                ", endAt='" + endAt + '\'' +
                 ", state='" + state + '\'' +
                 ", orderId=" + orderId +
-                ", useAt=" + useAt +
+                ", useAt='" + useAt + '\'' +
                 ", limitQuota=" + limitQuota +
                 ", cateNm='" + cateNm + '\'' +
                 '}';

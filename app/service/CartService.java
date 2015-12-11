@@ -33,4 +33,6 @@ public interface CartService {
     Boolean updateCoupon(CouponVo c) throws Exception;
 
     List<CouponVo> getUserCouponAll(CouponVo c) throws Exception;
+
+    Boolean updateCouponInvalid(CouponVo c) throws Exception;
 }

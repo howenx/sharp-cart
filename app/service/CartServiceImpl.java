@@ -75,4 +75,9 @@ public class CartServiceImpl  implements CartService{
     public List<CouponVo> getUserCouponAll(CouponVo c) throws Exception {
         return shoppingCartMapper.getUserCouponAll(c);
     }
+
+    @Override
+    public Boolean updateCouponInvalid(CouponVo c) throws Exception {
+        return shoppingCartMapper.updateCouponInvalid(c)>=0;
+    }
 }

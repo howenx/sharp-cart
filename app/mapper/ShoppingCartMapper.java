@@ -30,4 +30,6 @@ public interface ShoppingCartMapper {
 
     List<CouponVo> getUserCouponAll(CouponVo c) throws Exception;
 
+    int updateCouponInvalid(CouponVo c) throws Exception;
+
 }

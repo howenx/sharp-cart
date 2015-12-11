@@ -91,7 +91,7 @@ public class Application extends Controller {
                         cart.setStatus(cartDto.getState());
                     }
 
-                    if(sku.getRestrictAmount()>=cartDto.getAmount()){
+                    if(sku.getRestrictAmount()<=cartDto.getAmount()){
                         cart.setAmount(sku.getRestrictAmount());
                     }else cart.setAmount(cartDto.getAmount());
 

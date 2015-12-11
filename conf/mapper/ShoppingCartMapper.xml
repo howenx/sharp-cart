@@ -205,11 +205,11 @@
         ${alias}.user_id        ,
         ${alias}.cate_id        ,
         ${alias}.denomination   ,
-        ${alias}.start_at,
-        ${alias}.end_at,
+        to_char(${alias}.start_at, 'YYYY-MM-DD HH24:MI:SS') start_at,
+        to_char(${alias}.end_at, 'YYYY-MM-DD HH24:MI:SS') end_at,
         ${alias}.state          ,
         ${alias}.order_id       ,
-        ${alias}.use_at         ,
+        to_char(${alias}.use_at, 'YYYY-MM-DD HH24:MI:SS') use_at         ,
         ${alias}.limit_quota,
         ${alias}.cate_nm
     </sql>
@@ -319,6 +319,42 @@
         <if test="cateId!=null and cateId!=''">
             and cate_id =#{cateId}
         </if>
+    </update>
+
+    <update id="updateCouponInvalid" parameterType="domain.CouponVo">
+        update sp_coupons set coup_id = coup_id ,state ='S'
+        <if test="userId!=null and userId!=''">
+            ,user_id = #{userId}
+        </if>
+        <if test="cateId!=null and cateId!=''">
+            ,cate_id = #{cateId}
+        </if>
+        <if test="denomination!=null and denomination!=''">
+            ,denomination = #{denomination}
+        </if>
+        <if test="startAt!=null and startAt!=''">
+            ,start_at = #{startAt}
+        </if>
+        <if test="endAt!=null and endAt!=''">
+            ,end_at = #{endAt}
+        </if>
+        <if test="useAt!=null and useAt!=''">
+            ,use_at=#{useAt}
+        </if>
+        where 1= 1
+        <if test="coupId!=null and coupId !=''">
+            and coup_id = #{coupId}
+        </if>
+        <if test="userId!=null and userId!=''">
+            and user_id =#{userId}
+        </if>
+        <if test="state!=null and state!=''">
+            and state = #{state}
+        </if>
+        <if test="cateId!=null and cateId!=''">
+            and cate_id =#{cateId}
+        </if>
+        and end_at &lt;=CURRENT_TIMESTAMP(0)
     </update>
 
 </mapper>
