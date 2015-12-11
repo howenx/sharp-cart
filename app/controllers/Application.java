@@ -56,8 +56,9 @@ public class Application extends Controller {
     @Security.Authenticated(UserAuth.class)
     public Result cart() {
 
+        Logger.error(request().body().toString());
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
-
+        Logger.error("是否是空: "+String.valueOf(json.isPresent()));
         Boolean S_FLAG = false;
 
         List<Long> sCartIds = new ArrayList<>();
@@ -91,9 +92,14 @@ public class Application extends Controller {
                         cart.setStatus(cartDto.getState());
                     }
 
-                    if(sku.getRestrictAmount()<=cartDto.getAmount()){
+                    if(sku.getRestrictAmount()!=0 && sku.getRestrictAmount()<=cartDto.getAmount()){
                         cart.setAmount(sku.getRestrictAmount());
                     }else cart.setAmount(cartDto.getAmount());
+
+                    //判断是否超过库存余量,超过库存余量直接给最大库存余量
+                    if(cart.getAmount()>sku.getRestAmount()){
+                        cart.setAmount(sku.getRestAmount());
+                    }
 
                     if (cartDto.getCartId() == 0) {
                         if (cart.getStatus().equals("I") || cart.getStatus().equals("G")) {
@@ -221,10 +227,11 @@ public class Application extends Controller {
 
                 cartList.setCartId(cartDto.getCartId());
                 cartList.setSkuId(cartDto.getSkuId());
-                cartList.setAmount(cartDto.getAmount());
+
                 cartList.setItemColor(sku.getItemColor());
                 cartList.setItemSize(sku.getItemSize());
                 cartList.setItemPrice(sku.getItemPrice());
+
 
 
                 //先确定商品状态是正常,否则直接存为失效商品
@@ -233,6 +240,18 @@ public class Application extends Controller {
                 } else {
                     cartList.setState(cartDto.getState());
                 }
+
+                //判断是否超过限购数量
+                if(sku.getRestrictAmount()!=0 && sku.getRestrictAmount()<=cartDto.getAmount()){
+                    cartList.setAmount(sku.getRestrictAmount());
+                }else cartList.setAmount(cartDto.getAmount());
+
+                //判断是否超过库存余量
+                if(cartDto.getAmount()>sku.getRestrictAmount()){
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
+                    return ok(result);
+                }
+
                 cartList.setShipFee(sku.getShipFee());
                 cartList.setInvArea(sku.getInvArea());
                 cartList.setRestrictAmount(sku.getRestrictAmount());
@@ -554,7 +573,10 @@ public class Application extends Controller {
             if (sku.getState().equals("S")) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
                 return ok(result);
-            } else if (amount > sku.getRestAmount()) {
+            } else if (sku.getRestrictAmount()!=0 && amount > sku.getRestrictAmount()) {
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex()), Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex())));
+                return ok(result);
+            }else if (amount > sku.getRestAmount()) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
                 return ok(result);
             } else {

@@ -57,6 +57,7 @@ public class Message implements Serializable{
         PURCHASE_QUANTITY_LIMIT("亲,您购买数量超过我们的限制了", 3001),
         PURCHASE_QUANTITY_SUM_PRICE("亲,您购买金额超过1000元了,不能下单那,呜呜..", 3002);
 
+
         // 成员变量
         private String name;
         private int index;
