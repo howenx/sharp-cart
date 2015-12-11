@@ -58,7 +58,6 @@ public class Application extends Controller {
 
         Logger.error(request().body().toString());
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
-        Logger.error("是否是空: "+String.valueOf(json.isPresent()));
         Boolean S_FLAG = false;
 
         List<Long> sCartIds = new ArrayList<>();
@@ -68,6 +67,8 @@ public class Application extends Controller {
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
                 List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
+
+                Logger.error("登陆前数据:"+Json.toJson(cartDtoList).toString());
 
                 for (CartDto cartDto : cartDtoList) {
 
@@ -86,18 +87,18 @@ public class Application extends Controller {
                     //先确定商品状态是正常,否则直接存为失效商品
                     if (!sku.getState().equals("Y")) {
                         cart.setStatus("S");
-                        S_FLAG=true;
+                        S_FLAG = true;
 
                     } else {
                         cart.setStatus(cartDto.getState());
                     }
 
-                    if(sku.getRestrictAmount()!=0 && sku.getRestrictAmount()<=cartDto.getAmount()){
+                    if (sku.getRestrictAmount() != 0 && sku.getRestrictAmount() <= cartDto.getAmount()) {
                         cart.setAmount(sku.getRestrictAmount());
-                    }else cart.setAmount(cartDto.getAmount());
+                    } else cart.setAmount(cartDto.getAmount());
 
                     //判断是否超过库存余量,超过库存余量直接给最大库存余量
-                    if(cart.getAmount()>sku.getRestAmount()){
+                    if (cart.getAmount() > sku.getRestAmount()) {
                         cart.setAmount(sku.getRestAmount());
                     }
 
@@ -109,6 +110,11 @@ public class Application extends Controller {
                             if (carts.size() > 0) {
                                 cart.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
                                 cart.setAmount(cart.getAmount() + carts.get(0).getAmount());//购买数量累加
+                                if(cart.getAmount()>sku.getRestrictAmount()){
+                                    cart.setAmount(sku.getRestrictAmount());
+                                }else if(cart.getAmount()>sku.getRestAmount()){
+                                    cart.setAmount(sku.getRestAmount());
+                                }
                                 cartService.updateCart(cart);
                                 if (cart.getStatus().equals("S")) sCartIds.add(cart.getCartId());
 
@@ -124,11 +130,15 @@ public class Application extends Controller {
                     }
                 }
             }
-            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-            result.putPOJO("cartList", Json.toJson(cartAllMap(userId)));
 
-            if (S_FLAG){
-                for (Long s:sCartIds) {
+            if (cartAllMap(userId).isPresent()){
+                result.putPOJO("cartList", Json.toJson(cartAllMap(userId).get()));
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            }
+            else result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex()), Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex())));
+
+            if (S_FLAG) {
+                for (Long s : sCartIds) {
                     Cart cart = new Cart();
                     cart.setCartId(s);
                     cart.setStatus("N");
@@ -136,7 +146,7 @@ public class Application extends Controller {
                 }
             }
 
-            Logger.error("购物车最终结果:"+result.toString());
+            Logger.error("购物车最终结果:" + result.toString());
             return ok(result);
 
         } catch (Exception ex) {
@@ -156,8 +166,12 @@ public class Application extends Controller {
         ObjectNode result = Json.newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
-            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-            result.putPOJO("cartList", Json.toJson(cartAllMap(userId)));
+            if (cartAllMap(userId).isPresent()){
+                result.putPOJO("cartList", Json.toJson(cartAllMap(userId).get()));
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            }
+            else result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex()), Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex())));
+
             return ok(result);
         } catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
@@ -184,7 +198,6 @@ public class Application extends Controller {
             cartService.updateCart(cartu);
 
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-//            result.putPOJO("cartList", Json.toJson(cartAll(userId)));
             return ok(result);
         } catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
@@ -233,7 +246,6 @@ public class Application extends Controller {
                 cartList.setItemPrice(sku.getItemPrice());
 
 
-
                 //先确定商品状态是正常,否则直接存为失效商品
                 if (!sku.getState().equals("Y")) {
                     cartList.setState("S");
@@ -242,12 +254,12 @@ public class Application extends Controller {
                 }
 
                 //判断是否超过限购数量
-                if(sku.getRestrictAmount()!=0 && sku.getRestrictAmount()<=cartDto.getAmount()){
+                if (sku.getRestrictAmount() != 0 && sku.getRestrictAmount() <= cartDto.getAmount()) {
                     cartList.setAmount(sku.getRestrictAmount());
-                }else cartList.setAmount(cartDto.getAmount());
+                } else cartList.setAmount(cartDto.getAmount());
 
                 //判断是否超过库存余量
-                if(cartDto.getAmount()>sku.getRestAmount()){
+                if (cartDto.getAmount() > sku.getRestAmount()) {
                     cartList.setAmount(sku.getRestAmount());
                 }
 
@@ -272,7 +284,7 @@ public class Application extends Controller {
                     .stream()
                     .collect(Collectors.groupingBy(CartListDto::getInvCustoms));
 
-            List<Map<String,Object>> list = new ArrayList<>();
+            List<Map<String, Object>> list = new ArrayList<>();
 
             cartListMap
                     .forEach((invCustoms, p) -> {
@@ -327,6 +339,7 @@ public class Application extends Controller {
 
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("cartList", Json.toJson(list));
+            Logger.error("未登录时:"+Json.toJson(list));
             return ok(result);
 
         } catch (Exception ex) {
@@ -441,7 +454,7 @@ public class Application extends Controller {
         }
     }
 
-    private List<Map<String,Object>> cartAllMap(Long userId) throws Exception {
+    private Optional<List<Map<String, Object>>> cartAllMap(Long userId) throws Exception {
 
         //行邮税收税标准
         final String POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
@@ -457,102 +470,110 @@ public class Application extends Controller {
         Cart c = new Cart();
         c.setUserId(userId);
 
-        //返回数据组装,根据用户id查询出所有可显示的购物车数据
-        List<Cart> listCart = cartService.getCarts(c);
+        Optional<List<Cart>> listOptional = Optional.ofNullable(cartService.getCarts(c));
 
-        for (Cart cart : listCart) {
+        if (listOptional.isPresent()) {
+            //返回数据组装,根据用户id查询出所有可显示的购物车数据
+            List<Cart> listCart = listOptional.get();
 
-            Sku sku = new Sku();
-            sku.setId(cart.getSkuId());
-            sku = skuService.getInv(sku);
+            for (Cart cart : listCart) {
 
-            //先确定商品状态是正常,否则直接存为失效商品
-            if (!sku.getState().equals("Y")) {
-                cart.setStatus("S");
-            }
+                Sku sku = new Sku();
+                sku.setId(cart.getSkuId());
+                Optional<Sku> skuOptional = Optional.ofNullable(skuService.getInv(sku));
+                if (skuOptional.isPresent()) {
+                    sku = skuOptional.get();
 
-            //返回数据组装
-            CartListDto cartList = new CartListDto();
-            cartList.setCartId(cart.getCartId());
-            cartList.setSkuId(cart.getSkuId());
-            cartList.setAmount(cart.getAmount());
-            cartList.setItemColor(sku.getItemColor());
-            cartList.setItemSize(sku.getItemSize());
-            cartList.setItemPrice(sku.getItemPrice());
-            cartList.setState(cart.getStatus());
-            cartList.setShipFee(sku.getShipFee());
-            cartList.setInvArea(sku.getInvArea());
-            cartList.setRestrictAmount(sku.getRestrictAmount());
-            cartList.setRestAmount(sku.getRestAmount());
-            cartList.setInvImg(IMAGE_URL + sku.getInvImg());
-            cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
-            cartList.setCartDelUrl(SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
-            cartList.setInvTitle(sku.getInvTitle());
-            cartList.setCreateAt(cart.getCreateAt());
-            cartList.setInvCustoms(sku.getInvCustoms());
-            cartList.setPostalTaxRate(sku.getPostalTaxRate());
-            cartList.setPostalStandard(sku.getPostalStandard());
-            cartListDto.add(cartList);
-        }
-
-        Map<String, List<CartListDto>> cartListMap = cartListDto
-                .stream()
-                .collect(Collectors.groupingBy(CartListDto::getInvCustoms));
-
-        List<Map<String,Object>> list = new ArrayList<>();
-
-        cartListMap
-                .forEach((invCustoms, p) -> {
-
-                    switch (invCustoms) {
-                        case "shanghai": {
-                            Map<String, Object> mapResult = new HashMap<>();
-                            mapResult.put("invCustoms", invCustoms);
-                            mapResult.put("invArea", "韩国直邮");
-                            mapResult.put("carts", p);
-                            mapResult.put("postalStandard", POSTAL_STANDARD);
-                            mapResult.put("postalLimit", POSTAL_LIMIT);
-                            mapResult.put("freeShip", FREE_SHIP);
-                            list.add(mapResult);
-                            break;
-                        }
-                        case "guangzhou": {
-                            Map<String, Object> mapResult = new HashMap<>();
-                            mapResult.put("invCustoms", invCustoms);
-                            mapResult.put("invArea", "广州保税区");
-                            mapResult.put("carts", p);
-                            mapResult.put("postalStandard", POSTAL_STANDARD);
-                            mapResult.put("postalLimit", POSTAL_LIMIT);
-                            mapResult.put("freeShip", FREE_SHIP);
-                            list.add(mapResult);
-                            break;
-                        }
-                        case "hangzhou": {
-                            Map<String, Object> mapResult = new HashMap<>();
-                            mapResult.put("invCustoms", invCustoms);
-                            mapResult.put("invArea", "杭州保税区");
-                            mapResult.put("carts", p);
-                            mapResult.put("postalStandard", POSTAL_STANDARD);
-                            mapResult.put("postalLimit", POSTAL_LIMIT);
-                            mapResult.put("freeShip", FREE_SHIP);
-                            list.add(mapResult);
-                            break;
-                        }
-                        default: {
-                            Map<String, Object> mapResult = new HashMap<>();
-                            mapResult.put("invCustoms", invCustoms);
-                            mapResult.put("invArea", "海外直邮");
-                            mapResult.put("carts", p);
-                            mapResult.put("postalStandard", POSTAL_STANDARD);
-                            mapResult.put("postalLimit", POSTAL_LIMIT);
-                            mapResult.put("freeShip", FREE_SHIP);
-                            list.add(mapResult);
-                            break;
-                        }
+                    //先确定商品状态是正常,否则直接存为失效商品
+                    if (!sku.getState().equals("Y")) {
+                        cart.setStatus("S");
                     }
-                });
 
-        return list;
+                    //返回数据组装
+                    CartListDto cartList = new CartListDto();
+                    cartList.setCartId(cart.getCartId());
+                    cartList.setSkuId(cart.getSkuId());
+                    cartList.setAmount(cart.getAmount());
+                    cartList.setItemColor(sku.getItemColor());
+                    cartList.setItemSize(sku.getItemSize());
+                    cartList.setItemPrice(sku.getItemPrice());
+                    cartList.setState(cart.getStatus());
+                    cartList.setShipFee(sku.getShipFee());
+                    cartList.setInvArea(sku.getInvArea());
+                    cartList.setRestrictAmount(sku.getRestrictAmount());
+                    cartList.setRestAmount(sku.getRestAmount());
+                    cartList.setInvImg(IMAGE_URL + sku.getInvImg());
+                    cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                    cartList.setCartDelUrl(SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
+                    cartList.setInvTitle(sku.getInvTitle());
+                    cartList.setCreateAt(cart.getCreateAt());
+                    cartList.setInvCustoms(sku.getInvCustoms());
+                    cartList.setPostalTaxRate(sku.getPostalTaxRate());
+                    cartList.setPostalStandard(sku.getPostalStandard());
+                    cartListDto.add(cartList);
+                }
+            }
+            if(cartListDto.size()>0) {
+
+                Map<String, List<CartListDto>> cartListMap = cartListDto
+                        .stream()
+                        .collect(Collectors.groupingBy(CartListDto::getInvCustoms));
+
+                List<Map<String, Object>> list = new ArrayList<>();
+
+                cartListMap
+                        .forEach((invCustoms, p) -> {
+
+                            switch (invCustoms) {
+                                case "shanghai": {
+                                    Map<String, Object> mapResult = new HashMap<>();
+                                    mapResult.put("invCustoms", invCustoms);
+                                    mapResult.put("invArea", "韩国直邮");
+                                    mapResult.put("carts", p);
+                                    mapResult.put("postalStandard", POSTAL_STANDARD);
+                                    mapResult.put("postalLimit", POSTAL_LIMIT);
+                                    mapResult.put("freeShip", FREE_SHIP);
+                                    list.add(mapResult);
+                                    break;
+                                }
+                                case "guangzhou": {
+                                    Map<String, Object> mapResult = new HashMap<>();
+                                    mapResult.put("invCustoms", invCustoms);
+                                    mapResult.put("invArea", "广州保税区");
+                                    mapResult.put("carts", p);
+                                    mapResult.put("postalStandard", POSTAL_STANDARD);
+                                    mapResult.put("postalLimit", POSTAL_LIMIT);
+                                    mapResult.put("freeShip", FREE_SHIP);
+                                    list.add(mapResult);
+                                    break;
+                                }
+                                case "hangzhou": {
+                                    Map<String, Object> mapResult = new HashMap<>();
+                                    mapResult.put("invCustoms", invCustoms);
+                                    mapResult.put("invArea", "杭州保税区");
+                                    mapResult.put("carts", p);
+                                    mapResult.put("postalStandard", POSTAL_STANDARD);
+                                    mapResult.put("postalLimit", POSTAL_LIMIT);
+                                    mapResult.put("freeShip", FREE_SHIP);
+                                    list.add(mapResult);
+                                    break;
+                                }
+                                default: {
+                                    Map<String, Object> mapResult = new HashMap<>();
+                                    mapResult.put("invCustoms", invCustoms);
+                                    mapResult.put("invArea", "海外直邮");
+                                    mapResult.put("carts", p);
+                                    mapResult.put("postalStandard", POSTAL_STANDARD);
+                                    mapResult.put("postalLimit", POSTAL_LIMIT);
+                                    mapResult.put("freeShip", FREE_SHIP);
+                                    list.add(mapResult);
+                                    break;
+                                }
+                            }
+                        });
+                return Optional.of(list);
+            }else return Optional.empty();
+        } else return Optional.empty();
     }
 
 
@@ -568,18 +589,24 @@ public class Application extends Controller {
         try {
             Sku sku = new Sku();
             sku.setId(skuId);
-            sku = skuService.getInv(sku);
-            if (sku.getState().equals("S")) {
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
-                return ok(result);
-            } else if (sku.getRestrictAmount()!=0 && amount > sku.getRestrictAmount()) {
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex()), Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex())));
-                return ok(result);
-            }else if (amount > sku.getRestAmount()) {
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
-                return ok(result);
-            } else {
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            Optional<Sku> skuOptional = Optional.ofNullable(skuService.getInv(sku));
+            if (skuOptional.isPresent()){
+                sku =skuOptional.get();
+                if (sku.getState().equals("S")) {
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
+                    return ok(result);
+                } else if (sku.getRestrictAmount() != 0 && amount > sku.getRestrictAmount()) {
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex()), Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex())));
+                    return ok(result);
+                } else if (amount > sku.getRestAmount()) {
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
+                    return ok(result);
+                } else {
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                    return ok(result);
+                }
+            }else {
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex()), Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex())));
                 return ok(result);
             }
         } catch (Exception ex) {
