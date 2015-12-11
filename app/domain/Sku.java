@@ -24,8 +24,6 @@ public class Sku {
     private     BigDecimal          itemDiscount;//商品折扣
     private     Boolean             orMasterInv;//是否主商品
     private     String              state;//状态
-    @JsonSerialize(using = MoneySerializer.class)
-    private     BigDecimal          shipFee;//邮费
     private     String              invArea;//库存区域区分：'B'保税区仓库发货，‘Z’韩国直邮
     private     Integer             restrictAmount;//限购数量
     private     Integer             restAmount;//商品余量
@@ -60,7 +58,7 @@ public class Sku {
     public Sku() {
     }
 
-    public Sku(Long id, String itemColor, String itemSize, BigDecimal itemSrcPrice, BigDecimal itemPrice, BigDecimal itemDiscount, Boolean orMasterInv, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String itemPreviewImgs, String invUrl, String invTitle, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, Long itemId, Integer amount, BigDecimal itemCostPrice, Integer soldAmount, Boolean orDestroy, Timestamp destroyAt, Timestamp updateAt, Timestamp createAt, String carriageModelCode) {
+    public Sku(Long id, String itemColor, String itemSize, BigDecimal itemSrcPrice, BigDecimal itemPrice, BigDecimal itemDiscount, Boolean orMasterInv, String state, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String itemPreviewImgs, String invUrl, String invTitle, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, Long itemId, Integer amount, BigDecimal itemCostPrice, Integer soldAmount, Boolean orDestroy, Timestamp destroyAt, Timestamp updateAt, Timestamp createAt, String carriageModelCode) {
         this.id = id;
         this.itemColor = itemColor;
         this.itemSize = itemSize;
@@ -69,7 +67,6 @@ public class Sku {
         this.itemDiscount = itemDiscount;
         this.orMasterInv = orMasterInv;
         this.state = state;
-        this.shipFee = shipFee;
         this.invArea = invArea;
         this.restrictAmount = restrictAmount;
         this.restAmount = restAmount;
@@ -154,14 +151,6 @@ public class Sku {
 
     public void setState(String state) {
         this.state = state;
-    }
-
-    public BigDecimal getShipFee() {
-        return shipFee;
-    }
-
-    public void setShipFee(BigDecimal shipFee) {
-        this.shipFee = shipFee;
     }
 
     public String getInvArea() {
@@ -335,7 +324,6 @@ public class Sku {
                 ", itemDiscount=" + itemDiscount +
                 ", orMasterInv=" + orMasterInv +
                 ", state='" + state + '\'' +
-                ", shipFee=" + shipFee +
                 ", invArea='" + invArea + '\'' +
                 ", restrictAmount=" + restrictAmount +
                 ", restAmount=" + restAmount +

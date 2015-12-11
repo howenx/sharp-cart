@@ -14,11 +14,9 @@ import play.mvc.Security;
 import service.CartService;
 import service.IdService;
 import service.SkuService;
-import util.GenCouponCode;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -59,22 +57,24 @@ public class OrderCtrl extends Controller {
     public Result settle() {
 
         //行邮税收税标准
-         final String POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
+        final String POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
 
         //海关规定购买单笔订单金额限制
-         final String POSTAL_LIMIT = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_LIMIT")).getParameterVal();
+        final String POSTAL_LIMIT = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_LIMIT")).getParameterVal();
 
         //达到多少免除邮费
-         final String FREE_SHIP = skuService.getSysParameter(new SysParameter(null, null, null, "FREE_SHIP")).getParameterVal();
+        final String FREE_SHIP = skuService.getSysParameter(new SysParameter(null, null, null, "FREE_SHIP")).getParameterVal();
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
 
         ObjectNode result = Json.newObject();
 
         Map<String, Object> resultMap = new HashMap<>();
+
         try {
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
+
                 List<SettleDTO> settleDTOs = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, SettleDTO.class));
 
                 //运费
@@ -90,9 +90,7 @@ public class OrderCtrl extends Controller {
                 //总费用
                 BigDecimal sumAmount = new BigDecimal(0);
 
-                //
                 List<Map<String, Object>> returnFee = new ArrayList<>();
-
 
                 //省份代码
                 String province_code = "";
@@ -100,19 +98,17 @@ public class OrderCtrl extends Controller {
                 Address address = new Address();
                 for (SettleDTO settleDTO : settleDTOs) {
 
-                    Logger.error(settleDTO.getAddressId().toString());
                     //如果没有用户地址ID,那么就查找用户默认地址,否则就去查找用户指定的地址
-                    if (settleDTO.getAddressId() != null && settleDTO.getAddressId()!=0) {
+                    if (settleDTO.getAddressId() != null && settleDTO.getAddressId() != 0) {
                         address.setAddId(settleDTO.getAddressId());
                     } else {
                         address.setUserId(userId);
                         address.setOrDefault(true);
                     }
 
-                    Logger.error(address.toString());
-                    Address address_search = idService.getAddress(address);
-                    if (address_search != null) {
-                        address = address_search;
+                    Optional<Address> address_search = Optional.ofNullable(idService.getAddress(address));
+                    if (address_search.isPresent()) {
+                        address = address_search.get();
                         JsonNode detailCity = Json.parse(address.getDeliveryCity());
 
                         province_code = detailCity.get("province_code").asText();
@@ -140,35 +136,51 @@ public class OrderCtrl extends Controller {
 
                         Sku sku = new Sku();
                         sku.setId(cartDto.getSkuId());
-                        sku = skuService.getInv(sku);
+                        Optional<Sku> skuOptional = Optional.ofNullable(skuService.getInv(sku));
 
-                        //如果存在默认地址,取出默认地址下的邮费
-                        if (!province_code.equals("")) {
-                            Carriage carriage = new Carriage();
-                            carriage.setCityCode(province_code);
-                            carriage.setModelCode(sku.getCarriageModelCode());
-                            carriage = skuService.getCarriage(carriage);
-                            //规则:如果比购买数量小于首件数量要求,则取首费,否则就整除续件数量+1,乘以续费再加首费
-                            if (carriage.getFirstNum() >= cart.getAmount()) {
-                                shipFee = shipFee.add(carriage.getFirstFee());
-                                shipSingleCustomsFee = shipSingleCustomsFee.add(carriage.getFirstFee());
-                            } else {
-                                shipFee = shipFee.add(carriage.getFirstFee()).add(new BigDecimal((cart.getAmount() / carriage.getAddNum()) + 1).multiply(carriage.getAddFee()));
-                                shipSingleCustomsFee = shipSingleCustomsFee.add(carriage.getFirstFee()).add(new BigDecimal((cart.getAmount() / carriage.getAddNum()) + 1).multiply(carriage.getAddFee()));
-                            }
+                        if (skuOptional.isPresent()){
+                            sku=skuOptional.get();
+                        }else{
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex()), Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex())));
+                            return ok(result);
                         }
 
                         //先确定商品状态是正常,然后确定商品结算数量是否超出库存量
                         if (!sku.getState().equals("Y")) {
                             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
                             return ok(result);
+                        } else if (cartDto.getAmount() > sku.getRestrictAmount() && sku.getRestrictAmount()!=0) {
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex()), Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex())));
+                            return ok(result);
                         } else if (cartDto.getAmount() > sku.getRestAmount()) {
                             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
                             return ok(result);
                         } else {
 
-                            //累加邮费
-                            shipFee = shipFee.add(sku.getShipFee());
+                            //如果存在默认地址,取出默认地址下的邮费
+                            if (!province_code.equals("")) {
+
+                                //取邮费
+                                Carriage carriage = new Carriage();
+                                carriage.setCityCode(province_code);
+                                carriage.setModelCode(sku.getCarriageModelCode());
+                                Optional<Carriage> carriageOptional = Optional.ofNullable(skuService.getCarriage(carriage));
+                                if (carriageOptional.isPresent()){
+                                    carriage=carriageOptional.get();
+                                    //规则:如果购买数量小于首件数量要求,则取首费,否则就整除续件数量+1,乘以续费再加首费
+                                    if (cart.getAmount() <=carriage.getFirstNum()) {
+                                        shipFee = shipFee.add(carriage.getFirstFee());
+                                        shipSingleCustomsFee = shipSingleCustomsFee.add(carriage.getFirstFee());
+                                    } else {
+                                        shipFee = shipFee.add(carriage.getFirstFee()).add(new BigDecimal((cart.getAmount() / carriage.getAddNum()) + 1).multiply(carriage.getAddFee()));
+                                        shipSingleCustomsFee = shipSingleCustomsFee.add(carriage.getFirstFee()).add(new BigDecimal((cart.getAmount() / carriage.getAddNum()) + 1).multiply(carriage.getAddFee()));
+                                    }
+                                }else{
+                                    Logger.error("未找到相应邮费信息");
+                                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.NOT_FOUND_SHIP_FEE_INFO.getIndex()), Message.ErrorCode.NOT_FOUND_SHIP_FEE_INFO.getIndex())));
+                                    return ok(result);
+                                }
+                            }
 
                             //总费用
                             sumAmount = sumAmount.add(sku.getItemPrice().multiply(new BigDecimal(cart.getAmount())));
@@ -181,9 +193,6 @@ public class OrderCtrl extends Controller {
 
                             //每个海关的总数量
                             skuAmountSingleCustoms = +cart.getAmount();
-
-                            //单个海关运费
-                            shipSingleCustomsFee = shipSingleCustomsFee.add(sku.getShipFee());
 
                             //计算行邮税,行邮税加和
                             portalFee = portalFee.add(new BigDecimal(sku.getPostalTaxRate()).multiply(sku.getItemPrice()).multiply(new BigDecimal(cart.getAmount())).multiply(new BigDecimal(0.01)));
@@ -209,39 +218,42 @@ public class OrderCtrl extends Controller {
                         return ok(result);
                     }
                     //每个海关的总费用统计
-                    map.put("singleCustomsSumFee", sumAmountSingleCustoms.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
+                    map.put("singleCustomsSumFee", sumAmountSingleCustoms.setScale(2, BigDecimal.ROUND_DOWN).toPlainString());
 
                     //每个海关购买的总数量
                     map.put("singleCustomsSumAmount", skuAmountSingleCustoms);
 
                     //每个海关邮费统计
-                    map.put("shipSingleCustomsFee", shipSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
+                    map.put("shipSingleCustomsFee", shipSingleCustomsFee.setScale(2, BigDecimal.ROUND_DOWN).toPlainString());
 
                     //每个海关的实际邮费统计
                     if (sumAmount.compareTo(new BigDecimal(FREE_SHIP)) > 0) {
                         map.put("factSingleCustomsShipFee", 0);//实际邮费
-                    } else map.put("factSingleCustomsShipFee", shipSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());//每次计算出的邮费
+                    } else
+                        map.put("factSingleCustomsShipFee", shipSingleCustomsFee.setScale(2, BigDecimal.ROUND_DOWN).toPlainString());//每次计算出的邮费
 
                     //每个海关的关税统计
-                    map.put("portalSingleCustomsFee", portalSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
+                    map.put("portalSingleCustomsFee", portalSingleCustomsFee.setScale(2, BigDecimal.ROUND_DOWN).toPlainString());
 
                     //统计如果各个海关的实际关税,如果关税小于50元,则免税
                     if (portalSingleCustomsFee.compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
                         map.put("factPortalFeeSingleCustoms", 0);
-                    else map.put("factPortalFeeSingleCustoms", portalSingleCustomsFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
+                    else
+                        map.put("factPortalFeeSingleCustoms", portalSingleCustomsFee.setScale(2, BigDecimal.ROUND_DOWN).toPlainString());
 
                     returnFee.add(map);
                 }
 
                 if (sumAmount.compareTo(new BigDecimal(FREE_SHIP)) > 0) {
                     resultMap.put("factShipFee", 0);//实际邮费
-                } else resultMap.put("factShipFee", shipFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());//每次计算出的邮费
-                resultMap.put("shipFee", shipFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
-                resultMap.put("portalFee", portalFee.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
+                } else
+                    resultMap.put("factShipFee", shipFee.setScale(2, BigDecimal.ROUND_DOWN).toPlainString());//每次计算出的邮费
+                resultMap.put("shipFee", shipFee.setScale(2, BigDecimal.ROUND_DOWN).toPlainString());
+                resultMap.put("portalFee", portalFee.setScale(2, BigDecimal.ROUND_DOWN).toPlainString());
                 //统计如果各个海关的实际关税,如果关税小于50元,则免税
                 if (portalFeeFree.compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
-                    resultMap.put("factPortalFee",0);
-                else resultMap.put("factPortalFee", portalFeeFree.setScale(2,BigDecimal.ROUND_DOWN).toPlainString());
+                    resultMap.put("factPortalFee", 0);
+                else resultMap.put("factPortalFee", portalFeeFree.setScale(2, BigDecimal.ROUND_DOWN).toPlainString());
                 resultMap.put("address", address);
 
                 //将各个海关下的费用统计返回
@@ -262,14 +274,15 @@ public class OrderCtrl extends Controller {
                 result.putPOJO("settle", Json.toJson(resultMap));
 
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-                Logger.error(result.toString());
+                Logger.error("最终结果: " + result.toString());
                 return ok(result);
             } else {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
                 return ok(result);
             }
         } catch (Exception ex) {
-            Logger.error(ex.getMessage());
+            Logger.error("settle: "+ex.getMessage());
+            ex.printStackTrace();
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
             return ok(result);
         }

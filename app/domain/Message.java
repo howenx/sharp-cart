@@ -60,7 +60,8 @@ public class Message implements Serializable{
         THEME_NULL_EXCEPTION("获取主题数据空", 1007),
         THEME_LIST_NULL_EXCEPTION("获取主题列表数据空", 1008),
         SKU_DETAIL_NULL_EXCEPTION("获取产品详情数据空", 1009),
-        CART_LIST_NULL_EXCEPTION("获取购物车数据空", 1010);
+        CART_LIST_NULL_EXCEPTION("获取购物车数据空", 1010),
+        NOT_FOUND_SHIP_FEE_INFO("未找到邮费信息", 1011);
 
         // 成员变量
         private String name;
