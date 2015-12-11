@@ -247,9 +247,8 @@ public class Application extends Controller {
                 }else cartList.setAmount(cartDto.getAmount());
 
                 //判断是否超过库存余量
-                if(cartDto.getAmount()>sku.getRestrictAmount()){
-                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
-                    return ok(result);
+                if(cartDto.getAmount()>sku.getRestAmount()){
+                    cartList.setAmount(sku.getRestAmount());
                 }
 
                 cartList.setShipFee(sku.getShipFee());

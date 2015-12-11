@@ -16,7 +16,8 @@
         ${alias}.tel,
         ${alias}.name,
         ${alias}.delivery_city::text,
-        ${alias}.delivery_detail
+        ${alias}.delivery_detail,
+        ${alias}.id_card_num
     </sql>
 
     <select id="getAddress" resultType="domain.Address" parameterType="domain.Address">
