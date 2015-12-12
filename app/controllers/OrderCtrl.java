@@ -304,6 +304,10 @@ public class OrderCtrl extends Controller {
 //        cartService.insertCoupon(couponVo);
 //    }
 
+    /**
+     * 购物券List
+     * @return result
+     */
     @Security.Authenticated(UserAuth.class)
     public Result couponsList() {
 
@@ -327,6 +331,11 @@ public class OrderCtrl extends Controller {
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
             return ok(result);
         }
+    }
+
+//    @Security.Authenticated(UserAuth.class)
+    public Result submitOrder() {
+        return null;
     }
 
 }
