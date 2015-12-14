@@ -34,10 +34,13 @@ public class GenCouponCode {
 
     public enum CouponClassCode{
 
-        COSMETICS("化妆品", 153),
-        ACCESSORIES("配饰", 172),
-        CLOTHES("服饰", 165),
-        SHIP_FREE("邮费", 999);
+        COSMETICS("化妆品类商品适用券", 153),
+        ACCESSORIES("配饰类商品适用券", 172),
+        CLOTHES("服饰类商品适用券", 165),
+        ALL_FREE("全场通用券", 555),
+        REGISTER_PUBLIC("新人优惠券", 777),
+        PART_GOODS("指定商品适用券", 211),
+        SHIP_FREE("免邮券", 999);
 
         // 成员变量
         private String name;

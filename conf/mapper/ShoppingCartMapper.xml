@@ -275,11 +275,11 @@
             #{userId},
             #{cateId},
             #{denomination},
-            #{startAt},
-            #{endAt},
+        to_timestamp(#{startAt}),
+        to_timestamp(#{endAt}),
             #{state},
             #{limitQuota},
-            #{cate_nm}
+            #{cateNm}
         )
     </insert>
 

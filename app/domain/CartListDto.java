@@ -36,11 +36,12 @@ public class CartListDto implements Serializable{
     private     String          postalTaxRate;//税率
     private     String          postalStandard;//关税收费标准
     private     String          postalLimit;//海关规定的单笔订单金额不能超过的量值
+    private     String          invUrlAndroid;//安卓端的URL
 
     public CartListDto() {
     }
 
-    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit) {
+    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, String invUrlAndroid) {
         this.cartId = cartId;
         this.skuId = skuId;
         this.amount = amount;
@@ -61,6 +62,7 @@ public class CartListDto implements Serializable{
         this.postalTaxRate = postalTaxRate;
         this.postalStandard = postalStandard;
         this.postalLimit = postalLimit;
+        this.invUrlAndroid = invUrlAndroid;
     }
 
     public Long getCartId() {
@@ -223,6 +225,14 @@ public class CartListDto implements Serializable{
         this.postalLimit = postalLimit;
     }
 
+    public String getInvUrlAndroid() {
+        return invUrlAndroid;
+    }
+
+    public void setInvUrlAndroid(String invUrlAndroid) {
+        this.invUrlAndroid = invUrlAndroid;
+    }
+
     @Override
     public String toString() {
         return "CartListDto{" +
@@ -246,6 +256,7 @@ public class CartListDto implements Serializable{
                 ", postalTaxRate='" + postalTaxRate + '\'' +
                 ", postalStandard='" + postalStandard + '\'' +
                 ", postalLimit='" + postalLimit + '\'' +
+                ", invUrlAndroid='" + invUrlAndroid + '\'' +
                 '}';
     }
 }

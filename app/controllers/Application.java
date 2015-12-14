@@ -268,6 +268,7 @@ public class Application extends Controller {
                 cartList.setRestAmount(sku.getRestAmount());
                 cartList.setInvImg(IMAGE_URL + sku.getInvImg());
                 cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                cartList.setInvUrlAndroid(DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId());
                 cartList.setInvCustoms(sku.getInvCustoms());
                 cartList.setPostalTaxRate(sku.getPostalTaxRate());
 
@@ -502,6 +503,7 @@ public class Application extends Controller {
                     cartList.setRestAmount(sku.getRestAmount());
                     cartList.setInvImg(IMAGE_URL + sku.getInvImg());
                     cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                    cartList.setInvUrlAndroid(DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId());
                     cartList.setCartDelUrl(SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
                     cartList.setInvTitle(sku.getInvTitle());
                     cartList.setCreateAt(cart.getCreateAt());

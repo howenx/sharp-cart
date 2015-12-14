@@ -14,9 +14,11 @@ import play.mvc.Security;
 import service.CartService;
 import service.IdService;
 import service.SkuService;
+import util.GenCouponCode;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -289,20 +291,23 @@ public class OrderCtrl extends Controller {
     }
 
     //发放优惠券----->下订单时候,检查如果用户订单金额大于包邮金额,就发放一个999开头的优惠券,并且是已使用状态,当前时间下的
-//    private void publicCoupons() throws Exception {
-//        CouponVo couponVo = new CouponVo();
-//        couponVo.setUserId(((Integer) 1000012).longValue());
-//        couponVo.setDenomination((BigDecimal.valueOf(20)));
-//        Date timeDate = new Date();
-//        Timestamp dateTime = new Timestamp(timeDate.getTime());
-//        couponVo.setStartAt(dateTime);
-//        couponVo.setEndAt(new Timestamp(timeDate.getTime() + 10 * 24 * 60 * 60 * 1000));
-//        String coupId = GenCouponCode.GetCode(GenCouponCode.CouponClassCode.ACCESSORIES.getIndex(), 8);
-//        couponVo.setCoupId(coupId);
-//        couponVo.setCateId(((Integer) GenCouponCode.CouponClassCode.ACCESSORIES.getIndex()).longValue());
-//        couponVo.setState("N");
-//        cartService.insertCoupon(couponVo);
-//    }
+    public Result publicCoupons() throws Exception {
+        CouponVo couponVo = new CouponVo();
+        couponVo.setUserId(((Integer) 1000038).longValue());
+        couponVo.setDenomination((BigDecimal.valueOf(20)));
+        Date timeDate = new Date();
+        Timestamp dateTime = new Timestamp(timeDate.getTime());
+        couponVo.setStartAt(dateTime.toString());
+        couponVo.setEndAt(new Timestamp(timeDate.getTime() + 10 * 24 * 60 * 60 * 1000).toString());
+        String coupId = GenCouponCode.GetCode(GenCouponCode.CouponClassCode.ALL_FREE.getIndex(), 8);
+        couponVo.setCoupId(coupId);
+        couponVo.setCateId(((Integer) GenCouponCode.CouponClassCode.ALL_FREE.getIndex()).longValue());
+        couponVo.setState("N");
+        couponVo.setCateNm(GenCouponCode.CouponClassCode.ALL_FREE.getName());
+        couponVo.setLimitQuota(BigDecimal.valueOf(50));
+        cartService.insertCoupon(couponVo);
+        return ok("Success");
+    }
 
     /**
      * 购物券List
