@@ -275,8 +275,8 @@
             #{userId},
             #{cateId},
             #{denomination},
-        to_timestamp(#{startAt}),
-        to_timestamp(#{endAt}),
+        to_timestamp(#{startAt},'YYYY-MM-DD HH24:MI:SS'),
+        to_timestamp(#{endAt},'YYYY-MM-DD HH24:MI:SS'),
             #{state},
             #{limitQuota},
             #{cateNm}

@@ -7,6 +7,7 @@ import domain.*;
 import filters.UserAuth;
 import net.spy.memcached.MemcachedClient;
 import play.Logger;
+import play.libs.F;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -19,9 +20,11 @@ import util.GenCouponCode;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-
+import static play.libs.F.Promise.promise;
 /**
  * 订单相关,提交订单,优惠券
  * Created by howen on 15/12/1.
@@ -294,17 +297,17 @@ public class OrderCtrl extends Controller {
     public Result publicCoupons() throws Exception {
         CouponVo couponVo = new CouponVo();
         couponVo.setUserId(((Integer) 1000038).longValue());
-        couponVo.setDenomination((BigDecimal.valueOf(20)));
-        Date timeDate = new Date();
-        Timestamp dateTime = new Timestamp(timeDate.getTime());
-        couponVo.setStartAt(dateTime.toString());
-        couponVo.setEndAt(new Timestamp(timeDate.getTime() + 10 * 24 * 60 * 60 * 1000).toString());
-        String coupId = GenCouponCode.GetCode(GenCouponCode.CouponClassCode.ALL_FREE.getIndex(), 8);
+        couponVo.setDenomination((BigDecimal.valueOf(50)));
+        Calendar cal = Calendar.getInstance();
+        couponVo.setStartAt( new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cal.getTime()));
+        cal.add(Calendar.MONTH,2);
+        couponVo.setEndAt(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cal.getTime()));
+        String coupId = GenCouponCode.GetCode(GenCouponCode.CouponClassCode.REGISTER_PUBLIC.getIndex(), 8);
         couponVo.setCoupId(coupId);
-        couponVo.setCateId(((Integer) GenCouponCode.CouponClassCode.ALL_FREE.getIndex()).longValue());
+        couponVo.setCateId(((Integer) GenCouponCode.CouponClassCode.REGISTER_PUBLIC.getIndex()).longValue());
         couponVo.setState("N");
-        couponVo.setCateNm(GenCouponCode.CouponClassCode.ALL_FREE.getName());
-        couponVo.setLimitQuota(BigDecimal.valueOf(50));
+        couponVo.setCateNm(GenCouponCode.CouponClassCode.REGISTER_PUBLIC.getName());
+        couponVo.setLimitQuota(BigDecimal.valueOf(0));
         cartService.insertCoupon(couponVo);
         return ok("Success");
     }
@@ -339,7 +342,7 @@ public class OrderCtrl extends Controller {
     }
 
 //    @Security.Authenticated(UserAuth.class)
-    public Result submitOrder() {
+    public F.Promise<Result> submitOrder() {
         return null;
     }
 
