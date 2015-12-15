@@ -1,5 +1,9 @@
 package controllers;
 
+import actor.CalculateShipFeeActor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSelection;
+import akka.actor.ActorSystem;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -18,13 +22,13 @@ import service.SkuService;
 import util.GenCouponCode;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-import static play.libs.F.Promise.promise;
+
+import static akka.pattern.Patterns.ask;
 /**
  * 订单相关,提交订单,优惠券
  * Created by howen on 15/12/1.
@@ -143,9 +147,9 @@ public class OrderCtrl extends Controller {
                         sku.setId(cartDto.getSkuId());
                         Optional<Sku> skuOptional = Optional.ofNullable(skuService.getInv(sku));
 
-                        if (skuOptional.isPresent()){
-                            sku=skuOptional.get();
-                        }else{
+                        if (skuOptional.isPresent()) {
+                            sku = skuOptional.get();
+                        } else {
                             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex()), Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex())));
                             return ok(result);
                         }
@@ -154,7 +158,7 @@ public class OrderCtrl extends Controller {
                         if (!sku.getState().equals("Y")) {
                             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
                             return ok(result);
-                        } else if (cartDto.getAmount() > sku.getRestrictAmount() && sku.getRestrictAmount()!=0) {
+                        } else if (cartDto.getAmount() > sku.getRestrictAmount() && sku.getRestrictAmount() != 0) {
                             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex()), Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex())));
                             return ok(result);
                         } else if (cartDto.getAmount() > sku.getRestAmount()) {
@@ -170,17 +174,17 @@ public class OrderCtrl extends Controller {
                                 carriage.setCityCode(province_code);
                                 carriage.setModelCode(sku.getCarriageModelCode());
                                 Optional<Carriage> carriageOptional = Optional.ofNullable(skuService.getCarriage(carriage));
-                                if (carriageOptional.isPresent()){
-                                    carriage=carriageOptional.get();
+                                if (carriageOptional.isPresent()) {
+                                    carriage = carriageOptional.get();
                                     //规则:如果购买数量小于首件数量要求,则取首费,否则就整除续件数量+1,乘以续费再加首费
-                                    if (cart.getAmount() <=carriage.getFirstNum()) {
+                                    if (cart.getAmount() <= carriage.getFirstNum()) {
                                         shipFee = shipFee.add(carriage.getFirstFee());
                                         shipSingleCustomsFee = shipSingleCustomsFee.add(carriage.getFirstFee());
                                     } else {
                                         shipFee = shipFee.add(carriage.getFirstFee()).add(new BigDecimal((cart.getAmount() / carriage.getAddNum()) + 1).multiply(carriage.getAddFee()));
                                         shipSingleCustomsFee = shipSingleCustomsFee.add(carriage.getFirstFee()).add(new BigDecimal((cart.getAmount() / carriage.getAddNum()) + 1).multiply(carriage.getAddFee()));
                                     }
-                                }else{
+                                } else {
                                     Logger.error("未找到相应邮费信息");
                                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.NOT_FOUND_SHIP_FEE_INFO.getIndex()), Message.ErrorCode.NOT_FOUND_SHIP_FEE_INFO.getIndex())));
                                     return ok(result);
@@ -286,7 +290,7 @@ public class OrderCtrl extends Controller {
                 return ok(result);
             }
         } catch (Exception ex) {
-            Logger.error("settle: "+ex.getMessage());
+            Logger.error("settle: " + ex.getMessage());
             ex.printStackTrace();
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
             return ok(result);
@@ -299,8 +303,8 @@ public class OrderCtrl extends Controller {
         couponVo.setUserId(((Integer) 1000038).longValue());
         couponVo.setDenomination((BigDecimal.valueOf(50)));
         Calendar cal = Calendar.getInstance();
-        couponVo.setStartAt( new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cal.getTime()));
-        cal.add(Calendar.MONTH,2);
+        couponVo.setStartAt(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cal.getTime()));
+        cal.add(Calendar.MONTH, 2);
         couponVo.setEndAt(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cal.getTime()));
         String coupId = GenCouponCode.GetCode(GenCouponCode.CouponClassCode.REGISTER_PUBLIC.getIndex(), 8);
         couponVo.setCoupId(coupId);
@@ -314,6 +318,7 @@ public class OrderCtrl extends Controller {
 
     /**
      * 购物券List
+     *
      * @return result
      */
     @Security.Authenticated(UserAuth.class)
@@ -341,9 +346,17 @@ public class OrderCtrl extends Controller {
         }
     }
 
-//    @Security.Authenticated(UserAuth.class)
+    @Inject ActorSystem system;
+
+    @Inject @Named("shipFee-actor")
+    ActorRef shipActor;
+
+    //    @Security.Authenticated(UserAuth.class)
     public F.Promise<Result> submitOrder() {
-        return null;
+        final String path = "akka.tcp://application@127.0.0.1:2555/user/shipFee-actor";
+        ActorSelection myActor =system.actorSelection(path);
+        return F.Promise.wrap(ask(myActor,CalculateShipFeeActor.Msg.GREET, 10000))
+                .map(response -> ok(response.toString()));
     }
 
 }

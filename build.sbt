@@ -32,6 +32,13 @@ libraryDependencies += "com.aliyun.oss" % "aliyun-sdk-oss" % "2.0.1" withSources
 
 libraryDependencies += "com.typesafe.play" %% "anorm" % "2.5.0" withSources() withJavadoc()
 
+libraryDependencies += "com.typesafe.akka" % "akka-actor_2.11" % "2.4.1" withSources() withJavadoc()
+
+libraryDependencies += "com.typesafe.akka" % "akka-kernel_2.11" % "2.4.1" withSources() withJavadoc()
+
+libraryDependencies += "com.typesafe.akka" % "akka-slf4j_2.11" % "2.4.1" withSources() withJavadoc()
+
+libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.4.1" withSources() withJavadoc()
 resolvers ++= Seq(
   "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
   "Apache" at "http://repo1.maven.org/maven2/",

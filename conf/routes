@@ -13,3 +13,4 @@ POST          /client/order/state/update                                        
 POST          /client/settle                                                            controllers.OrderCtrl.settle()
 GET           /client/coupons/list                                                      controllers.OrderCtrl.couponsList()
 GET           /client/public/coupons                                                    controllers.OrderCtrl.publicCoupons()
+GET           /client/order/submit                                                      controllers.OrderCtrl.submitOrder()

@@ -12,6 +12,5 @@ public class ActorModule extends AbstractModule implements AkkaGuiceSupport {
     @Override
     protected void configure() {
         bindActor(CalculateShipFeeActor.class, "shipFee-actor");
-//        bindActorFactory(ConfiguredChildActor.class, ConfiguredChildActorProtocol.Factory.class);
     }
 }

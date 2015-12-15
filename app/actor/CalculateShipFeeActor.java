@@ -9,16 +9,16 @@ import akka.japi.pf.ReceiveBuilder;
  */
 public class CalculateShipFeeActor extends AbstractActor {
 
-        public static enum Msg {
-            GREET, DONE;
-        }
+    public static enum Msg {
+        GREET, DONE;
+    }
 
-        public CalculateShipFeeActor() {
-            receive(ReceiveBuilder.
-                    matchEquals(Msg.GREET, m -> {
-                        System.out.println("Hello World!");
-                        sender().tell(Msg.DONE, self());
-                    }).build());
-        }
+    public CalculateShipFeeActor() {
+        receive(ReceiveBuilder.
+                matchEquals(Msg.GREET, m -> {
+                    System.out.println("Hello World!");
+                    sender().tell(Msg.DONE, self());
+                }).build());
+    }
 
 }
