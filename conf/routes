@@ -14,3 +14,15 @@ POST          /client/settle                                                    
 GET           /client/coupons/list                                                      controllers.OrderCtrl.couponsList()
 GET           /client/public/coupons                                                    controllers.OrderCtrl.publicCoupons()
 GET           /client/order/submit                                                      controllers.OrderCtrl.submitOrder()
+
+
+
+
+
+
+
+
+
+GET           /jd/pay                                                                       controllers.JDPay.pay()
+GET           /jd/notify                                                                       controllers.JDPay.back()
+GET           /jd/return                                                                      controllers.JDPay.front()
