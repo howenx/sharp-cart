@@ -8,10 +8,10 @@ import java.io.Serializable;
  */
 public class CartDto implements Serializable {
 
-    private Long cartId;
-    private Long skuId;
-    private Integer amount;
-    private String state;
+    private Long cartId;//购物车ID
+    private Long skuId;//skuID
+    private Integer amount;//购买数量
+    private String state;//状态
 
     public CartDto() {
     }

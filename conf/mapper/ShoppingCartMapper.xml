@@ -25,20 +25,21 @@
     </sql>
 
     <sql id="orderColumns">
-        ${alias}.order_id          ,
-        ${alias}.user_id           ,
-        ${alias}.pay_total         ,
-        ${alias}.pay_method         ,
+        ${alias}.order_id             ,
+        ${alias}.user_id              ,
+        ${alias}.pay_total            ,
+        ${alias}.pay_method           ,
         to_char(${alias}.order_create_at, 'YYYY-MM-DD HH24:MI:SS') order_create_at,
-        ${alias}.order_ip          ,
-        ${alias}.pg_trade_no       ,
-        ${alias}.order_status      ,
-        ${alias}.error_str         ,
-        ${alias}.discount          ,
-        ${alias}.updated_at        ,
-        ${alias}.order_desc        ,
-        ${alias}.add_id            ,
-        ${alias}.ship_fee
+        ${alias}.order_ip             ,
+        ${alias}.pg_trade_no          ,
+        ${alias}.order_status         ,
+        ${alias}.error_str            ,
+        ${alias}.discount             ,
+        ${alias}.updated_at           ,
+        ${alias}.order_desc           ,
+        ${alias}.ship_fee             ,
+        ${alias}.postal_fee           ,
+        to_char(${alias}.confirm_receive_at, 'YYYY-MM-DD HH24:MI:SS') confirm_receive_at
     </sql>
 
     <!---  获取用户购物车,以用户ID或者CartID    -->
@@ -190,7 +191,21 @@
     </select>
 
     <update id="updateOrder" parameterType="domain.Order">
-        update sp_order set order_status = orderStatus where 1=1
+        update sp_order set
+        <if test="orderStatus!=null and orderStatus!=''">
+            order_status = #{orderStatus},
+        </if>
+        <if test="confirmReceiveAt!=null and confirmReceiveAt!=''">
+            confirm_receive_at=CURRENT_TIMESTAMP(0),
+        </if>
+        <if test="pgTradeNo!=null and pgTradeNo!=''">
+            pg_trade_no=#{pgTradeNo},
+        </if>
+        <if test="errorStr!=null and errorStr!=''">
+            error_str=#{errorStr},
+        </if>
+        order_id = order_id
+         where 1=1
         <if test="userId!=null and userId !=''">
             and user_id = #{userId}
         </if>
@@ -198,6 +213,48 @@
             and order_id = #{orderId}
         </if>
     </update>
+
+    <insert id="insertOrder" parameterType="domain.Order"  useGeneratedKeys="true" keyProperty="orderId">
+        insert into sp_order (
+        user_id              ,
+        pay_total            ,
+        pay_method           ,
+        order_create_at      ,
+        order_ip             ,
+        <if test="shipTime!=null and shipTime!=''">
+            ship_time         ,
+        </if>
+        <if test="clientType!=null and clientType!=''">
+            client_type        ,
+        </if>
+        <if test="discount!=null and discount!=''">
+            discount         ,
+        </if>
+        order_desc           ,
+        ship_fee             ,
+        postal_fee           ,
+        total_fee
+        )values(
+            #{userId},
+            #{payTotal}           ,
+            #{payMethod}          ,
+            CURRENT_TIMESTAMP(0)  ,
+            #{orderIp}::cidr      ,
+            <if test="shipTime!=null and shipTime!=''">
+                #{shipTime}         ,
+            </if>
+            <if test="clientType!=null and clientType!=''">
+                #{clientType}        ,
+            </if>
+            <if test="discount!=null and discount!=''">
+                #{discount}           ,
+            </if>
+            #{orderDesc}          ,
+            #{shipFee}            ,
+            #{postalFee},
+            #{totalFee}
+        )
+    </insert>
 
     <!---优惠券-->
     <sql id="couponColumns">
@@ -357,4 +414,194 @@
         and end_at &lt;=CURRENT_TIMESTAMP(0)
     </update>
 
+    <!--子订单表-->
+    <insert id="insertOrderSplit" parameterType="domain.OrderSplit" useGeneratedKeys="true" keyProperty="splitId">
+        insert into order_split(
+        order_id              ,
+        cbe_code              ,
+        total_fee             ,
+        total_pay_fee         ,
+        total_amount          ,
+        ship_fee              ,
+        postal_fee
+        )
+        values(#{orderId},#{cbeCode},#{totalFee},#{totalPayFee},#{totalAmount},#{shipFee},#{postalFee})
+    </insert>
+    <update id="updateOrderSplit" parameterType="domain.OrderSplit">
+        update order_split set
+        <if test="orderId!=null and orderId!=''">
+            order_id = #{orderId},
+        </if>
+        <if test="state!=null and state!=''">
+            state = #{state},
+        </if>
+        <if test="cbeCode!=null and cbeCode!=''">
+            cbe_code = #{cbeCode},
+        </if>
+        <if test="inspReturnCode!=null and inspReturnCode!=''">
+            insp_return_code = #{inspReturnCode},
+        </if>
+        <if test="inspReturnMsg!=null and inspReturnMsg!=''">
+            insp_return_msg = #{inspReturnMsg},
+        </if>
+        <if test="customsReturnCode!=null and customsReturnCode!=''">
+            customs_return_code=#{customsReturnCode},
+        </if>
+        <if test="customsReturnMsg!=null and customsReturnMsg!=''">
+            customs_return_msg = #{customsReturnMsg},
+        </if>
+        <if test="totalFee!=null and totalFee!=''">
+            total_fee = #{totalFee},
+        </if>
+        <if test="totalPayFee!=null and totalPayFee!=''">
+            total_pay_fee=#{totalPayFee},
+        </if>
+        <if test="totalAmount!=null and totalAmount!=''">
+            total_amount = #{totalAmount},
+        </if>
+        <if test="shipFee!=null and shipFee!=''">
+            ship_fee = #{shipFee},
+        </if>
+        <if test="postalFee!=null and postalFee!=''">
+            postal_fee = #{postalFee},
+        </if>
+        <if test="expressNum!=null and expressNum!=''">
+            express_num = #{expressNum},
+        </if>
+        <if test="expressCode!=null and expressCode!=''">
+            express_code = #{expressCode},
+        </if>
+        <if test="expressNm!=null and expressNm!=''">
+            express_nm = #{expressNm},
+        </if>
+        split_id = split_id   where 1=1
+        <if test="splitId!=null and splitId!=''">
+            and split_id = #{splitId}
+        </if>
+        <if test="orderId!=null and orderId!=''">
+            and order_id = #{orderId}
+        </if>
+        <if test="state!=null and state!=''">
+            and state = #{state}
+        </if>
+    </update>
+
+    <select id="selectOrderSplit" parameterType="domain.OrderSplit" resultType="domain.OrderSplit">
+        select split_id       ,
+        order_id              ,
+        state                 ,
+        cbe_code              ,
+        insp_return_code      ,
+        insp_return_msg       ,
+        customs_return_code   ,
+        customs_return_msg    ,
+        total_fee             ,
+        total_pay_fee         ,
+        total_amount          ,
+        ship_fee              ,
+        postal_fee            ,
+        express_num           ,
+        express_code          ,
+        express_nm
+        from order_split where 1=1
+        <if test="splitId!=null and splitId!=''">
+            and split_id = #{splitId}
+        </if>
+        <if test="orderId!=null and orderId!=''">
+            and order_id = #{orderId}
+        </if>
+        <if test="state!=null and state!=''">
+            and state = #{state}
+        </if>
+    </select>
+
+    <!--订单明细表-->
+    <insert id="insertOrderLine" parameterType="domain.OrderLine" useGeneratedKeys="true" keyProperty="lineId">
+        insert into sp_order_line (
+        order_id    ,
+        sku_id      ,
+        item_id     ,
+        amount      ,
+        price       ,
+        sku_title   ,
+        sku_img     ,
+        split_id    ,
+        sku_size    ,
+        sku_color
+        )values(
+            #{orderId }   ,
+            #{skuId}      ,
+            #{item_id}     ,
+            #{amount}      ,
+            #{price}       ,
+            #{skuTitle}   ,
+            #{skuImg}     ,
+            #{splitId}    ,
+            #{skuSize}    ,
+            #{skuColor}
+        )
+    </insert>
+
+    <select id="selectOrderLine" parameterType="domain.OrderLine" resultType="domain.OrderLine">
+        select line_id,
+        order_id    ,
+        sku_id      ,
+        item_id     ,
+        amount      ,
+        price       ,
+        sku_title   ,
+        sku_img     ,
+        split_id    ,
+        sku_size    ,
+        sku_color
+        from sp_order_line where 1=1
+        <if test="lineId!=null and lineId!=''">
+            and line_id=#{lineId}
+        </if>
+        <if test="orderId!=null and orderId!=''">
+            and order_id=#{orderId}
+        </if>
+        <if test="skuId!=null and skuId!=''">
+            and sku_id =#{skuId}
+        </if>
+        <if test="itemId !=null and itemId!=''">
+            and item_id=#{itemId}
+        </if>
+    </select>
+
+    <!--订单用户地址信息-->
+    <insert id="insertOrderAddress" parameterType="domain.OrderAddress" useGeneratedKeys="true" keyProperty="shipId">
+        insert into sp_order_ship(
+        order_id            ,
+        delivery_name       ,
+        delivery_tel        ,
+        delivery_city       ,
+        delivery_address    ,
+        delivery_card_num
+        )values(
+            #{orderId}            ,
+            #{deliveryName}       ,
+            #{deliveryTel}        ,
+            #{deliveryCity}       ,
+            #{deliveryAddress}    ,
+            #{deliveryCardNum}
+        )
+    </insert>
+
+    <select id="selectOrderAddress" parameterType="domain.OrderAddress" resultType="domain.OrderAddress">
+        select ship_id      ,
+        order_id            ,
+        delivery_name       ,
+        delivery_tel        ,
+        delivery_city       ,
+        delivery_address    ,
+        delivery_card_num
+        from sp_order_ship where 1=1
+        <if test="shipId!=null and shipId!=''">
+            and ship_id=#{shipId}
+        </if>
+        <if test="orderId!=null and orderId!=''">
+            and order_id=#{orderId}
+        </if>
+    </select>
 </mapper>

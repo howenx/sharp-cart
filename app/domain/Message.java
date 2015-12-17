@@ -52,6 +52,7 @@ public class Message implements Serializable{
         BAD_PARAMETER("参数不合法", 1003),
         BAD_USER_TOKEN("用户不存在", 1004),
         DATABASE_EXCEPTION("数据库操作异常", 1005),
+        CREATE_ORDER_EXCEPTION("创建订单异常", 1006),
         SKU_AMOUNT_SHORTAGE("亲,此件商品被你买光了", 2001),
         SKU_INVALID("亲,您已经长时间未操作,此商品已经失效,建议您刷新购物车", 2002),
         PURCHASE_QUANTITY_LIMIT("亲,您购买数量超过我们的限制了", 3001),

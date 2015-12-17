@@ -3,6 +3,7 @@ package mapper;
 import domain.*;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Theme mapper interface.
@@ -32,4 +33,19 @@ public interface ShoppingCartMapper {
 
     int updateCouponInvalid(CouponVo c) throws Exception;
 
+    int insertOrderSplit(OrderSplit orderSplit) throws Exception;
+
+    int updateOrderSplit(OrderSplit orderSplit) throws Exception;
+
+    List<OrderSplit> selectOrderSplit(OrderSplit orderSplit) throws Exception;
+
+    int insertOrderLine(OrderLine orderLine) throws Exception;
+
+    List<OrderLine> selectOrderLine(OrderLine orderLine) throws Exception;
+
+    int insertOrderAddress(OrderAddress orderAddress) throws Exception;
+
+    List<OrderAddress> selectOrderAddress(OrderAddress orderAddress) throws Exception;
+
+    int insertOrder(Order order) throws Exception;
 }

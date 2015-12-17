@@ -13,4 +13,5 @@ POST          /client/order/state/update                                        
 POST          /client/settle                                                            controllers.OrderCtrl.settle()
 GET           /client/coupons/list                                                      controllers.OrderCtrl.couponsList()
 GET           /client/public/coupons                                                    controllers.OrderCtrl.publicCoupons()
-GET           /client/order/submit                                                      controllers.OrderCtrl.submitOrder()
+POST          /client/order/submit                                                      controllers.OrderCtrl.submitOrder()
+GET           /client/pay/order/get/$orderId<[0-9]+>                                    controllers.OrderCtrl.payOrderWeb(orderId:Long)

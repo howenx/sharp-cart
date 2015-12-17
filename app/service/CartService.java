@@ -1,10 +1,7 @@
 package service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import domain.Cart;
-import domain.CouponVo;
-import domain.Order;
-import domain.Sku;
+import domain.*;
 
 import java.util.List;
 
@@ -35,4 +32,20 @@ public interface CartService {
     List<CouponVo> getUserCouponAll(CouponVo c) throws Exception;
 
     Boolean updateCouponInvalid(CouponVo c) throws Exception;
+
+    Boolean insertOrderSplit(OrderSplit orderSplit) throws Exception;
+
+    Boolean updateOrderSplit(OrderSplit orderSplit) throws Exception;
+
+    List<OrderSplit> selectOrderSplit(OrderSplit orderSplit) throws Exception;
+
+    Boolean insertOrderLine(OrderLine orderLine) throws Exception;
+
+    List<OrderLine> selectOrderLine(OrderLine orderLine) throws Exception;
+
+    Boolean insertOrderAddress(OrderAddress orderAddress) throws Exception;
+
+    List<OrderAddress> selectOrderAddress(OrderAddress orderAddress) throws Exception;
+
+    Boolean insertOrder(Order order) throws Exception;
 }

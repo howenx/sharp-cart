@@ -23,11 +23,13 @@ public class Address implements Serializable {
     private String userToken;//客户端返回的token
     @JsonIgnore
     private Boolean orDefault;//是否默认收获地址
+    @JsonIgnore
+    private String provinceCode;//省份代码
 
     public Address() {
     }
 
-    public Address(Long addId, String tel, String name, String deliveryCity, String deliveryDetail, String idCardNum, Long userId, String userToken, Boolean orDefault) {
+    public Address(Long addId, String tel, String name, String deliveryCity, String deliveryDetail, String idCardNum, Long userId, String userToken, Boolean orDefault, String provinceCode) {
         this.addId = addId;
         this.tel = tel;
         this.name = name;
@@ -37,6 +39,7 @@ public class Address implements Serializable {
         this.userId = userId;
         this.userToken = userToken;
         this.orDefault = orDefault;
+        this.provinceCode = provinceCode;
     }
 
     public Long getAddId() {
@@ -111,6 +114,14 @@ public class Address implements Serializable {
         this.orDefault = orDefault;
     }
 
+    public String getProvinceCode() {
+        return provinceCode;
+    }
+
+    public void setProvinceCode(String provinceCode) {
+        this.provinceCode = provinceCode;
+    }
+
     @Override
     public String toString() {
         return "Address{" +
@@ -123,6 +134,7 @@ public class Address implements Serializable {
                 ", userId=" + userId +
                 ", userToken='" + userToken + '\'' +
                 ", orDefault=" + orDefault +
+                ", provinceCode='" + provinceCode + '\'' +
                 '}';
     }
 }

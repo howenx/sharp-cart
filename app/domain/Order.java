@@ -36,12 +36,19 @@ public class Order implements Serializable {
     private Long                addId;//用户订单地址
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal          shipFee;//邮费
+    private Timestamp           confirmReceiveAt;//确认收货时间
     private String              orderDetailUrl;//订单相信页面url
+    private BigDecimal          postalFee;//行邮税
+    private BigDecimal          totalFee;//购买商品总费用
+    @JsonIgnore
+    private Integer             shipTime;//发货时间
+    @JsonIgnore
+    private Integer             clientType;//客户端类型
 
     public Order() {
     }
 
-    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String orderDetailUrl) {
+    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, Timestamp confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType) {
         this.orderId = orderId;
         this.userId = userId;
         this.payTotal = payTotal;
@@ -56,7 +63,12 @@ public class Order implements Serializable {
         this.orderDesc = orderDesc;
         this.addId = addId;
         this.shipFee = shipFee;
+        this.confirmReceiveAt = confirmReceiveAt;
         this.orderDetailUrl = orderDetailUrl;
+        this.postalFee = postalFee;
+        this.totalFee = totalFee;
+        this.shipTime = shipTime;
+        this.clientType = clientType;
     }
 
     public Long getOrderId() {
@@ -171,12 +183,52 @@ public class Order implements Serializable {
         this.shipFee = shipFee;
     }
 
+    public Timestamp getConfirmReceiveAt() {
+        return confirmReceiveAt;
+    }
+
+    public void setConfirmReceiveAt(Timestamp confirmReceiveAt) {
+        this.confirmReceiveAt = confirmReceiveAt;
+    }
+
     public String getOrderDetailUrl() {
         return orderDetailUrl;
     }
 
     public void setOrderDetailUrl(String orderDetailUrl) {
         this.orderDetailUrl = orderDetailUrl;
+    }
+
+    public BigDecimal getPostalFee() {
+        return postalFee;
+    }
+
+    public void setPostalFee(BigDecimal postalFee) {
+        this.postalFee = postalFee;
+    }
+
+    public BigDecimal getTotalFee() {
+        return totalFee;
+    }
+
+    public void setTotalFee(BigDecimal totalFee) {
+        this.totalFee = totalFee;
+    }
+
+    public Integer getShipTime() {
+        return shipTime;
+    }
+
+    public void setShipTime(Integer shipTime) {
+        this.shipTime = shipTime;
+    }
+
+    public Integer getClientType() {
+        return clientType;
+    }
+
+    public void setClientType(Integer clientType) {
+        this.clientType = clientType;
     }
 
     @Override
@@ -196,7 +248,12 @@ public class Order implements Serializable {
                 ", orderDesc='" + orderDesc + '\'' +
                 ", addId=" + addId +
                 ", shipFee=" + shipFee +
+                ", confirmReceiveAt=" + confirmReceiveAt +
                 ", orderDetailUrl='" + orderDetailUrl + '\'' +
+                ", postalFee=" + postalFee +
+                ", totalFee=" + totalFee +
+                ", shipTime=" + shipTime +
+                ", clientType=" + clientType +
                 '}';
     }
 }
