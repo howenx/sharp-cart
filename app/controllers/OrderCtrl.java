@@ -534,6 +534,6 @@ public class OrderCtrl extends Controller {
      * @return 跳转到京东支付页面
      */
     public Result payOrderWeb(Long orderId){
-        return ok("success");
+        return redirect("/jd/pay");
     }
 }
