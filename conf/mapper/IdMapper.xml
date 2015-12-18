@@ -38,4 +38,32 @@
         </if>
         ORDER BY t.or_default DESC
     </select>
+
+    <!--用户附加信息表-->
+    <select id="getIdPlus" resultType="domain.IdPlus" parameterType="domain.IdPlus">
+        select    plus_id,
+        user_id,
+        pay_jd_token,
+        update_at,
+        create_at,
+        update_times
+        from id_plus where 1=1
+        <if test="userId!=null and userId!=''">
+            and user_id=#{userId}
+        </if>
+    </select>
+    <insert id="insertIdPlus" parameterType="domain.IdPlus" useGeneratedKeys="true" keyProperty="plusId">
+        insert into id_plus(
+            user_id,
+            pay_jd_token,
+            create_at
+        )values(#{userId},#{payJdToken},CURRENT_TIMESTAMP(0))
+    </insert>
+    <update id="updateIdPlus" parameterType="domain.IdPlus">
+        update id_plus set  update_at = CURRENT_TIMESTAMP(0),
+        pay_jd_token =#{payJdToken},
+        update_times=COALESCE(update_times::int,0)+1
+        where 1=1 and user_id =#{userId}
+    </update>
+
 </mapper>

@@ -1,15 +1,26 @@
 package controllers;
 
 import com.google.inject.Singleton;
+import domain.IdPlus;
+import domain.Order;
+import domain.OrderLine;
+import domain.OrderSplit;
+import filters.UserAuth;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import play.Logger;
 import play.Play;
+import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
+import play.mvc.Security;
+import service.CartService;
+import service.IdService;
 import util.Crypto;
 
+import javax.inject.Inject;
+import java.math.BigDecimal;
 import java.util.*;
 
 
@@ -20,6 +31,42 @@ import java.util.*;
 @Singleton
 public class JDPay extends Controller {
 
+    private CartService cartService;
+
+    private IdService idService;
+
+    //shopping服务器url
+    private static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
+
+    private static final String JD_SECRET = Play.application().configuration().getString("jd_secret");
+
+    private static final String JD_SELLER = Play.application().configuration().getString("jd_seller");
+
+    @Inject
+    public JDPay(CartService cartService, IdService idService) {
+        this.cartService = cartService;
+        this.idService = idService;
+    }
+
+    /**
+     * 支付调用
+     * @param orderId 订单ID
+     * @return 跳转到京东支付页面
+     */
+    @Security.Authenticated(UserAuth.class)
+    public Result payOrderWeb(Long orderId){
+
+        Map<String, String> params = new HashMap<>();
+        try {
+            params = getParams(request().queryString(),request().body().asFormUrlEncoded(),(Long) ctx().args.get("userId"),orderId);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return redirect("/jd/pay");
+    }
+
+
     /**
      * GET 或者POST 请求
      * 需要的参数:
@@ -27,17 +74,18 @@ public class JDPay extends Controller {
      * trade_amount   整数, 按照分计算的,1表示1分, 100表示1元,取消
      * trade_subject 订单标题,就是商品的标题
      * sub_order_info 子订单内容
-     * @return
+     *
+     * @return page
      */
-    public Result pay () {
+    public Result pay() {
         Map<String, String[]> req_map = request().queryString();
-        Map<String,String[]> body_map = request().body().asFormUrlEncoded();
+        Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
-        if(req_map != null) {
-            req_map.forEach((k,v)->params.put(k,v[0]));
+        if (req_map != null) {
+            req_map.forEach((k, v) -> params.put(k, v[0]));
         }
-        if(body_map != null)
-         body_map.forEach((k, v) -> params.put(k, v[0]));
+        if (body_map != null)
+            body_map.forEach((k, v) -> params.put(k, v[0]));
 
         //查询订单的金额, 标题, 子订单
 
@@ -58,24 +106,23 @@ public class JDPay extends Controller {
         String return_url = Play.application().configuration().getString("jd_return_url");
         String token = "";
 
+        params.put("buyer_info", "{\"customer_type\":\"OUT_CUSTOMER_VALUE\",\"customer_code\":\"Louch2010\"}");
+        params.put("customer_no", seller);
+        params.put("jeep_info", "");
+        params.put("notify_url", notify_url);
+        params.put("out_trade_no", "" + order_id);
+        params.put("request_datetime", req_date);
+        params.put("return_params", return_params);
+        params.put("return_url", return_url);
+        params.put("settle_currency", settle_currency);
+        params.put("sub_order_info", "[{\"sub_order_no\": \"32132\", \"sub_order_amount\":\"1\", \"sub_order_name\":\"测试商品\"}]");
+        params.put("token", "");
+        params.put("trade_amount", "" + amount);
+        params.put("trade_currency", trade_currency);
+        params.put("trade_subject", "测试订单");
+        params.put("sign_type", sign_type);
 
-        params.put("buyer_info","{\"customer_type\":\"OUT_CUSTOMER_VALUE\",\"customer_code\":\"Louch2010\"}");
-        params.put("customer_no",seller);
-        params.put("jeep_info","");
-        params.put("notify_url",notify_url);
-        params.put("out_trade_no","" + order_id);
-        params.put("request_datetime",req_date);
-        params.put("return_params",return_params);
-        params.put("return_url",return_url);
-        params.put("settle_currency",settle_currency);
-        params.put("sub_order_info","[{\"sub_order_no\": \"32132\", \"sub_order_amount\":\"1\", \"sub_order_name\":\"测试商品\"}]");
-        params.put("token","");
-        params.put("trade_amount","" + amount);
-        params.put("trade_currency",trade_currency);
-        params.put("trade_subject","测试订单");
-        params.put("sign_type",sign_type);
-
-        params.put("sign_data",create_sign(params,secret));
+        params.put("sign_data", create_sign(params, secret));
 
 
         StringBuilder sbHtml = new StringBuilder();
@@ -86,9 +133,7 @@ public class JDPay extends Controller {
                 "</head><form id=\"jdsubmit\" name=\"jdsubmit\" action=\"https://cbe.wangyin.com/cashier/mobile/payment\""
                 + "_input_charset=utf-8" + "\" method=\"" + "POST" + "\">");
 
-          params.forEach((k,v) -> sbHtml.append("<input type=\"hidden\" name=\"" + k + "\" value='" + v + "'/>"));
-
-
+        params.forEach((k, v) -> sbHtml.append("<input type=\"hidden\" name=\"").append(k).append("\" value='").append(v).append("'/>"));
 
 
         //submit按钮控件请不要含有name属性
@@ -98,14 +143,101 @@ public class JDPay extends Controller {
         return ok(sbHtml.toString()).as("text/html");
     }
 
-    public Result back() {
-        Map<String,String[]> body_map = request().body().asFormUrlEncoded();
+
+    private Map<String, String> getParams(Map<String, String[]> req_map,Map<String, String[]> body_map,Long userId, Long orderId) throws Exception{
+        Map<String, String> params = new HashMap<>();
+        if (req_map != null) {
+            req_map.forEach((k, v) -> params.put(k, v[0]));
+        }
+        if (body_map != null)
+            body_map.forEach((k, v) -> params.put(k, v[0]));
+
+        Optional<Map<String,String>> optionalOrderInfo = Optional.ofNullable(getOrderInfo(userId,orderId));
+
+        if (optionalOrderInfo.isPresent()){
+            optionalOrderInfo.get().forEach(params::put);
+            getBasicInfo().forEach(params::put);
+            params.put("sign_data", create_sign(params, JD_SECRET));
+            return params;
+        }else return null;
+    }
+
+
+
+    private Map<String, String> getOrderInfo(Long userId, Long orderId) throws Exception {
+        Map<String, String> map = new HashMap<>();
+        Order order = new Order();
+        order.setOrderId(orderId);
+        Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
+
+        IdPlus idPlus = new IdPlus();
+        idPlus.setUserId(userId);
+        Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
+
+        if (listOptional.isPresent() && listOptional.get().size() > 0) {
+            order = cartService.getOrderBy(order).get(0);
+            map.put("out_trade_no", orderId.toString());
+            map.put("return_params", orderId.toString());//成功支付,或者查询时候,返回订单编号
+            map.put("trade_subject", "韩秘美-订单编号" + orderId);
+            map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).toPlainString());
+            if (idPlusOptional.isPresent()) {
+                map.put("token", idPlusOptional.get().getPayJdToken());
+            }
+            //buyer info json
+            Map<String, String> buyerInfo = new HashMap<>();
+            buyerInfo.put("customer_type", "OUT_CUSTOMER_VALUE");
+            buyerInfo.put("customer_code", userId.toString());
+            map.put("buyer_info", Json.stringify(Json.toJson(buyerInfo)));
+
+            //sub_order_info
+            OrderSplit orderSplit = new OrderSplit();
+            orderSplit.setOrderId(orderId);
+            Optional<List<OrderSplit>> orderSplitList = Optional.ofNullable(cartService.selectOrderSplit(orderSplit));
+            if (orderSplitList.isPresent()) {
+                List<Map<String, String>> subInfo = new ArrayList<>();
+                for (OrderSplit orderSp : orderSplitList.get()) {
+                    Map<String, String> subOrderMap = new HashMap<>();
+                    OrderLine orderLine = new OrderLine();
+                    orderLine.setOrderId(orderId);
+                    orderLine.setSplitId(orderSp.getSplitId());
+                    subOrderMap.put("sub_order_no", orderSp.getSplitId().toString());
+                    subOrderMap.put("sub_order_name", "韩秘美-子订单号" + orderSp.getSplitId());
+                    subOrderMap.put("sub_order_amount",orderSp.getTotalPayFee().multiply(new BigDecimal(100)).toPlainString());
+                    subInfo.add(subOrderMap);
+                }
+                map.put("sub_order_info",Json.stringify(Json.toJson(subInfo)));
+            }
+            return map;
+        }else return null;
+    }
+
+    private static Map<String, String> getBasicInfo(){
+        Map<String, String> params = new HashMap<>();
+
+        DateTimeFormatter f = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
+        String req_date = f.print(new DateTime());
+        String sign_type = "MD5";
+        String trade_currency = "CNY";
+        String settle_currency = "USD";
+
+        params.put("customer_no", JD_SELLER);
+        params.put("notify_url", SHOPPING_URL+"/client/pay/jd/back");
+        params.put("request_datetime", req_date);
+        params.put("return_url",  SHOPPING_URL+"/client/pay/jd/front");
+        params.put("settle_currency", settle_currency);
+        params.put("trade_currency", trade_currency);
+        params.put("sign_type", sign_type);
+        return params;
+    }
+
+    public Result payBackendNotify() {
+        Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
         body_map.forEach((k, v) -> params.put(k, v[0]));
         String sign = params.get("sign_data");
         String secret = Play.application().configuration().getString("jd_secret");
-        String _sign = create_sign(params,secret);
-        if(!sign.equalsIgnoreCase(_sign)) {
+        String _sign = create_sign(params, secret);
+        if (!sign.equalsIgnoreCase(_sign)) {
             //error
             return ok("通知失败，签名失败！");
         }
@@ -115,25 +247,21 @@ public class JDPay extends Controller {
         return ok("SUCCESS");
     }
 
-    public Result front() {
-        Map<String,String[]> body_map = request().body().asFormUrlEncoded();
+    public Result payFrontNotify() {
+        Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
         body_map.forEach((k, v) -> params.put(k, v[0]));
         String sign = params.get("sign_data");
         String secret = Play.application().configuration().getString("jd_secret");
-        String _sign = create_sign(params,secret);
-        if(!sign.equalsIgnoreCase(_sign)) {
-
+        String _sign = create_sign(params, secret);
+        if (!sign.equalsIgnoreCase(_sign)) {
             return ok("error page");
-
         }
-
-
         return ok("success page");
     }
 
     public static String create_sign(Map<String, String> params, String secret) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         List<String> keys = new ArrayList<>(params.keySet());
         Collections.sort(keys);
 
@@ -142,7 +270,7 @@ public class JDPay extends Controller {
             if (key.equals("KEY") || key.equals("URL") || key.equals("sign_data") || key.equals("sign_type")) {
                 continue;
             }
-            if(sb.length() > 0) {
+            if (sb.length() > 0) {
                 sb.append("&");
             }
             sb.append(String.format("%s=%s", key, value));

@@ -87,7 +87,7 @@ public class OrderAddress implements Serializable {
 
     @Override
     public String toString() {
-        return "OrderAddress{" +
+        return "OrderAddressActor{" +
                 "shipId=" + shipId +
                 ", orderId=" + orderId +
                 ", deliveryName='" + deliveryName + '\'' +

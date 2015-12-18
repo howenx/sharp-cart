@@ -1,0 +1,48 @@
+body{
+    margin: 0;
+}
+*{
+    box-sizing: border-box;
+}
+hr{
+    margin: 0;
+}
+.pay-change span{
+    display: inline-block;
+    margin: 10px 0 10px 10px;
+    color: #686868;
+}
+.pay-change em{
+    font-style: normal;
+    float: right;margin: 10px 10px 10px 0;
+    color: #f15353;
+}
+.pay{
+    width: 100%;height: 35px;padding-left: 55px;
+    margin: 10px 0;position: relative;
+}
+.pay span{
+    font-size: 15px;
+    color: #333;
+    margin-top: 10px;
+    line-height: 15px;
+    display: block;
+}
+.pay em{
+    font-style: normal;
+    font-size: 12px;
+    color: #999;
+    display: inline-block;
+    margin-top: 8px;
+}
+.pay .right-icon{
+    width: 18px;height: 30px;
+    position: absolute;right: 5px;top: 8px;
+    background: url("images/right.png") no-repeat;background-size: 11px;
+}
+.weixin{
+    background: url("images/home-pay-icon.png") no-repeat 10px -140px;background-size: 35px;
+}
+.jingdong{
+    background: url("images/home-pay-icon.png") no-repeat 10px -70px;background-size: 35px;
+}

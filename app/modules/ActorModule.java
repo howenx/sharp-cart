@@ -1,6 +1,6 @@
 package modules;
 
-import actor.CalculateShipFeeActor;
+import actor.*;
 import com.google.inject.AbstractModule;
 import play.libs.akka.AkkaGuiceSupport;
 
@@ -11,6 +11,12 @@ import play.libs.akka.AkkaGuiceSupport;
 public class ActorModule extends AbstractModule implements AkkaGuiceSupport {
     @Override
     protected void configure() {
-        bindActor(CalculateShipFeeActor.class, "shipFee-actor");
+
+        bindActor(OrderSplitActor.class, "subOrderActor");
+        bindActor(OrderAddressActor.class, "orderShipActor");
+        bindActor(OrderLineActor.class, "orderDetailActor");
+        bindActor(ClearCartActor.class,"clearCartActor");
+        bindActor(PublicFreeShipActor.class,"publicFreeShipActor");
+        bindActor(ReduceInvActor.class,"reduceInvActor");
     }
 }

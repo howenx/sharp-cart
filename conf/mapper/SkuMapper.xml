@@ -65,8 +65,8 @@
         <if test="restAmount != null and restAmount!=''">
             ,t.rest_amount=#{restAmount}
         </if>
-        <if test="orSoldOut != null and orSoldOut!=''">
-            ,t.or_sold_out=#{orSoldOut}
+        <if test="state != null and state!=''">
+            ,t.state=#{state}
         </if>
         where 1=1
         <if test="id != null and id!=''">

@@ -14,17 +14,8 @@ POST          /client/settle                                                    
 GET           /client/coupons/list                                                      controllers.OrderCtrl.couponsList()
 GET           /client/public/coupons                                                    controllers.OrderCtrl.publicCoupons()
 POST          /client/order/submit                                                      controllers.OrderCtrl.submitOrder()
-GET           /client/pay/order/get/$orderId<[0-9]+>                                    controllers.OrderCtrl.payOrderWeb(orderId:Long)
 GET           /client/order/submit                                                      controllers.OrderCtrl.submitOrder()
 
-
-
-
-
-
-
-
-
-GET           /jd/pay                                                                   controllers.JDPay.pay()
-GET           /jd/notify                                                                controllers.JDPay.back()
-GET           /jd/return                                                                controllers.JDPay.front()
+GET           /client/pay/order/get/$orderId<[0-9]+>                                    controllers.JDPay.payOrderWeb(orderId:Long)
+POST          /client/pay/jd/back                                                       controllers.JDPay.payBackendNotify()
+POST          /client/pay/jd/front                                                      controllers.JDPay.payFrontNotify()

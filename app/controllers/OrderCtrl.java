@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
  * 订单相关,提交订单,优惠券
  * Created by howen on 15/12/1.
  */
+@SuppressWarnings("unchecked")
 @Singleton
 public class OrderCtrl extends Controller {
 
@@ -38,9 +39,7 @@ public class OrderCtrl extends Controller {
 
     private IdService idService;
 
-    private ActorSystem system;
-
-    private ActorRef shipActor;
+    private ActorRef orderSplitActor;
 
     //行邮税收税标准
     static String POSTAL_STANDARD;
@@ -52,11 +51,10 @@ public class OrderCtrl extends Controller {
     static String FREE_SHIP;
 
     @Inject
-    public OrderCtrl(SkuService skuService, CartService cartService, IdService idService, ActorSystem system, @Named("shipFee-actor") ActorRef shipActor) {
+    public OrderCtrl(SkuService skuService, CartService cartService, IdService idService, @Named("subOrderActor") ActorRef orderSplitActor) {
         this.cartService = cartService;
         this.idService = idService;
-        this.system = system;
-        this.shipActor = shipActor;
+        this.orderSplitActor = orderSplitActor;
         this.skuService = skuService;
         //行邮税收税标准
         POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
@@ -267,7 +265,6 @@ public class OrderCtrl extends Controller {
         }
     }
 
-    @SuppressWarnings("fallthrough")
     @Security.Authenticated(UserAuth.class)
     public Result submitOrder() {
 
@@ -300,7 +297,11 @@ public class OrderCtrl extends Controller {
 
                 if (settleOrderDTO.getCouponId() != null && !settleOrderDTO.getCouponId().equals("")) {
                     allFee.put("discountFee", calDiscount(userId, settleOrderDTO.getCouponId(), (BigDecimal) allFee.get("totalFee")));
+                    allFee.put("couponId",settleOrderDTO.getCouponId());
                 }
+
+                //前端是立即购买还是结算页提交订单
+                allFee.put("buyNow",settleOrderDTO.getBuyNow());
 
                 Logger.error("所有费用: "+allFee.toString());
 
@@ -314,7 +315,8 @@ public class OrderCtrl extends Controller {
                         return c;
                     }).collect(Collectors.toList());
                     //调用Actor创建子订单
-                    shipActor.tell(singleCustoms, ActorRef.noSender());
+                    allFee.put("orderId", order.getOrderId());
+                    orderSplitActor.tell(allFee, ActorRef.noSender());
                     result.putPOJO("order", Json.toJson(order));
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                     return ok(result);
@@ -443,6 +445,12 @@ public class OrderCtrl extends Controller {
         map.put("totalPayFeeSingle", totalPayFeeSingle.setScale(2, BigDecimal.ROUND_HALF_UP));
         map.put("totalAmount", settleDTO.getCartDtos().size());
         map.put("cartDtos", settleDTO.getCartDtos());
+
+        //单个海关下是否达到某个消费值时候免邮
+        if (totalFeeSingle.compareTo(new BigDecimal(FREE_SHIP)) > 0) {
+            map.put("freeShip",true);
+        }else map.put("freeShip",false);
+
         return map;
     }
 
@@ -504,6 +512,9 @@ public class OrderCtrl extends Controller {
         allFee.put("postalFee", postalFee.setScale(2, BigDecimal.ROUND_HALF_UP));
         allFee.put("totalFee", totalFee.setScale(2, BigDecimal.ROUND_HALF_UP));
         allFee.put("totalPayFee", totalPayFee.setScale(2, BigDecimal.ROUND_HALF_UP));
+        allFee.put("address", address);
+        allFee.put("userId", userId);
+        allFee.put("freeShipLimit", new BigDecimal(FREE_SHIP).setScale(2, BigDecimal.ROUND_DOWN));
         return allFee;
     }
 

@@ -12,7 +12,7 @@ public interface SkuService {
 
     Sku getInv(Sku sku) throws Exception;
 
-    Integer updateInv(Sku sku) throws Exception;
+    Boolean updateInv(Sku sku) throws Exception;
 
     Carriage getCarriage(Carriage carriage) throws Exception;
 

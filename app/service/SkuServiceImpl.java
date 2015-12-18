@@ -22,8 +22,8 @@ public class SkuServiceImpl implements SkuService{
     }
 
     @Override
-    public Integer updateInv(Sku sku) throws Exception{
-        return skuMapper.updateInv(sku);
+    public Boolean updateInv(Sku sku) throws Exception{
+        return skuMapper.updateInv(sku)>=0;
     }
 
     @Override

@@ -288,6 +288,9 @@
         <if test="state!=null and state!=''">
             and state = #{state}
         </if>
+        <if test="state==null or state==''">
+            and state in ('Y','N','S')
+        </if>
         <if test="limitQuota!=null and limitQuota!=''">
             and limit_quota = #{limitQuota}
         </if>
@@ -311,6 +314,9 @@
         </if>
         <if test="state!=null and state!=''">
             and state = #{state}
+        </if>
+        <if test="state==null or state==''">
+            and state in ('Y','N','S')
         </if>
         <if test="limitQuota!=null and limitQuota!=''">
             and limit_quota = #{limitQuota}
@@ -566,6 +572,9 @@
         </if>
         <if test="itemId !=null and itemId!=''">
             and item_id=#{itemId}
+        </if>
+        <if test="splitId !=null and splitId!=''">
+            and split_id=#{splitId}
         </if>
     </select>
 
