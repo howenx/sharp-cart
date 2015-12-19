@@ -21,13 +21,3 @@ POST          /client/pay/jd/back                                               
 POST          /client/pay/jd/front                                                      controllers.JDPay.payFrontNotify()
 
 GET           /assets/*file                                                             controllers.Assets.versioned(path="/public", file: Asset)
-
-
-
-
-
-
-
-GET           /jd/pay                                                                   controllers.JDPay.pay()
-POST           /jd/notify                                                                controllers.JDPay.back()
-POST          /jd/return                                                                controllers.JDPay.front()

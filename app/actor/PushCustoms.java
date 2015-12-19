@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
  * Created by handy on 15/12/19.
  * kakao china
  */
+@SuppressWarnings("unchecked")
 public class PushCustoms extends UntypedActor{
 
     private static String[] customs = {"guangzhou","ningbo","hangzhou","gzjichang","gzluogang","shanghai","zhengzhou"};
@@ -41,7 +42,7 @@ public class PushCustoms extends UntypedActor{
      * 电商平台海关编号: ecp_code 3302461805
      * 电商平台海关名称: ecp_name 全球购
      * 电商平台国检编号: ecp_code_insp 3302461805
-     * @param message
+     * @param message m
      * @throws Exception
      */
     @Override
