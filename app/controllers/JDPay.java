@@ -42,7 +42,6 @@ public class JDPay extends Controller {
 
     static final ObjectNode result = Json.newObject();
 
-
     @Inject
     public JDPay(CartService cartService, IdService idService) {
         this.cartService = cartService;
@@ -90,7 +89,7 @@ public class JDPay extends Controller {
         if (optionalOrderInfo.isPresent()){
             optionalOrderInfo.get().forEach(params::put);
             getBasicInfo().forEach(params::put);
-            params.put("sign_data", create_sign(params, JD_SECRET));
+            params.put("sign_data", Crypto.create_sign(params, JD_SECRET));
             return params;
         }else return null;
     }
@@ -177,8 +176,9 @@ public class JDPay extends Controller {
         body_map.forEach((k, v) -> params.put(k, v[0]));
         String sign = params.get("sign_data");
         String secret = Play.application().configuration().getString("jd_secret");
-        String _sign = create_sign(params, secret);
-        if (!sign.equalsIgnoreCase(_sign)) {
+
+        String _sign = Crypto.create_sign(params,secret);
+        if(!sign.equalsIgnoreCase(_sign)) {
             //error
             return ok("通知失败，签名失败！");
         }
@@ -194,33 +194,10 @@ public class JDPay extends Controller {
         body_map.forEach((k, v) -> params.put(k, v[0]));
         String sign = params.get("sign_data");
         String secret = Play.application().configuration().getString("jd_secret");
-        String _sign = create_sign(params, secret);
+        String _sign = Crypto.create_sign(params,secret);
         if (!sign.equalsIgnoreCase(_sign)) {
             return ok("error page");
         }
         return ok("success page");
-    }
-
-    public static String create_sign(Map<String, String> params, String secret) {
-        StringBuilder sb = new StringBuilder();
-        List<String> keys = new ArrayList<>(params.keySet());
-        Collections.sort(keys);
-
-        for (String key : keys) {
-            String value = params.get(key);
-            if (key.equals("KEY") || key.equals("URL") || key.equals("sign_data") || key.equals("sign_type")) {
-                continue;
-            }
-            if (sb.length() > 0) {
-                sb.append("&");
-            }
-            sb.append(String.format("%s=%s", key, value));
-        }
-
-        String pre_sign = sb.toString();
-        Logger.debug(pre_sign);
-
-        return Crypto.md5(pre_sign + secret);
-
     }
 }
