@@ -1,5 +1,7 @@
 package actor;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.ArrayUtils;
@@ -8,10 +10,14 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import play.Logger;
 import play.Play;
+import play.libs.Akka;
 import play.libs.ws.WS;
+import scala.concurrent.duration.Duration;
 import util.Crypto;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by handy on 15/12/19.
@@ -82,6 +88,15 @@ public class PushCustoms extends UntypedActor{
 
                     //每次不用初始化的话,不用杀死该actor
                     //getSelf().tell(PoisonPill.getInstance(), ActorRef.noSender());
+
+                    Map<String,String> send = new HashMap<>();
+                    send.put("out_trade_no",out_trade_no);
+                    send.put("sub_out_trade_no", sub_out_trade_no);
+                    send.put("sub_order_no", sub_order_no);
+
+                    //30 分钟之后发起查询状态actor
+                    ActorRef ar = Akka.system().actorOf(Props.create(CustomStatus.class));
+                    Akka.system().scheduler().scheduleOnce(Duration.create(30, TimeUnit.MINUTES), ar, send, Akka.system().dispatcher(), ActorRef.noSender());
                 }
                 else {
                     Logger.info("post customer error ->" + ret.get("response_code").textValue());
