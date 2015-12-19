@@ -95,7 +95,7 @@ public class OrderCtrl extends Controller {
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
 
-                Logger.error("请求JSON : "+json.get().toString());
+                Logger.error("请求JSON : " + json.get().toString());
 
                 SettleOrderDTO settleOrderDTO = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructType(SettleOrderDTO.class));
 
@@ -108,7 +108,12 @@ public class OrderCtrl extends Controller {
                     address.setUserId(userId);
                     address.setOrDefault(true);
                 }
-                address = selectAddress(address);
+                Optional<Address> addressOptional = Optional.ofNullable(selectAddress(address));
+
+                if (addressOptional.isPresent()) {
+                    address = addressOptional.get();
+                }
+                resultMap.put("address", address);
 
                 //计算所有费用
                 Map<String, Object> allFee = calOrderFee(settleOrderDTO.getSettleDTOs(), userId, address);
@@ -178,8 +183,6 @@ public class OrderCtrl extends Controller {
                 if (((BigDecimal) allFee.get("postalFee")).compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
                     resultMap.put("factPortalFee", 0);
                 else resultMap.put("factPortalFee", ((BigDecimal) allFee.get("postalFee")).toPlainString());
-
-                resultMap.put("address", address);
 
                 //将各个海关下的费用统计返回
                 resultMap.put("singleCustoms", returnFee);
@@ -274,7 +277,7 @@ public class OrderCtrl extends Controller {
 
             if (json.isPresent() && json.get().size() > 0) {
 
-                Logger.error("请求JSON : "+json.get().toString());
+                Logger.error("请求JSON : " + json.get().toString());
 
                 SettleOrderDTO settleOrderDTO = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructType(SettleOrderDTO.class));
                 settleOrderDTO.setClientIp(request().remoteAddress());
@@ -292,19 +295,19 @@ public class OrderCtrl extends Controller {
                     return ok(result);
                 }
 
-                List<Map<String,Object>> singleCustoms =(List<Map<String,Object>>) allFee.get("singleCustoms");
+                List<Map<String, Object>> singleCustoms = (List<Map<String, Object>>) allFee.get("singleCustoms");
 
                 if (settleOrderDTO.getCouponId() != null && !settleOrderDTO.getCouponId().equals("")) {
-                    BigDecimal discount =  calDiscount(userId, settleOrderDTO.getCouponId(), (BigDecimal) allFee.get("totalFee"));
+                    BigDecimal discount = calDiscount(userId, settleOrderDTO.getCouponId(), (BigDecimal) allFee.get("totalFee"));
                     allFee.put("discountFee", discount);
-                    allFee.put("couponId",settleOrderDTO.getCouponId());
-                    allFee.put("totalPayFee", ((BigDecimal)allFee.get("totalPayFee")).subtract(discount).setScale(2, BigDecimal.ROUND_HALF_UP));
+                    allFee.put("couponId", settleOrderDTO.getCouponId());
+                    allFee.put("totalPayFee", ((BigDecimal) allFee.get("totalPayFee")).subtract(discount).setScale(2, BigDecimal.ROUND_HALF_UP));
                 }
 
                 //前端是立即购买还是结算页提交订单
-                allFee.put("buyNow",settleOrderDTO.getBuyNow());
+                allFee.put("buyNow", settleOrderDTO.getBuyNow());
 
-                Logger.error("所有费用: "+allFee.toString());
+                Logger.error("所有费用: " + allFee.toString());
 
                 //创建订单
                 Order order = createOrder(settleOrderDTO, allFee, userId);
@@ -316,7 +319,7 @@ public class OrderCtrl extends Controller {
                     result.putPOJO("order", Json.toJson(order));
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                     return ok(result);
-                }else {
+                } else {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CREATE_ORDER_EXCEPTION.getIndex()), Message.ErrorCode.CREATE_ORDER_EXCEPTION.getIndex())));
                     return ok(result);
                 }
@@ -373,8 +376,8 @@ public class OrderCtrl extends Controller {
             JsonNode detailCity = Json.parse(address.getDeliveryCity());
             address.setProvinceCode(detailCity.get("province_code").asText());
             address.setDeliveryCity(detailCity.get("province").asText() + " " + detailCity.get("city").asText() + " " + detailCity.get("area").asText());
-        }
-        return address;
+            return address;
+        } else return null;
     }
 
     //计算每个报关单位下的所有费用
@@ -419,7 +422,9 @@ public class OrderCtrl extends Controller {
                 return map;
             } else {
                 //邮费
-                shipFeeSingle = shipFeeSingle.add(calculateShipFee(address.getProvinceCode(), sku.getCarriageModelCode(), cartDto.getAmount()));
+                if (address!=null && address.getProvinceCode()!=null){
+                    shipFeeSingle = shipFeeSingle.add(calculateShipFee(address.getProvinceCode(), sku.getCarriageModelCode(), cartDto.getAmount()));
+                }else shipFeeSingle=BigDecimal.ZERO;
 
                 //单sku产生的行邮税
                 postalFeeSingle = postalFeeSingle.add(calculatePostalTax(sku.getPostalTaxRate(), sku.getItemPrice(), cartDto.getAmount()));
@@ -444,8 +449,8 @@ public class OrderCtrl extends Controller {
 
         //单个海关下是否达到某个消费值时候免邮
         if (totalFeeSingle.compareTo(new BigDecimal(FREE_SHIP)) > 0) {
-            map.put("freeShip",true);
-        }else map.put("freeShip",false);
+            map.put("freeShip", true);
+        } else map.put("freeShip", false);
 
         return map;
     }
@@ -490,7 +495,9 @@ public class OrderCtrl extends Controller {
         List<Map<String, Object>> singleCustoms = new ArrayList<>();
 
         for (SettleDTO settleDTO : settleDTOList) {
+            //计算单个海关费用
             Map<String, Object> map = calCustomsFee(settleDTO, userId, address);
+
             if (map.containsKey("message")) {
                 allFee.put("message", (int) map.get("message"));
                 return allFee;
@@ -522,7 +529,7 @@ public class OrderCtrl extends Controller {
         order.setPayTotal(((BigDecimal) allFee.get("totalPayFee")).setScale(2, BigDecimal.ROUND_HALF_UP));
         order.setPayMethod(settleOrderDTO.getPayMethod());
         order.setOrderIp(settleOrderDTO.getClientIp());
-        if (allFee.containsKey("discountFee")){
+        if (allFee.containsKey("discountFee")) {
             order.setDiscount(((BigDecimal) allFee.get("discountFee")).setScale(2, BigDecimal.ROUND_HALF_UP));
         }
         order.setOrderDesc(settleOrderDTO.getOrderDesc());
@@ -537,10 +544,11 @@ public class OrderCtrl extends Controller {
 
     /**
      * 支付调用
+     *
      * @param orderId 订单ID
      * @return 跳转到京东支付页面
      */
-    public Result payOrderWeb(Long orderId){
+    public Result payOrderWeb(Long orderId) {
         return redirect("/jd/pay");
     }
 }

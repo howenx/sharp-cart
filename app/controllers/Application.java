@@ -360,62 +360,68 @@ public class Application extends Controller {
         try {
             Long userId = (Long) ctx().args.get("userId");
             Order order = new Order();
+
             order.setUserId(userId);
-            List<Order> orderList = cartService.getOrderBy(order);
+
+            Optional <List<Order>> orderList = Optional.ofNullable(cartService.getOrderBy(order));
 
             //返回总数据
             List<Map> mapList = new ArrayList<>();
 
-            for (Order o : orderList) {
+            if (orderList.isPresent()){
 
-                //用于保存每个订单对应的明细list和地址信息
-                Map<String, Object> map = new HashMap<>();
+                for (Order o : orderList.get()) {
 
-                //根据订单ID获取所有购物车内容
-                Cart c = new Cart();
-                c.setUserId(userId);
-                c.setOrderId(o.getOrderId());
-                List<Cart> carts = cartService.getCarts(c);
+                    //用于保存每个订单对应的明细list和地址信息
+                    Map<String, Object> map = new HashMap<>();
 
-                //每个订单对应的商品明细
-                List<CartSkuDto> skuDtoList = new ArrayList<>();
+                    OrderLine orderLine = new OrderLine();
+                    orderLine.setOrderId(o.getOrderId());
 
-                for (Cart cart : carts) {
-                    CartSkuDto skuDto = new CartSkuDto();
+                    List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
 
-                    //获取每个库存信息
-                    Sku sku = new Sku();
+                    //每个订单对应的商品明细
+                    List<CartSkuDto> skuDtoList = new ArrayList<>();
 
-                    sku.setId(cart.getSkuId());
-                    sku = skuService.getInv(sku);
+                    for (OrderLine orl : orderLineList) {
+                        CartSkuDto skuDto = new CartSkuDto();
 
-                    //组装返回的订单商品明细
-                    skuDto.setSkuId(sku.getId());
-                    skuDto.setAmount(cart.getAmount());
-                    skuDto.setPrice(cart.getPrice());
-                    skuDto.setSkuTitle(sku.getInvTitle());
-                    skuDto.setInvImg(IMAGE_URL + sku.getInvImg());
-                    skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
-                    skuDto.setItemColor(sku.getItemColor());
-                    skuDto.setItemSize(sku.getItemSize());
+                        //获取每个库存信息
+                        Sku sku = new Sku();
+                        //组装返回的订单商品明细
+                        skuDto.setSkuId(orl.getSkuId());
+                        skuDto.setAmount(orl.getAmount());
+                        skuDto.setPrice(orl.getPrice());
+                        skuDto.setSkuTitle(orl.getSkuTitle());
+                        skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                        skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                        skuDto.setItemColor(orl.getSkuColor());
+                        skuDto.setItemSize(orl.getSkuSize());
+                        skuDtoList.add(skuDto);
 
-                    skuDtoList.add(skuDto);
+                    }
 
+                    OrderAddress orderAddress = new OrderAddress();
+                    orderAddress.setOrderId(o.getOrderId());
+
+                    Optional<List<OrderAddress>>  orderAddressOptional=Optional.ofNullable(cartService.selectOrderAddress(orderAddress));
+
+                    if (orderAddressOptional.isPresent()){
+                        //获取地址信息
+                        Address address = new Address();
+                        address.setDeliveryCity(orderAddressOptional.get().get(0).getDeliveryCity());
+                        address.setDeliveryDetail(orderAddressOptional.get().get(0).getDeliveryAddress());
+                        address.setIdCardNum(orderAddressOptional.get().get(0).getDeliveryCardNum());
+                        address.setName(orderAddressOptional.get().get(0).getDeliveryName());
+                        map.put("address", address);
+
+                    }
+                    //组装每个订单对应的明细和地址
+                    map.put("order", o);
+                    map.put("sku", skuDtoList);
+                    mapList.add(map);
                 }
-
-                //获取地址信息
-                Address address = new Address();
-                address.setAddId(o.getAddId());
-                address = idService.getAddress(address);
-
-                //组装每个订单对应的明细和地址
-                map.put("order", o);
-                map.put("sku", skuDtoList);
-                map.put("address", address);
-
-                mapList.add(map);
             }
-
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("orderList", Json.toJson(mapList));
             Logger.error("返回数据" + result.toString());
