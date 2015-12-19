@@ -1,10 +1,8 @@
 package controllers;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Singleton;
-import domain.IdPlus;
-import domain.Order;
-import domain.OrderLine;
-import domain.OrderSplit;
+import domain.*;
 import filters.UserAuth;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -42,6 +40,9 @@ public class JDPay extends Controller {
 
     private static final String JD_SELLER = Play.application().configuration().getString("jd_seller");
 
+    static final ObjectNode result = Json.newObject();
+
+
     @Inject
     public JDPay(CartService cartService, IdService idService) {
         this.cartService = cartService;
@@ -56,94 +57,26 @@ public class JDPay extends Controller {
     @Security.Authenticated(UserAuth.class)
     public Result payOrderWeb(Long orderId){
 
-        Map<String, String> params = new HashMap<>();
         try {
-            params = getParams(request().queryString(),request().body().asFormUrlEncoded(),(Long) ctx().args.get("userId"),orderId);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
+            Map<String, String> params = getParams(request().queryString(),request().body().asFormUrlEncoded(),(Long) ctx().args.get("userId"),orderId);
+            return ok(views.html.cashdesk.render(params));
+        } catch (Exception ex) {
+            Logger.error("settle: " + ex.getMessage());
+            ex.printStackTrace();
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
+            return ok(result);
         }
-        return redirect("/jd/pay");
     }
-
 
     /**
-     * GET 或者POST 请求
-     * 需要的参数:
-     * out_trade_no
-     * trade_amount   整数, 按照分计算的,1表示1分, 100表示1元,取消
-     * trade_subject 订单标题,就是商品的标题
-     * sub_order_info 子订单内容
-     *
-     * @return page
+     * 获取签名参数
+     * @param req_map 请求参数
+     * @param body_map  请求参数
+     * @param userId    用户ID
+     * @param orderId   订单ID
+     * @return  map
+     * @throws Exception
      */
-    public Result pay() {
-        Map<String, String[]> req_map = request().queryString();
-        Map<String, String[]> body_map = request().body().asFormUrlEncoded();
-        Map<String, String> params = new HashMap<>();
-        if (req_map != null) {
-            req_map.forEach((k, v) -> params.put(k, v[0]));
-        }
-        if (body_map != null)
-            body_map.forEach((k, v) -> params.put(k, v[0]));
-
-        //查询订单的金额, 标题, 子订单
-
-        String seller = Play.application().configuration().getString("jd_seller");
-        String secret = Play.application().configuration().getString("jd_secret");
-        DateTimeFormatter f = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
-        String req_date = f.print(new DateTime());
-        String sign_type = "MD5";
-        Long order_id = System.currentTimeMillis();
-        int amount = 1;
-        String trade_currency = "CNY";
-        String settle_currency = "USD";
-        String buyer_info = "{\"customer_type\": \"OUT_CUSTOMER_VALUE\", \"customer_code\":\"Louch2010\"}";
-        String sub_order_info = "[{\"sub_order_no\": \"32132\", \"sub_order_amount\":\"1\", \"sub_order_name\":\"测试商品\"}]";
-        String jeep_info = "";
-        String return_params = "abc";
-        String notify_url = Play.application().configuration().getString("jd_notify_url");
-        String return_url = Play.application().configuration().getString("jd_return_url");
-        String token = "";
-
-        params.put("buyer_info", "{\"customer_type\":\"OUT_CUSTOMER_VALUE\",\"customer_code\":\"Louch2010\"}");
-        params.put("customer_no", seller);
-        params.put("jeep_info", "");
-        params.put("notify_url", notify_url);
-        params.put("out_trade_no", "" + order_id);
-        params.put("request_datetime", req_date);
-        params.put("return_params", return_params);
-        params.put("return_url", return_url);
-        params.put("settle_currency", settle_currency);
-        params.put("sub_order_info", "[{\"sub_order_no\": \"32132\", \"sub_order_amount\":\"1\", \"sub_order_name\":\"测试商品\"}]");
-        params.put("token", "");
-        params.put("trade_amount", "" + amount);
-        params.put("trade_currency", trade_currency);
-        params.put("trade_subject", "测试订单");
-        params.put("sign_type", sign_type);
-
-        params.put("sign_data", create_sign(params, secret));
-
-
-        StringBuilder sbHtml = new StringBuilder();
-
-        sbHtml.append("<html>\n" +
-                "<head>\n" +
-                "\t<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" +
-                "</head><form id=\"jdsubmit\" name=\"jdsubmit\" action=\"https://cbe.wangyin.com/cashier/mobile/payment\""
-                + "_input_charset=utf-8" + "\" method=\"" + "POST" + "\">");
-
-        params.forEach((k, v) -> sbHtml.append("<input type=\"hidden\" name=\"").append(k).append("\" value='").append(v).append("'/>"));
-
-
-        //submit按钮控件请不要含有name属性
-        sbHtml.append("<input type=\"submit\" value=\"" + "submit" + "\" style=\"display:none;\"></form>");
-        sbHtml.append("<script>document.forms['jdsubmit'].submit();</script></html>");
-
-        return ok(sbHtml.toString()).as("text/html");
-    }
-
-
     private Map<String, String> getParams(Map<String, String[]> req_map,Map<String, String[]> body_map,Long userId, Long orderId) throws Exception{
         Map<String, String> params = new HashMap<>();
         if (req_map != null) {
@@ -163,7 +96,13 @@ public class JDPay extends Controller {
     }
 
 
-
+    /***
+     * 支付订单参数配置
+     * @param userId 用户ID
+     * @param orderId 订单ID
+     * @return map
+     * @throws Exception
+     */
     private Map<String, String> getOrderInfo(Long userId, Long orderId) throws Exception {
         Map<String, String> map = new HashMap<>();
         Order order = new Order();
@@ -179,7 +118,9 @@ public class JDPay extends Controller {
             map.put("out_trade_no", orderId.toString());
             map.put("return_params", orderId.toString());//成功支付,或者查询时候,返回订单编号
             map.put("trade_subject", "韩秘美-订单编号" + orderId);
-            map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).toPlainString());
+            map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).setScale(0,BigDecimal.ROUND_DOWN).toPlainString());
+            //自用字断
+            map.put("all_fee", order.getPayTotal().toPlainString());
             if (idPlusOptional.isPresent()) {
                 map.put("token", idPlusOptional.get().getPayJdToken());
             }
@@ -202,7 +143,7 @@ public class JDPay extends Controller {
                     orderLine.setSplitId(orderSp.getSplitId());
                     subOrderMap.put("sub_order_no", orderSp.getSplitId().toString());
                     subOrderMap.put("sub_order_name", "韩秘美-子订单号" + orderSp.getSplitId());
-                    subOrderMap.put("sub_order_amount",orderSp.getTotalPayFee().multiply(new BigDecimal(100)).toPlainString());
+                    subOrderMap.put("sub_order_amount",orderSp.getTotalPayFee().multiply(new BigDecimal(100)).setScale(0,BigDecimal.ROUND_DOWN).toPlainString());
                     subInfo.add(subOrderMap);
                 }
                 map.put("sub_order_info",Json.stringify(Json.toJson(subInfo)));

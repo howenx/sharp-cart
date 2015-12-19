@@ -12,7 +12,7 @@
 <body>
 <div class="pay-change">
     <span>请选择支付方式</span>
-    <em>9.9元</em>
+    <em>@params.get("all_fee")元</em>
 </div>
 <hr>
 <div class="jingdong pay" onclick="jdPost()">
@@ -30,11 +30,11 @@
 </div>
 <div style="display:none">
     <form id="jdsubmit" name="jdsubmit" action="https://cbe.wangyin.com/cashier/mobile/payment" method="POST">
-        @params.foreach {
-        case (k, v) => {
+        @for((k,v) <- params) {
+                @k,@v
                 <input type="hidden" name="@k" value="@v"/>
             }
-        }
+
     </form>
     <script>
         function jdPost(){

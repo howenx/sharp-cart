@@ -60,17 +60,17 @@
     <update id="updateInv" parameterType="domain.Sku">
         update inventories set update_at= CURRENT_TIMESTAMP(0)
         <if test="soldAmount != null and soldAmount!=''">
-            ,t.sold_amount=#{soldAmount}
+            ,sold_amount=#{soldAmount}
         </if>
         <if test="restAmount != null and restAmount!=''">
-            ,t.rest_amount=#{restAmount}
+            ,rest_amount=#{restAmount}
         </if>
         <if test="state != null and state!=''">
-            ,t.state=#{state}
+            ,state=#{state}
         </if>
         where 1=1
         <if test="id != null and id!=''">
-            and t.id=#{id}
+            and id=#{id}
         </if>
     </update>
 

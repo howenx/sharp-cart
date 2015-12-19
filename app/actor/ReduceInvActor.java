@@ -37,7 +37,7 @@ public class ReduceInvActor extends AbstractActor {
                     try {
                         sku=skuService.getInv(sku);
                     } catch (Exception e) {
-                        Logger.error("Sku Select Error:" + e.getMessage());
+                        Logger.error("ReduceInvActor Sku Select Error:" + e.getMessage());
                         e.printStackTrace();
                     }
                     if (sku.getRestAmount()- cartDto.getAmount() ==0){

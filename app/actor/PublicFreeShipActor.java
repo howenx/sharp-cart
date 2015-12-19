@@ -29,6 +29,7 @@ public class PublicFreeShipActor extends AbstractActor {
 
             Map<String, Object> orderInfo = (Map<String, Object>) maps;
             Long userId = (Long) orderInfo.get("userId");
+            Long orderId = (Long) orderInfo.get("orderId");
             BigDecimal freeShipLimit = (BigDecimal) orderInfo.get("freeShipLimit");
             List<Map<String, Object>> orderSplitList = (List<Map<String, Object>>) orderInfo.get("singleCustoms");
 
@@ -47,6 +48,7 @@ public class PublicFreeShipActor extends AbstractActor {
                     couponVo.setState("F");
                     couponVo.setCateNm(GenCouponCode.CouponClassCode.SHIP_FREE.getName());
                     couponVo.setLimitQuota(freeShipLimit);
+                    couponVo.setOrderId(orderId);
                     try {
                         if (cartService.insertCoupon(couponVo)) Logger.debug("免邮券:"+couponVo);
                     } catch (Exception e) {

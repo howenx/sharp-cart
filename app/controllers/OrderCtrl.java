@@ -1,7 +1,6 @@
 package controllers;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -296,8 +295,10 @@ public class OrderCtrl extends Controller {
                 List<Map<String,Object>> singleCustoms =(List<Map<String,Object>>) allFee.get("singleCustoms");
 
                 if (settleOrderDTO.getCouponId() != null && !settleOrderDTO.getCouponId().equals("")) {
-                    allFee.put("discountFee", calDiscount(userId, settleOrderDTO.getCouponId(), (BigDecimal) allFee.get("totalFee")));
+                    BigDecimal discount =  calDiscount(userId, settleOrderDTO.getCouponId(), (BigDecimal) allFee.get("totalFee"));
+                    allFee.put("discountFee", discount);
                     allFee.put("couponId",settleOrderDTO.getCouponId());
+                    allFee.put("totalPayFee", ((BigDecimal)allFee.get("totalPayFee")).subtract(discount).setScale(2, BigDecimal.ROUND_HALF_UP));
                 }
 
                 //前端是立即购买还是结算页提交订单
@@ -309,11 +310,6 @@ public class OrderCtrl extends Controller {
                 Order order = createOrder(settleOrderDTO, allFee, userId);
 
                 if (order != null) {
-                    //创建子订单
-                    singleCustoms = singleCustoms.stream().map(c -> {
-                        c.put("orderId", order.getOrderId());
-                        return c;
-                    }).collect(Collectors.toList());
                     //调用Actor创建子订单
                     allFee.put("orderId", order.getOrderId());
                     orderSplitActor.tell(allFee, ActorRef.noSender());

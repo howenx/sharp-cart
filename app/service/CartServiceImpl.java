@@ -28,13 +28,13 @@ public class CartServiceImpl  implements CartService{
     }
 
     @Override
-    public Integer updateCart(Cart cart) throws Exception {
-        return shoppingCartMapper.updateCart(cart);
+    public Boolean updateCart(Cart cart) throws Exception {
+        return shoppingCartMapper.updateCart(cart)>=0;
     }
 
     @Override
-    public Integer addCart(Cart cart) throws Exception {
-        return shoppingCartMapper.addCart(cart);
+    public Boolean addCart(Cart cart) throws Exception {
+        return shoppingCartMapper.addCart(cart)>=0;
     }
 
     @Override
@@ -116,5 +116,10 @@ public class CartServiceImpl  implements CartService{
     @Override
     public Boolean insertOrder(Order order) throws Exception {
         return shoppingCartMapper.insertOrder(order)>=0;
+    }
+
+    @Override
+    public Boolean deleteCouponF(CouponVo vo) throws Exception {
+        return shoppingCartMapper.deleteCouponF(vo)>=0;
     }
 }

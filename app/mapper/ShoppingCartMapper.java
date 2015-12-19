@@ -48,4 +48,6 @@ public interface ShoppingCartMapper {
     List<OrderAddress> selectOrderAddress(OrderAddress orderAddress) throws Exception;
 
     int insertOrder(Order order) throws Exception;
+
+    int deleteCouponF(CouponVo vo) throws Exception;
 }

@@ -13,9 +13,9 @@ public interface CartService {
 
     List<Cart> getCarts(Cart cart) throws Exception;
 
-    Integer updateCart(Cart cart) throws Exception;
+    Boolean updateCart(Cart cart) throws Exception;
 
-    Integer addCart(Cart cart) throws Exception;
+    Boolean addCart(Cart cart) throws Exception;
 
     List<Order> getOrderBy(Order order) throws Exception;
 
@@ -48,4 +48,6 @@ public interface CartService {
     List<OrderAddress> selectOrderAddress(OrderAddress orderAddress) throws Exception;
 
     Boolean insertOrder(Order order) throws Exception;
+
+    Boolean deleteCouponF(CouponVo vo) throws Exception;
 }

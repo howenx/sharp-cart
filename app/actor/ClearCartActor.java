@@ -1,18 +1,21 @@
 package actor;
 
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
 import akka.japi.pf.ReceiveBuilder;
 import domain.Address;
 import domain.Cart;
 import domain.CartDto;
 import domain.OrderAddress;
 import play.Logger;
+import scala.concurrent.duration.FiniteDuration;
 import service.CartService;
 
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 清空购物车
@@ -39,6 +42,13 @@ public class ClearCartActor extends AbstractActor {
                         cart.setCartId(cartDto.getCartId());
                         cart.setStatus("O");
                         cart.setOrderId(orderId);
+                        try {
+                            if (cartService.updateCart(cart)) Logger.debug("ClearCartActor 清空购物车"+cart);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Logger.error("ClearCartActor 更新购物车"+e.getMessage());
+                            context().system().scheduler().scheduleOnce(FiniteDuration.create(5, TimeUnit.MILLISECONDS),self(),orderInfo,context().dispatcher(), ActorRef.noSender());
+                        }
                     });
                 });
             }

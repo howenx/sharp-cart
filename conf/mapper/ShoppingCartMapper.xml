@@ -204,7 +204,7 @@
         <if test="errorStr!=null and errorStr!=''">
             error_str=#{errorStr},
         </if>
-        order_id = order_id
+        updated_at = CURRENT_TIMESTAMP(0)
          where 1=1
         <if test="userId!=null and userId !=''">
             and user_id = #{userId}
@@ -284,6 +284,9 @@
         </if>
         <if test="cateId!=null and cateId!=''">
             and cate_id = #{cateId}
+        </if>
+        <if test="orderId!=null and orderId!=''">
+            and order_id = #{orderId}
         </if>
         <if test="state!=null and state!=''">
             and state = #{state}
@@ -367,7 +370,10 @@
             ,state =#{state}
         </if>
         <if test="useAt!=null and useAt!=''">
-            ,use_at=#{useAt}
+            ,use_at=CURRENT_TIMESTAMP(0)
+        </if>
+        <if test="orderId!=null and orderId!=''">
+            ,order_id = #{orderId}
         </if>
         where 1= 1
         <if test="coupId!=null and coupId !=''">
@@ -375,9 +381,6 @@
         </if>
         <if test="userId!=null and userId!=''">
             and user_id =#{userId}
-        </if>
-        <if test="state!=null and state!=''">
-            and state = #{state}
         </if>
         <if test="cateId!=null and cateId!=''">
             and cate_id =#{cateId}
@@ -419,6 +422,19 @@
         </if>
         and end_at &lt;=CURRENT_TIMESTAMP(0)
     </update>
+
+    <delete id="deleteCouponF" parameterType="domain.CouponVo">
+        delete sp_coupons where 1=1
+        <if test="coupId!=null and coupId !=''">
+            and coup_id = #{coupId}
+        </if>
+        <if test="userId!=null and userId!=''">
+            and user_id =#{userId}
+        </if>
+        <if test="state!=null and state!=''">
+            and state = #{state}
+        </if>
+    </delete>
 
     <!--子订单表-->
     <insert id="insertOrderSplit" parameterType="domain.OrderSplit" useGeneratedKeys="true" keyProperty="splitId">
@@ -537,7 +553,7 @@
         )values(
             #{orderId }   ,
             #{skuId}      ,
-            #{item_id}     ,
+            #{itemId}     ,
             #{amount}      ,
             #{price}       ,
             #{skuTitle}   ,
