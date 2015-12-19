@@ -26,5 +26,5 @@ GET           /client/order/submit                                              
 
 
 GET           /jd/pay                                                                   controllers.JDPay.pay()
-GET           /jd/notify                                                                controllers.JDPay.back()
-GET           /jd/return                                                                controllers.JDPay.front()
+POST           /jd/notify                                                                controllers.JDPay.back()
+POST          /jd/return                                                                controllers.JDPay.front()
