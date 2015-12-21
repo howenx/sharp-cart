@@ -32,6 +32,6 @@ public class IdServiceImpl implements IdService{
 
     @Override
     public Boolean updateIdPlus(IdPlus idPlus) throws Exception {
-        return idMapper.insertIdPlus((idPlus))>=0;
+        return idMapper.updateIdPlus((idPlus))>=0;
     }
 }

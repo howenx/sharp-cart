@@ -216,7 +216,6 @@ public class JDPay extends Controller {
                     Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
                     idPlus.setPayJdToken(params.get("token"));
                     if (idPlusOptional.isPresent()){
-
                         if (idService.updateIdPlus(idPlus)) Logger.debug("支付成功回调更新用户Token payFrontNotify:"+Json.toJson(idPlus));
                     }else{
                         if (idService.insertIdPlus(idPlus)) Logger.debug("支付成功回调创建用户Token payFrontNotify:"+Json.toJson(idPlus));
