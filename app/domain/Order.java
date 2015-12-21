@@ -38,7 +38,9 @@ public class Order implements Serializable {
     private BigDecimal          shipFee;//邮费
     private Timestamp           confirmReceiveAt;//确认收货时间
     private String              orderDetailUrl;//订单相信页面url
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal          postalFee;//行邮税
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal          totalFee;//购买商品总费用
     @JsonIgnore
     private Integer             shipTime;//发货时间
