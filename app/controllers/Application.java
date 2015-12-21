@@ -413,6 +413,7 @@ public class Application extends Controller {
                         address.setDeliveryDetail(orderAddressOptional.get().get(0).getDeliveryAddress());
                         address.setIdCardNum(orderAddressOptional.get().get(0).getDeliveryCardNum());
                         address.setName(orderAddressOptional.get().get(0).getDeliveryName());
+                        address.setTel(orderAddressOptional.get().get(0).getDeliveryTel());
                         map.put("address", address);
 
                     }
