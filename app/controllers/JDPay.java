@@ -118,7 +118,7 @@ public class JDPay extends Controller {
             map.put("return_params", orderId.toString());//成功支付,或者查询时候,返回订单编号
             map.put("trade_subject", "韩秘美-订单编号" + orderId);
 //            map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).setScale(0,BigDecimal.ROUND_DOWN).toPlainString());
-            map.put("trade_amount", String.valueOf(100));
+            map.put("trade_amount", String.valueOf(1));
             //自用字断
             map.put("all_fee", order.getPayTotal().toPlainString());
             if (idPlusOptional.isPresent()) {
@@ -144,7 +144,7 @@ public class JDPay extends Controller {
                     subOrderMap.put("sub_order_no", orderSp.getSplitId().toString());
                     subOrderMap.put("sub_order_name", "韩秘美-子订单号" + orderSp.getSplitId());
 //                    subOrderMap.put("sub_order_amount",orderSp.getTotalPayFee().multiply(new BigDecimal(100)).setScale(0,BigDecimal.ROUND_DOWN).toPlainString());
-                    map.put("sub_order_amount", String.valueOf(100));
+                    subOrderMap.put("sub_order_amount", String.valueOf(1));
 
                     subInfo.add(subOrderMap);
                 }
@@ -198,6 +198,7 @@ public class JDPay extends Controller {
         String sign = params.get("sign_data");
         String secret = Play.application().configuration().getString("jd_secret");
         String _sign = Crypto.create_sign(params,secret);
+        Logger.error("支付成功返回数据: "+params);
         if (!sign.equalsIgnoreCase(_sign)) {
             return ok("error page");
         }
