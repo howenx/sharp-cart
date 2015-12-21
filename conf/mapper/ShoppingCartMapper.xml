@@ -38,6 +38,7 @@
         ${alias}.updated_at           ,
         ${alias}.order_desc           ,
         ${alias}.ship_fee             ,
+        ${alias}.total_fee            ,
         ${alias}.postal_fee           ,
         to_char(${alias}.confirm_receive_at, 'YYYY-MM-DD HH24:MI:SS') confirm_receive_at
     </sql>
