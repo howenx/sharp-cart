@@ -68,7 +68,7 @@ public class Application extends Controller {
             if (json.isPresent() && json.get().size() > 0) {
                 List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
 
-                Logger.error("登陆前数据:"+Json.toJson(cartDtoList).toString());
+                Logger.error("登陆前数据:" + Json.toJson(cartDtoList).toString());
 
                 for (CartDto cartDto : cartDtoList) {
 
@@ -110,9 +110,9 @@ public class Application extends Controller {
                             if (carts.size() > 0) {
                                 cart.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
                                 cart.setAmount(cart.getAmount() + carts.get(0).getAmount());//购买数量累加
-                                if(cart.getAmount()>sku.getRestrictAmount() && sku.getRestrictAmount()!=0){
+                                if (cart.getAmount() > sku.getRestrictAmount() && sku.getRestrictAmount() != 0) {
                                     cart.setAmount(sku.getRestrictAmount());
-                                }else if(cart.getAmount()>sku.getRestAmount()){
+                                } else if (cart.getAmount() > sku.getRestAmount()) {
                                     cart.setAmount(sku.getRestAmount());
                                 }
                                 cartService.updateCart(cart);
@@ -131,11 +131,11 @@ public class Application extends Controller {
                 }
             }
 
-            if (cartAllMap(userId).isPresent()){
+            if (cartAllMap(userId).isPresent()) {
                 result.putPOJO("cartList", Json.toJson(cartAllMap(userId).get()));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-            }
-            else result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex()), Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex())));
+            } else
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex()), Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex())));
 
             if (S_FLAG) {
                 for (Long s : sCartIds) {
@@ -166,11 +166,11 @@ public class Application extends Controller {
         ObjectNode result = Json.newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
-            if (cartAllMap(userId).isPresent()){
+            if (cartAllMap(userId).isPresent()) {
                 result.putPOJO("cartList", Json.toJson(cartAllMap(userId).get()));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-            }
-            else result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex()), Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex())));
+            } else
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex()), Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex())));
 
             return ok(result);
         } catch (Exception ex) {
@@ -339,7 +339,7 @@ public class Application extends Controller {
 
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("cartList", Json.toJson(list));
-            Logger.error("未登录时:"+Json.toJson(list));
+            Logger.error("未登录时:" + Json.toJson(list));
             return ok(result);
 
         } catch (Exception ex) {
@@ -363,7 +363,7 @@ public class Application extends Controller {
 
             order.setUserId(userId);
 
-            Optional <List<Order>> orderList = Optional.ofNullable(cartService.getOrderBy(order));
+            Optional<List<Order>> orderList = Optional.ofNullable(cartService.getOrderBy(order));
 
             //返回总数据
             List<Map> mapList = new ArrayList<>();
@@ -371,35 +371,8 @@ public class Application extends Controller {
             if (orderList.isPresent()){
 
                 for (Order o : orderList.get()) {
-
                     //用于保存每个订单对应的明细list和地址信息
                     Map<String, Object> map = new HashMap<>();
-
-                    OrderLine orderLine = new OrderLine();
-                    orderLine.setOrderId(o.getOrderId());
-
-                    List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
-
-                    //每个订单对应的商品明细
-                    List<CartSkuDto> skuDtoList = new ArrayList<>();
-
-                    for (OrderLine orl : orderLineList) {
-                        CartSkuDto skuDto = new CartSkuDto();
-
-                        //获取每个库存信息
-                        Sku sku = new Sku();
-                        //组装返回的订单商品明细
-                        skuDto.setSkuId(orl.getSkuId());
-                        skuDto.setAmount(orl.getAmount());
-                        skuDto.setPrice(orl.getPrice());
-                        skuDto.setSkuTitle(orl.getSkuTitle());
-                        skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
-                        skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
-                        skuDto.setItemColor(orl.getSkuColor());
-                        skuDto.setItemSize(orl.getSkuSize());
-                        skuDtoList.add(skuDto);
-
-                    }
 
                     OrderAddress orderAddress = new OrderAddress();
                     orderAddress.setOrderId(o.getOrderId());
@@ -417,10 +390,94 @@ public class Application extends Controller {
                         map.put("address", address);
 
                     }
-                    //组装每个订单对应的明细和地址
-                    map.put("order", o);
-                    map.put("sku", skuDtoList);
-                    mapList.add(map);
+
+                    //未支付订单
+                    if (o.getOrderStatus().equals("I")){
+
+                        OrderLine orderLine = new OrderLine();
+                        orderLine.setOrderId(o.getOrderId());
+
+                        List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
+
+                        //每个订单对应的商品明细
+                        List<CartSkuDto> skuDtoList = new ArrayList<>();
+
+                        Integer orderAmount  = 0;
+
+                        for (OrderLine orl : orderLineList) {
+                            CartSkuDto skuDto = new CartSkuDto();
+
+                            //获取每个库存信息
+                            Sku sku = new Sku();
+                            //组装返回的订单商品明细
+                            skuDto.setSkuId(orl.getSkuId());
+                            skuDto.setAmount(orl.getAmount());
+                            orderAmount+=skuDto.getAmount();
+                            skuDto.setPrice(orl.getPrice());
+                            skuDto.setSkuTitle(orl.getSkuTitle());
+                            skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                            skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                            skuDto.setItemColor(orl.getSkuColor());
+                            skuDto.setItemSize(orl.getSkuSize());
+                            skuDtoList.add(skuDto);
+                        }
+
+                        o.setOrderAmount(orderAmount);
+                        //组装每个订单对应的明细和地址
+                        map.put("order", o);
+                        map.put("sku", skuDtoList);
+                        mapList.add(map);
+                    }
+                    //否则以子订单来显示
+                    else{
+                        OrderSplit orderSplit = new OrderSplit();
+                        orderSplit.setOrderId(o.getOrderId());
+                        Optional<List<OrderSplit>> optionalOrderSplitList = Optional.ofNullable(cartService.selectOrderSplit(orderSplit));
+                        if (optionalOrderSplitList.isPresent()){
+                            for (OrderSplit osp : optionalOrderSplitList.get()){
+                                Order orderS = new Order();
+                                orderS.setOrderId(osp.getOrderId());
+                                orderS.setOrderAmount(osp.getTotalAmount());
+                                orderS.setPayMethod(o.getPayMethod());
+                                orderS.setPayTotal(osp.getTotalPayFee());
+                                orderS.setTotalFee(osp.getTotalFee());
+                                orderS.setShipFee(osp.getShipFee());
+                                orderS.setPostalFee(osp.getPostalFee());
+                                orderS.setOrderCreateAt(o.getOrderCreateAt());
+                                orderS.setOrderStatus(o.getOrderStatus());
+
+                                OrderLine orderLine = new OrderLine();
+                                orderLine.setOrderId(o.getOrderId());
+                                orderS.setOrderSplitId(osp.getSplitId());
+                                List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
+
+                                //每个订单对应的商品明细
+                                List<CartSkuDto> skuDtoList = new ArrayList<>();
+
+                                for (OrderLine orl : orderLineList) {
+                                    CartSkuDto skuDto = new CartSkuDto();
+
+                                    //获取每个库存信息
+                                    Sku sku = new Sku();
+                                    //组装返回的订单商品明细
+                                    skuDto.setSkuId(orl.getSkuId());
+                                    skuDto.setAmount(orl.getAmount());
+                                    skuDto.setPrice(orl.getPrice());
+                                    skuDto.setSkuTitle(orl.getSkuTitle());
+                                    skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                                    skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                                    skuDto.setItemColor(orl.getSkuColor());
+                                    skuDto.setItemSize(orl.getSkuSize());
+                                    skuDtoList.add(skuDto);
+                                }
+
+                                map.put("order", orderS);
+                                map.put("sku", skuDtoList);
+                                mapList.add(map);
+                            }
+                        }
+                    }
+
                 }
             }
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
@@ -520,7 +577,7 @@ public class Application extends Controller {
                     cartListDto.add(cartList);
                 }
             }
-            if(cartListDto.size()>0) {
+            if (cartListDto.size() > 0) {
 
                 Map<String, List<CartListDto>> cartListMap = cartListDto
                         .stream()
@@ -579,7 +636,7 @@ public class Application extends Controller {
                             }
                         });
                 return Optional.of(list);
-            }else return Optional.empty();
+            } else return Optional.empty();
         } else return Optional.empty();
     }
 
@@ -597,8 +654,8 @@ public class Application extends Controller {
             Sku sku = new Sku();
             sku.setId(skuId);
             Optional<Sku> skuOptional = Optional.ofNullable(skuService.getInv(sku));
-            if (skuOptional.isPresent()){
-                sku =skuOptional.get();
+            if (skuOptional.isPresent()) {
+                sku = skuOptional.get();
                 if (sku.getState().equals("S")) {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
                     return ok(result);
@@ -612,7 +669,7 @@ public class Application extends Controller {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                     return ok(result);
                 }
-            }else {
+            } else {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex()), Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex())));
                 return ok(result);
             }

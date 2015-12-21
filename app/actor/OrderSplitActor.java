@@ -54,7 +54,7 @@ public class OrderSplitActor extends AbstractActor {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    c.put("splitId", orderSplit.getOrderId());
+                    c.put("splitId", orderSplit.getSplitId());
                     return c;
                 }).collect(Collectors.toList());
                 orderInfo.put("singleCustoms",orderSplitList);

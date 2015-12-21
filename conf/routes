@@ -15,9 +15,11 @@ GET           /client/coupons/list                                              
 GET           /client/public/coupons                                                    controllers.OrderCtrl.publicCoupons()
 POST          /client/order/submit                                                      controllers.OrderCtrl.submitOrder()
 GET           /client/order/submit                                                      controllers.OrderCtrl.submitOrder()
+GET           /client/order/cancel/$orderId<[0-9]+>                                     controllers.OrderCtrl.cancelOrder(orderId:Long)
 
 GET           /client/pay/order/get/$orderId<[0-9]+>                                    controllers.JDPay.payOrderWeb(orderId:Long)
 POST          /client/pay/jd/back                                                       controllers.JDPay.payBackendNotify()
 POST          /client/pay/jd/front                                                      controllers.JDPay.payFrontNotify()
 
 GET           /assets/*file                                                             controllers.Assets.versioned(path="/public", file: Asset)
+

@@ -166,7 +166,7 @@ public class JDPay extends Controller {
         params.put("customer_no", JD_SELLER);
         params.put("notify_url", SHOPPING_URL+"/client/pay/jd/back");
         params.put("request_datetime", req_date);
-        params.put("return_url",  SHOPPING_URL+"/client/pay/jd/front");
+        params.put("return_url",  "http://172.28.3.51:9003/client/pay/jd/front");
         params.put("settle_currency", settle_currency);
         params.put("trade_currency", trade_currency);
         params.put("sign_type", sign_type);
@@ -199,7 +199,6 @@ public class JDPay extends Controller {
         String secret = Play.application().configuration().getString("jd_secret");
         String _sign = Crypto.create_sign(params,secret);
         Logger.error("支付成功返回数据: "+Json.toJson(params));
-
         if (!sign.equalsIgnoreCase(_sign)) {
             return ok("error page");
         }else {
@@ -210,18 +209,24 @@ public class JDPay extends Controller {
                 order.setErrorStr(params.get("trade_status"));
                 order.setPgTradeNo(params.get("trade_no"));
                 try {
-                    if (cartService.updateOrder(order)) Logger.debug("支付回调订单更新payFrontNotify: "+Json.toJson(order));
+                    if (cartService.updateOrder(order))  Logger.debug("支付回调订单更新payFrontNotify: "+Json.toJson(order));
                     Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
                     IdPlus idPlus = new IdPlus();
                     idPlus.setUserId(userId);
+                    Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
                     idPlus.setPayJdToken(params.get("token"));
-                    if (idService.updateIdPlus(idPlus)) Logger.debug("支付成功回调更新用户Token payFrontNotify:"+Json.toJson(idPlus));
+                    if (idPlusOptional.isPresent()){
+
+                        if (idService.updateIdPlus(idPlus)) Logger.debug("支付成功回调更新用户Token payFrontNotify:"+Json.toJson(idPlus));
+                    }else{
+                        if (idService.insertIdPlus(idPlus)) Logger.debug("支付成功回调创建用户Token payFrontNotify:"+Json.toJson(idPlus));
+                    }
                 } catch (Exception e) {
                     Logger.error("支付回调订单更新出错payFrontNotify: "+e.getMessage());
                     e.printStackTrace();
                 }
-                return ok("success page");
-            }else return ok("success page");
+                return ok(views.html.jdpaysuccess.render(params));
+            }else return ok("pay error page");
         }
     }
 }

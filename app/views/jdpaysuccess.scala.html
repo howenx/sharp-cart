@@ -1,0 +1,28 @@
+@(params:Map[String,String])
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="/assets/stylesheets/pay.css">
+</head>
+<body style=" background: rgb(240,240,240);" onload="window.handler.clearHistory()">
+    <div class="order-pay">
+        <h2>订单支付成功 <span>完成</span></h2>
+        <hr>
+        <div class="order-fni">
+            <div class="pay-suc">
+                <div class="icon-order-suc"></div>
+                <h1>订单支付成功</h1>
+                <h3>订单金额: <span>@params.get("all_fee")</span></h3>
+            </div>
+            <div class="btn-pay">
+                <button onClick="window.handler.openOrder()">查看订单</button>
+                <button onClick="window.handler.openHome()">回首页</button>
+            </div>
+            <h4>感谢您在韩秘美购物,祝您愉快</h4>
+        </div>
+    </div>
+</body>
+</html>

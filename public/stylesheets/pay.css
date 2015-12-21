@@ -1,3 +1,4 @@
+/* all base */
 body{
     margin: 0;
 }
@@ -7,6 +8,10 @@ body{
 hr{
     margin: 0;
 }
+h1,h2,h3,h4,h5,h6{
+    margin: 0;
+}
+/************ pay-style ***********/
 .pay-change span{
     display: inline-block;
     margin: 10px 0 10px 10px;
@@ -45,4 +50,91 @@ hr{
 }
 .jingdong{
     background: url("/assets/images/home-pay-icon.png") no-repeat 10px -70px;background-size: 35px;
+}
+/************ pay-result1 ***************/
+.pay-result{
+    width: 100%;height: auto;
+}
+.pay-result h2{
+    background: rgb(37,41,44);text-align: center;
+    color: #fff;padding: 20px 0;
+}
+.pay-result .pay-suc{
+    margin-top: 20px;background: #fff;
+    padding: 20px 20px;
+}
+.pay-result .pay-suc .icon-suc{
+    width: 64px;height: 64px;
+    background: url("/assets/images/iconfont-iconsuccess.png") no-repeat;
+    background-size: 100%;
+    float: left;
+}
+.pay-result .pay-suc span{
+    display: inline-block;height: 64px;
+    line-height: 64px;padding-left: 15%;
+    color: rgb(106,106,106);font-size: 24px;
+}
+.pay-result .pay-money{
+    background: rgb(232,232,232);overflow: hidden;
+    margin-top: 20px;
+}
+.pay-result .pay-money div{
+    width: 70%;padding-left: 15px;
+   float: left;line-height: 64px;
+    font-size: 18px;
+}
+.pay-result .pay-money .money-num{
+    width: 30%;padding-left: 0;
+}
+.pay-result .pay-money>div em{
+    float: right;
+    color: red;font-style: normal;
+}
+.pay-result .pay-money>div span{
+    float: right;padding-right: 15px;
+    padding-left: 0;
+    font-size: 18px;
+}
+.pay-result .btn{
+    width: 100%;padding: 20px 20px 0;
+}
+.pay-result button{
+    width: 100%;line-height: 64px;
+    background: rgb(216,68,76);
+    border: 0;outline: none;
+    font-size: 24px;color: #fff;
+    padding:0;
+}
+/************ pay-result2 ***************/
+.order-pay{
+    width: 100%;height: auto;text-align: center;
+}
+.order-pay h2{
+    background: rgb(253,253,253);
+    color: rgb(56,56,56);padding: 20px 0;
+}
+.order-pay .order-fni{
+    background: #fff;
+    padding-top: 20px;
+}
+.order-pay .icon-order-suc{
+    width: 64px;height: 64px;margin: 20px auto;
+    background: url("/assets/images/iconfont-14wanchengzhifudingdan.png") no-repeat;
+    background-size: 100%;
+}
+.order-pay .pay-suc h3{
+    margin: 15px auto;
+}
+.order-pay .pay-suc h3 span{
+    color: red;
+}
+.order-pay .btn-pay button{
+    width: 40%;height: 48px;
+    background: rgb(253,253,253);border: 2px solid #ccc;
+    border-radius: 5px;font-size: 18px;color: rgb(157,157,157);
+    outline: none;margin-bottom: 15px;
+}
+.order-pay h4{
+    color: rgb(154,154,154);line-height: 1.2;
+    padding: 10px 15px;
 }

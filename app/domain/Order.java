@@ -36,7 +36,7 @@ public class Order implements Serializable {
     private Long                addId;//用户订单地址
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal          shipFee;//邮费
-    private Timestamp           confirmReceiveAt;//确认收货时间
+    private String              confirmReceiveAt;//确认收货时间
     private String              orderDetailUrl;//订单相信页面url
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal          postalFee;//行邮税
@@ -46,11 +46,13 @@ public class Order implements Serializable {
     private Integer             shipTime;//发货时间
     @JsonIgnore
     private Integer             clientType;//客户端类型
+    private Integer             orderAmount;//订单购买货物总数
+    private Long                orderSplitId;//子订单编号
 
     public Order() {
     }
 
-    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, Timestamp confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType) {
+    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId) {
         this.orderId = orderId;
         this.userId = userId;
         this.payTotal = payTotal;
@@ -71,6 +73,8 @@ public class Order implements Serializable {
         this.totalFee = totalFee;
         this.shipTime = shipTime;
         this.clientType = clientType;
+        this.orderAmount = orderAmount;
+        this.orderSplitId = orderSplitId;
     }
 
     public Long getOrderId() {
@@ -185,11 +189,11 @@ public class Order implements Serializable {
         this.shipFee = shipFee;
     }
 
-    public Timestamp getConfirmReceiveAt() {
+    public String getConfirmReceiveAt() {
         return confirmReceiveAt;
     }
 
-    public void setConfirmReceiveAt(Timestamp confirmReceiveAt) {
+    public void setConfirmReceiveAt(String confirmReceiveAt) {
         this.confirmReceiveAt = confirmReceiveAt;
     }
 
@@ -233,6 +237,22 @@ public class Order implements Serializable {
         this.clientType = clientType;
     }
 
+    public Integer getOrderAmount() {
+        return orderAmount;
+    }
+
+    public void setOrderAmount(Integer orderAmount) {
+        this.orderAmount = orderAmount;
+    }
+
+    public Long getOrderSplitId() {
+        return orderSplitId;
+    }
+
+    public void setOrderSplitId(Long orderSplitId) {
+        this.orderSplitId = orderSplitId;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -250,12 +270,14 @@ public class Order implements Serializable {
                 ", orderDesc='" + orderDesc + '\'' +
                 ", addId=" + addId +
                 ", shipFee=" + shipFee +
-                ", confirmReceiveAt=" + confirmReceiveAt +
+                ", confirmReceiveAt='" + confirmReceiveAt + '\'' +
                 ", orderDetailUrl='" + orderDetailUrl + '\'' +
                 ", postalFee=" + postalFee +
                 ", totalFee=" + totalFee +
                 ", shipTime=" + shipTime +
                 ", clientType=" + clientType +
+                ", orderAmount=" + orderAmount +
+                ", orderSplitId=" + orderSplitId +
                 '}';
     }
 }

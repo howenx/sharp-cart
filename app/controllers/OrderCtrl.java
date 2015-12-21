@@ -7,10 +7,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
 import filters.UserAuth;
 import play.Logger;
+import play.libs.F;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
+import scala.concurrent.duration.Duration;
 import service.CartService;
 import service.IdService;
 import service.SkuService;
@@ -22,8 +24,9 @@ import javax.inject.Singleton;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
+import static akka.pattern.Patterns.ask;
 /**
  * 订单相关,提交订单,优惠券
  * Created by howen on 15/12/1.
@@ -40,6 +43,8 @@ public class OrderCtrl extends Controller {
 
     private ActorRef orderSplitActor;
 
+    private ActorRef cancelOrderActor;
+
     //行邮税收税标准
     static String POSTAL_STANDARD;
 
@@ -50,11 +55,12 @@ public class OrderCtrl extends Controller {
     static String FREE_SHIP;
 
     @Inject
-    public OrderCtrl(SkuService skuService, CartService cartService, IdService idService, @Named("subOrderActor") ActorRef orderSplitActor) {
+    public OrderCtrl(SkuService skuService, CartService cartService, IdService idService, @Named("subOrderActor") ActorRef orderSplitActor,@Named("cancelOrderActor") ActorRef  cancelOrderActor) {
         this.cartService = cartService;
         this.idService = idService;
         this.orderSplitActor = orderSplitActor;
         this.skuService = skuService;
+        this.cancelOrderActor = cancelOrderActor;
         //行邮税收税标准
         POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
 
@@ -364,7 +370,7 @@ public class OrderCtrl extends Controller {
 
         //统计如果各个海关的实际关税,如果关税小于50(sku.getPostalStandard())元,则免税
         if (postalFee.compareTo(new BigDecimal(POSTAL_STANDARD)) > 0)       //公式应收税金 T=X*N*S/(1-S)
-            return price.multiply(new BigDecimal(amount)).multiply(new BigDecimal(postalTaxRate).multiply(new BigDecimal(0.01))).divide(new BigDecimal(1).subtract(new BigDecimal(postalTaxRate).multiply(new BigDecimal(0.01))), 2, BigDecimal.ROUND_HALF_UP);
+            return price.multiply(new BigDecimal(amount)).multiply(new BigDecimal(postalTaxRate).multiply(new BigDecimal(0.01)));
         else return BigDecimal.ZERO;
     }
 
@@ -542,13 +548,18 @@ public class OrderCtrl extends Controller {
         else return null;
     }
 
-    /**
-     * 支付调用
-     *
-     * @param orderId 订单ID
-     * @return 跳转到京东支付页面
-     */
-    public Result payOrderWeb(Long orderId) {
-        return redirect("/jd/pay");
+    //取消订单
+    public F.Promise<Result>  cancelOrder(Long orderId){
+        return F.Promise.wrap(ask(cancelOrderActor,orderId, 3000)
+        ).map(response ->{
+            Logger.error(response.toString());
+            if (((Integer)response)==200){
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                return ok(result);
+            }else {
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
+                return ok(result);
+            }
+        });
     }
 }
