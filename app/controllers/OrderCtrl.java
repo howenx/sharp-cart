@@ -16,6 +16,7 @@ import scala.concurrent.duration.Duration;
 import service.CartService;
 import service.IdService;
 import service.SkuService;
+import util.CalCountDown;
 import util.GenCouponCode;
 
 import javax.inject.Inject;
@@ -550,7 +551,11 @@ public class OrderCtrl extends Controller {
         else return null;
     }
 
-    //取消订单
+    /**
+     * 取消订单
+     * @param orderId 订单ID
+     * @return promise
+     */
     public F.Promise<Result>  cancelOrder(Long orderId){
         return F.Promise.wrap(ask(cancelOrderActor,orderId, 3000)
         ).map(response ->{
@@ -563,5 +568,146 @@ public class OrderCtrl extends Controller {
                 return ok(result);
             }
         });
+    }
+
+    /**
+     * 用户查询所有订单接口
+     *
+     * @return 返回所有订单数据
+     */
+    @Security.Authenticated(UserAuth.class)
+    public Result shoppingOrder(Long orderId) {
+        ObjectNode result = Json.newObject();
+        try {
+            Long userId = (Long) ctx().args.get("userId");
+            Order order = new Order();
+            if (orderId!=0){
+                order.setOrderId(orderId);
+            }
+            order.setUserId(userId);
+
+            Optional<List<Order>> orderList = Optional.ofNullable(cartService.getOrderBy(order));
+
+            //返回总数据
+            List<Map> mapList = new ArrayList<>();
+
+            if (orderList.isPresent()){
+
+                for (Order o : orderList.get()) {
+                    //用于保存每个订单对应的明细list和地址信息
+                    Map<String, Object> map = new HashMap<>();
+
+                    OrderAddress orderAddress = new OrderAddress();
+                    orderAddress.setOrderId(o.getOrderId());
+
+                    Optional<List<OrderAddress>>  orderAddressOptional=Optional.ofNullable(cartService.selectOrderAddress(orderAddress));
+
+                    if (orderAddressOptional.isPresent()){
+                        //获取地址信息
+                        Address address = new Address();
+                        address.setDeliveryCity(orderAddressOptional.get().get(0).getDeliveryCity());
+                        address.setDeliveryDetail(orderAddressOptional.get().get(0).getDeliveryAddress());
+                        address.setIdCardNum(orderAddressOptional.get().get(0).getDeliveryCardNum());
+                        address.setName(orderAddressOptional.get().get(0).getDeliveryName());
+                        address.setTel(orderAddressOptional.get().get(0).getDeliveryTel());
+                        map.put("address", address);
+
+                    }
+                    o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
+
+                    //未支付订单
+                    if (o.getOrderStatus().equals("I")){
+
+                        OrderLine orderLine = new OrderLine();
+                        orderLine.setOrderId(o.getOrderId());
+
+                        List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
+
+                        //每个订单对应的商品明细
+                        List<CartSkuDto> skuDtoList = new ArrayList<>();
+
+                        Integer orderAmount  = 0;
+
+                        for (OrderLine orl : orderLineList) {
+                            CartSkuDto skuDto = new CartSkuDto();
+
+                            //组装返回的订单商品明细
+                            skuDto.setSkuId(orl.getSkuId());
+                            skuDto.setAmount(orl.getAmount());
+                            orderAmount+=skuDto.getAmount();
+                            skuDto.setPrice(orl.getPrice());
+                            skuDto.setSkuTitle(orl.getSkuTitle());
+                            skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                            skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                            skuDto.setItemColor(orl.getSkuColor());
+                            skuDto.setItemSize(orl.getSkuSize());
+                            skuDtoList.add(skuDto);
+                        }
+
+                        o.setOrderAmount(orderAmount);
+                        //组装每个订单对应的明细和地址
+                        map.put("order", o);
+                        map.put("sku", skuDtoList);
+                        mapList.add(map);
+                    }
+                    //否则以子订单来显示
+                    else{
+                        OrderSplit orderSplit = new OrderSplit();
+                        orderSplit.setOrderId(o.getOrderId());
+                        Optional<List<OrderSplit>> optionalOrderSplitList = Optional.ofNullable(cartService.selectOrderSplit(orderSplit));
+                        if (optionalOrderSplitList.isPresent()){
+                            for (OrderSplit osp : optionalOrderSplitList.get()){
+                                Order orderS = new Order();
+                                orderS.setOrderId(osp.getOrderId());
+                                orderS.setOrderAmount(osp.getTotalAmount());
+                                orderS.setPayMethod(o.getPayMethod());
+                                orderS.setPayTotal(osp.getTotalPayFee());
+                                orderS.setTotalFee(osp.getTotalFee());
+                                orderS.setShipFee(osp.getShipFee());
+                                orderS.setPostalFee(osp.getPostalFee());
+                                orderS.setOrderCreateAt(o.getOrderCreateAt());
+                                orderS.setOrderStatus(o.getOrderStatus());
+
+                                OrderLine orderLine = new OrderLine();
+                                orderLine.setOrderId(o.getOrderId());
+                                orderS.setOrderSplitId(osp.getSplitId());
+                                List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
+
+                                //每个订单对应的商品明细
+                                List<CartSkuDto> skuDtoList = new ArrayList<>();
+
+                                for (OrderLine orl : orderLineList) {
+                                    CartSkuDto skuDto = new CartSkuDto();
+
+                                    //组装返回的订单商品明细
+                                    skuDto.setSkuId(orl.getSkuId());
+                                    skuDto.setAmount(orl.getAmount());
+                                    skuDto.setPrice(orl.getPrice());
+                                    skuDto.setSkuTitle(orl.getSkuTitle());
+                                    skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                                    skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                                    skuDto.setItemColor(orl.getSkuColor());
+                                    skuDto.setItemSize(orl.getSkuSize());
+                                    skuDtoList.add(skuDto);
+                                }
+
+                                map.put("order", orderS);
+                                map.put("sku", skuDtoList);
+                                mapList.add(map);
+                            }
+                        }
+                    }
+
+                }
+            }
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            result.putPOJO("orderList", Json.toJson(mapList));
+            Logger.error("返回数据" + result.toString());
+            return ok(result);
+        } catch (Exception ex) {
+            Logger.error("server exception:" + ex.getMessage());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
     }
 }
