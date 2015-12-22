@@ -119,6 +119,8 @@ public class OrderCtrl extends Controller {
                 if (addressOptional.isPresent()) {
                     address = addressOptional.get();
                 }
+
+                Logger.error("地址信息:"+address);
                 resultMap.put("address", address);
 
                 //计算所有费用

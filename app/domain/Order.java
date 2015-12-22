@@ -48,11 +48,12 @@ public class Order implements Serializable {
     private Integer             clientType;//客户端类型
     private Integer             orderAmount;//订单购买货物总数
     private Long                orderSplitId;//子订单编号
+    private Long                countDown;//倒计时
 
     public Order() {
     }
 
-    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId) {
+    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId, Long countDown) {
         this.orderId = orderId;
         this.userId = userId;
         this.payTotal = payTotal;
@@ -75,6 +76,7 @@ public class Order implements Serializable {
         this.clientType = clientType;
         this.orderAmount = orderAmount;
         this.orderSplitId = orderSplitId;
+        this.countDown = countDown;
     }
 
     public Long getOrderId() {
@@ -253,6 +255,14 @@ public class Order implements Serializable {
         this.orderSplitId = orderSplitId;
     }
 
+    public Long getCountDown() {
+        return countDown;
+    }
+
+    public void setCountDown(Long countDown) {
+        this.countDown = countDown;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -278,6 +288,7 @@ public class Order implements Serializable {
                 ", clientType=" + clientType +
                 ", orderAmount=" + orderAmount +
                 ", orderSplitId=" + orderSplitId +
+                ", countDown=" + countDown +
                 '}';
     }
 }

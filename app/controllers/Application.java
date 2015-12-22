@@ -14,6 +14,7 @@ import play.mvc.Security;
 import service.CartService;
 import service.IdService;
 import service.SkuService;
+import util.CalCountDown;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -390,6 +391,7 @@ public class Application extends Controller {
                         map.put("address", address);
 
                     }
+                    o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
 
                     //未支付订单
                     if (o.getOrderStatus().equals("I")){
@@ -407,8 +409,6 @@ public class Application extends Controller {
                         for (OrderLine orl : orderLineList) {
                             CartSkuDto skuDto = new CartSkuDto();
 
-                            //获取每个库存信息
-                            Sku sku = new Sku();
                             //组装返回的订单商品明细
                             skuDto.setSkuId(orl.getSkuId());
                             skuDto.setAmount(orl.getAmount());
@@ -457,8 +457,6 @@ public class Application extends Controller {
                                 for (OrderLine orl : orderLineList) {
                                     CartSkuDto skuDto = new CartSkuDto();
 
-                                    //获取每个库存信息
-                                    Sku sku = new Sku();
                                     //组装返回的订单商品明细
                                     skuDto.setSkuId(orl.getSkuId());
                                     skuDto.setAmount(orl.getAmount());
