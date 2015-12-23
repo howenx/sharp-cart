@@ -1,7 +1,7 @@
 package actor;
 
 import akka.actor.ActorRef;
-import akka.actor.PoisonPill;
+
 import akka.actor.UntypedActor;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.joda.time.DateTime;
@@ -68,23 +68,23 @@ public class CustomStatus extends UntypedActor{
                     //报关成功
                     //TODO 更新报关状态
 
-                    getSelf().tell(PoisonPill.getInstance(), ActorRef.noSender());
+
                 }
                 else if (custom_push_status.equalsIgnoreCase("SAVE") || custom_push_status.equalsIgnoreCase("SEND")) {
-
                     // 30 分钟调度一次,直到成功
                     Akka.system().scheduler().scheduleOnce(Duration.create(30, TimeUnit.MINUTES), getSelf(), message, Akka.system().dispatcher(), ActorRef.noSender());
+
                 }
                 else {
                     //status is FAIL EXCEPTION
-                    getSelf().tell(PoisonPill.getInstance(), ActorRef.noSender());
+
                 }
 
             }
 
             else {
                 //杀掉该actor
-                getSelf().tell(PoisonPill.getInstance(), ActorRef.noSender());
+
             }
 
             return null;
