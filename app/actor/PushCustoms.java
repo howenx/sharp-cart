@@ -1,9 +1,11 @@
 package actor;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
+
 import akka.actor.UntypedActor;
+
 import com.fasterxml.jackson.databind.JsonNode;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -15,6 +17,8 @@ import play.libs.ws.WS;
 import scala.concurrent.duration.Duration;
 import util.Crypto;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +31,9 @@ import java.util.concurrent.TimeUnit;
 public class PushCustoms extends UntypedActor{
 
     private static String[] customs = {"guangzhou","ningbo","hangzhou","gzjichang","gzluogang","shanghai","zhengzhou"};
+
+    @Inject @Named("custom_status")
+    private static ActorRef customer_status;
     /**
      * params 里面应该包含如下的参数:
      * 订单流水号: out_trade_no
@@ -96,8 +103,9 @@ public class PushCustoms extends UntypedActor{
                     send.put("sub_order_no", sub_order_no);
 
                     //30 分钟之后发起查询状态actor
-                    ActorRef ar = Akka.system().actorOf(Props.create(CustomStatus.class));
-                    Akka.system().scheduler().scheduleOnce(Duration.create(30, TimeUnit.MINUTES), ar, send, Akka.system().dispatcher(), ActorRef.noSender());
+                    //使用全局actoer 对象, 从inject 里面得到
+                    //ActorRef ar = Akka.system().actorOf(Props.create(CustomStatus.class));
+                    Akka.system().scheduler().scheduleOnce(Duration.create(30, TimeUnit.MINUTES), customer_status, send, Akka.system().dispatcher(), ActorRef.noSender());
                 }
                 else {
                     Logger.info("post customer error ->" + ret.get("response_code").textValue());
