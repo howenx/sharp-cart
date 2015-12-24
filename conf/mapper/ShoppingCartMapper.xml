@@ -630,4 +630,64 @@
             and order_id=#{orderId}
         </if>
     </select>
+
+    <!--退款页面-->
+    <insert id="insertRefund" parameterType="domain.Refund" useGeneratedKeys="true" keyProperty="id">
+        insert into sp_refund(
+            order_id       ,
+            pay_back_fee   ,
+            reason         ,
+            create_at
+        )values(
+            #{orderId},
+            #{payBackFee},
+            #{reason},
+            CURRENT_TIMESTAMP(0)
+        )
+    </insert>
+    <select id="selectRefund" parameterType="domain.Refund" resultType="domain.Refund" >
+        select
+        id             ,
+        order_id       ,
+        pay_back_fee   ,
+        reason         ,
+        state          ,
+        create_at      ,
+        pg_trade_no,pg_code,pg_message    from sp_refund where 1=1
+        <if test="id!=null and id!=''">
+            and id = #{id}
+        </if>
+        <if test="orderId!=null and orderId!=''">
+            and order_id =#{orderId}
+        </if>
+    </select>
+    <update id="updateRefund" parameterType="domain.Refund">
+        update sp_refund set
+        <if test="payBackFee!=null and payBackFee!=''">
+            pay_back_fee = #{payBackFee},
+        </if>
+        <if test="state!=null and state!=''">
+            state = #{state},
+        </if>
+        <if test="reason!=null and reason!=''">
+            reason = #{reason},
+        </if>
+        <if test="pgTradeNo!=null and pgTradeNo!=''">
+            pg_trade_no = #{pgTradeNo},
+        </if>
+        <if test="pgCode!=null and pgCode!=''">
+            pg_code = #{pgCode},
+        </if>
+        <if test="pgMessage!=null and pgMessage!=''">
+            pg_message = #{pgMessage},
+        </if>
+        update_at =CURRENT_TIMESTAMP(0)
+        where 1=1
+        <if test="id!=null and id!=''">
+            and id = #{id}
+        </if>
+        <if test="orderId!=null and orderId!=''">
+            and order_id =#{orderId}
+        </if>
+    </update>
 </mapper>

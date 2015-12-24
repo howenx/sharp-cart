@@ -17,10 +17,13 @@ GET           /client/order/submit                                              
 GET           /client/order/cancel/$orderId<[0-9]+>                                     controllers.OrderCtrl.cancelOrder(orderId:Long)
 GET           /client/order                                                             controllers.OrderCtrl.shoppingOrder(orderId:Long= 0)
 GET           /client/order/$orderId<[0-9]+>                                            controllers.OrderCtrl.shoppingOrder(orderId:Long)
+GET           /client/order/verify/$orderId<[0-9]+>                                     controllers.OrderCtrl.verifyOrder(orderId:Long)
 
 GET           /client/pay/order/get/$orderId<[0-9]+>                                    controllers.JDPay.payOrderWeb(orderId:Long)
 POST          /client/pay/jd/back                                                       controllers.JDPay.payBackendNotify()
 POST          /client/pay/jd/front                                                      controllers.JDPay.payFrontNotify()
+GET           /client/payback                                                           controllers.JDPay.payRefund()
+POST          /client/payback/refund                                                    controllers.JDPay.payBack()
 
 GET           /assets/*file                                                             controllers.Assets.versioned(path="/public", file: Asset)
 

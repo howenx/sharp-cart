@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="/assets/stylesheets/pay.css">
+    <script src="/assets/js/jquery-2.1.4.min.js"></script>
+</head>
+<body>
+<div class="refund">
+    <h2>退款</h2>
+    <hr>
+    <div class="refund-all">
+
+        <form id="jdsubmit" name="jdsubmit" action="/client/payback/refund" method="POST">
+                    <div class="refund-order">
+                        <h3>
+                            订单号: <input type="text" name="orderId" value="77700424">
+                        </h3>
+                    </div>
+                    <div class="refund-money">
+                        <h3>
+                            金额: <input type="text" name="payBackFee">
+                        </h3>
+                    </div>
+                    <div class="refund-reason">
+                        <h3>退款原因: </h3>
+                        <div><input type="checkbox" class="check" value="7天无理由退货"> 7天无理由退货</div>
+                        <br>
+                        <div><input type="checkbox" class="check" value="商品质量问题"> 商品质量问题</div>
+                        <br>
+                        <div><input type="checkbox" class="check" value="不想要了"> 不想要了</div>
+                        <br>
+                        <div style="padding-left: 10px">其他原因:</div>
+                        <textarea  id="reasonArea" cols="30" rows="5"></textarea>
+                    </div>
+                    <input type="hidden" name="reason">
+        </form>
+        <div class="btn">
+            <button>确定</button>
+        </div>
+    </div>
+</div>
+    <script>
+        $(function(){
+			$('.btn').click(function(){
+				var reason = '';
+				$("input:checked").each(function(){
+					reason = reason+" "+$(this).val();
+				})
+				reason = reason+" "+$('#reasonArea').val();
+				console.log(reason.trim());
+				$("input[name='reason']").val(reason.trim());
+				$('#jdsubmit').submit();
+			})
+        })
+    </script>
+</body>
+</html>

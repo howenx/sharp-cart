@@ -12,7 +12,6 @@ import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
-import scala.concurrent.duration.Duration;
 import service.CartService;
 import service.IdService;
 import service.SkuService;
@@ -25,9 +24,10 @@ import javax.inject.Singleton;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
 import static akka.pattern.Patterns.ask;
+
 /**
  * 订单相关,提交订单,优惠券
  * Created by howen on 15/12/1.
@@ -56,7 +56,7 @@ public class OrderCtrl extends Controller {
     static String FREE_SHIP;
 
     @Inject
-    public OrderCtrl(SkuService skuService, CartService cartService, IdService idService, @Named("subOrderActor") ActorRef orderSplitActor,@Named("cancelOrderActor") ActorRef  cancelOrderActor) {
+    public OrderCtrl(SkuService skuService, CartService cartService, IdService idService, @Named("subOrderActor") ActorRef orderSplitActor, @Named("cancelOrderActor") ActorRef cancelOrderActor) {
         this.cartService = cartService;
         this.idService = idService;
         this.orderSplitActor = orderSplitActor;
@@ -121,7 +121,7 @@ public class OrderCtrl extends Controller {
                     address = addressOptional.get();
                 }
 
-                Logger.error("地址信息:"+address);
+                Logger.error("地址信息:" + address);
                 resultMap.put("address", address);
 
                 //计算所有费用
@@ -164,7 +164,7 @@ public class OrderCtrl extends Controller {
 
                     //每个海关的实际邮费统计
                     if (((BigDecimal) s.get("shipFeeSingle")).compareTo(new BigDecimal(FREE_SHIP)) > 0) {
-                        singleCustomsFee.put("factSingleCustomsShipFee", 0);//实际邮费
+                        singleCustomsFee.put("factSingleCustomsShipFee", "0");//实际邮费
                     } else
                         singleCustomsFee.put("factSingleCustomsShipFee", ((BigDecimal) s.get("shipFeeSingle")).toPlainString());//每次计算出的邮费
 
@@ -173,7 +173,7 @@ public class OrderCtrl extends Controller {
 
                     //统计如果各个海关的实际关税,如果关税小于50元,则免税
                     if (((BigDecimal) s.get("postalFeeSingle")).compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
-                        singleCustomsFee.put("factPortalFeeSingleCustoms", 0);
+                        singleCustomsFee.put("factPortalFeeSingleCustoms", "0");
                     else
                         singleCustomsFee.put("factPortalFeeSingleCustoms", ((BigDecimal) s.get("postalFeeSingle")).toPlainString());
 
@@ -182,7 +182,7 @@ public class OrderCtrl extends Controller {
 
 
                 if (((BigDecimal) allFee.get("shipFee")).compareTo(new BigDecimal(FREE_SHIP)) > 0) {
-                    resultMap.put("factShipFee", 0);//实际邮费
+                    resultMap.put("factShipFee", "0");//实际邮费
                 } else
                     resultMap.put("factShipFee", ((BigDecimal) allFee.get("shipFee")).toPlainString());//每次计算出的邮费
 
@@ -190,7 +190,7 @@ public class OrderCtrl extends Controller {
                 resultMap.put("portalFee", ((BigDecimal) allFee.get("postalFee")).toPlainString());
                 //统计如果各个海关的实际关税,如果关税小于50元,则免税
                 if (((BigDecimal) allFee.get("postalFee")).compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
-                    resultMap.put("factPortalFee", 0);
+                    resultMap.put("factPortalFee", "0");
                 else resultMap.put("factPortalFee", ((BigDecimal) allFee.get("postalFee")).toPlainString());
 
                 //将各个海关下的费用统计返回
@@ -431,9 +431,9 @@ public class OrderCtrl extends Controller {
                 return map;
             } else {
                 //邮费
-                if (address!=null && address.getProvinceCode()!=null){
+                if (address != null && address.getProvinceCode() != null) {
                     shipFeeSingle = shipFeeSingle.add(calculateShipFee(address.getProvinceCode(), sku.getCarriageModelCode(), cartDto.getAmount()));
-                }else shipFeeSingle=BigDecimal.ZERO;
+                } else shipFeeSingle = BigDecimal.ZERO;
 
                 //单sku产生的行邮税
                 postalFeeSingle = postalFeeSingle.add(calculatePostalTax(sku.getPostalTaxRate(), sku.getItemPrice(), cartDto.getAmount()));
@@ -553,17 +553,18 @@ public class OrderCtrl extends Controller {
 
     /**
      * 取消订单
+     *
      * @param orderId 订单ID
      * @return promise
      */
-    public F.Promise<Result>  cancelOrder(Long orderId){
-        return F.Promise.wrap(ask(cancelOrderActor,orderId, 3000)
-        ).map(response ->{
+    public F.Promise<Result> cancelOrder(Long orderId) {
+        return F.Promise.wrap(ask(cancelOrderActor, orderId, 3000)
+        ).map(response -> {
             Logger.error(response.toString());
-            if (((Integer)response)==200){
+            if (((Integer) response) == 200) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
-            }else {
+            } else {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
                 return ok(result);
             }
@@ -581,7 +582,7 @@ public class OrderCtrl extends Controller {
         try {
             Long userId = (Long) ctx().args.get("userId");
             Order order = new Order();
-            if (orderId!=0){
+            if (orderId != 0) {
                 order.setOrderId(orderId);
             }
             order.setUserId(userId);
@@ -591,7 +592,7 @@ public class OrderCtrl extends Controller {
             //返回总数据
             List<Map> mapList = new ArrayList<>();
 
-            if (orderList.isPresent()){
+            if (orderList.isPresent()) {
 
                 for (Order o : orderList.get()) {
                     //用于保存每个订单对应的明细list和地址信息
@@ -600,9 +601,9 @@ public class OrderCtrl extends Controller {
                     OrderAddress orderAddress = new OrderAddress();
                     orderAddress.setOrderId(o.getOrderId());
 
-                    Optional<List<OrderAddress>>  orderAddressOptional=Optional.ofNullable(cartService.selectOrderAddress(orderAddress));
+                    Optional<List<OrderAddress>> orderAddressOptional = Optional.ofNullable(cartService.selectOrderAddress(orderAddress));
 
-                    if (orderAddressOptional.isPresent()){
+                    if (orderAddressOptional.isPresent()) {
                         //获取地址信息
                         Address address = new Address();
                         address.setDeliveryCity(orderAddressOptional.get().get(0).getDeliveryCity());
@@ -616,7 +617,7 @@ public class OrderCtrl extends Controller {
                     o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
 
                     //未支付订单
-                    if (o.getOrderStatus().equals("I")){
+                    if (o.getOrderStatus().equals("I")) {
 
                         OrderLine orderLine = new OrderLine();
                         orderLine.setOrderId(o.getOrderId());
@@ -626,7 +627,7 @@ public class OrderCtrl extends Controller {
                         //每个订单对应的商品明细
                         List<CartSkuDto> skuDtoList = new ArrayList<>();
 
-                        Integer orderAmount  = 0;
+                        Integer orderAmount = 0;
 
                         for (OrderLine orl : orderLineList) {
                             CartSkuDto skuDto = new CartSkuDto();
@@ -634,7 +635,7 @@ public class OrderCtrl extends Controller {
                             //组装返回的订单商品明细
                             skuDto.setSkuId(orl.getSkuId());
                             skuDto.setAmount(orl.getAmount());
-                            orderAmount+=skuDto.getAmount();
+                            orderAmount += skuDto.getAmount();
                             skuDto.setPrice(orl.getPrice());
                             skuDto.setSkuTitle(orl.getSkuTitle());
                             skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
@@ -651,12 +652,12 @@ public class OrderCtrl extends Controller {
                         mapList.add(map);
                     }
                     //否则以子订单来显示
-                    else{
+                    else {
                         OrderSplit orderSplit = new OrderSplit();
                         orderSplit.setOrderId(o.getOrderId());
                         Optional<List<OrderSplit>> optionalOrderSplitList = Optional.ofNullable(cartService.selectOrderSplit(orderSplit));
-                        if (optionalOrderSplitList.isPresent()){
-                            for (OrderSplit osp : optionalOrderSplitList.get()){
+                        if (optionalOrderSplitList.isPresent()) {
+                            for (OrderSplit osp : optionalOrderSplitList.get()) {
                                 Order orderS = new Order();
                                 orderS.setOrderId(osp.getOrderId());
                                 orderS.setOrderAmount(osp.getTotalAmount());
@@ -704,6 +705,41 @@ public class OrderCtrl extends Controller {
             result.putPOJO("orderList", Json.toJson(mapList));
             Logger.error("返回数据" + result.toString());
             return ok(result);
+        } catch (Exception ex) {
+            Logger.error("server exception:" + ex.getMessage());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+    }
+
+    @Security.Authenticated(UserAuth.class)
+    public Result verifyOrder(Long orderId) {
+        try {
+            Long userId = (Long) ctx().args.get("userId");
+            if (orderId != 0) {
+                Order order = new Order();
+                order.setOrderId(orderId);
+                order.setUserId(userId);
+                Optional <List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
+                if (listOptional.isPresent() && listOptional.get().size()>0){
+                    order=cartService.getOrderBy(order).get(0);
+                    Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
+                    if (longOptional.isPresent() && longOptional.get().compareTo(((Integer) 86400).longValue())>0){
+                        cancelOrderActor.tell(orderId,null);
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex()), Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex())));
+                        return ok(result);
+                    }else {
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                        return ok(result);
+                    }
+                }else{
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
+                    return ok(result);
+                }
+            }else{
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
+                return ok(result);
+            }
         } catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));

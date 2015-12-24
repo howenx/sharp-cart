@@ -50,4 +50,8 @@ public interface ShoppingCartMapper {
     int insertOrder(Order order) throws Exception;
 
     int deleteCouponF(CouponVo vo) throws Exception;
+
+    int insertRefund(Refund refund) throws Exception;
+    List<Refund> selectRefund(Refund refund) throws Exception;
+    int updateRefund(Refund refund) throws  Exception;
 }

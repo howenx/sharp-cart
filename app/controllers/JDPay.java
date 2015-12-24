@@ -1,5 +1,7 @@
 package controllers;
 
+import akka.actor.ActorRef;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Singleton;
 import domain.*;
@@ -9,15 +11,20 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import play.Logger;
 import play.Play;
+import play.data.Form;
+import play.libs.F;
 import play.libs.Json;
+import play.libs.ws.WSClient;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
 import service.CartService;
 import service.IdService;
+import util.CalCountDown;
 import util.Crypto;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -33,6 +40,11 @@ public class JDPay extends Controller {
 
     private IdService idService;
 
+    private ActorRef cancelOrderActor;
+
+    @Inject
+    WSClient ws;
+
     //shopping服务器url
     private static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
 
@@ -43,22 +55,37 @@ public class JDPay extends Controller {
     static final ObjectNode result = Json.newObject();
 
     @Inject
-    public JDPay(CartService cartService, IdService idService) {
+    public JDPay(CartService cartService, IdService idService, @Named("cancelOrderActor") ActorRef cancelOrderActor) {
         this.cartService = cartService;
         this.idService = idService;
+        this.cancelOrderActor = cancelOrderActor;
     }
 
     /**
      * 支付调用
+     *
      * @param orderId 订单ID
      * @return 跳转到京东支付页面
      */
     @Security.Authenticated(UserAuth.class)
-    public Result payOrderWeb(Long orderId){
+    public Result payOrderWeb(Long orderId) {
 
         try {
-            Map<String, String> params = getParams(request().queryString(),request().body().asFormUrlEncoded(),(Long) ctx().args.get("userId"),orderId);
-            return ok(views.html.cashdesk.render(params));
+            Long userId = (Long) ctx().args.get("userId");
+            Map<String, String> params = getParams(request().queryString(), request().body().asFormUrlEncoded(), userId, orderId);
+            Order order = new Order();
+            order.setOrderId(orderId);
+            order.setUserId(userId);
+            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
+            if (listOptional.isPresent() && listOptional.get().size() > 0) {
+                order = cartService.getOrderBy(order).get(0);
+                Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
+                if (longOptional.isPresent() && longOptional.get().compareTo(((Integer) 86400).longValue()) > 0) {
+                    cancelOrderActor.tell(orderId, null);
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex()), Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex())));
+                    return ok(result);
+                } else return ok(views.html.cashdesk.render(params));
+            } else return ok(views.html.jdpayfailed.render(params));
         } catch (Exception ex) {
             Logger.error("settle: " + ex.getMessage());
             ex.printStackTrace();
@@ -69,14 +96,15 @@ public class JDPay extends Controller {
 
     /**
      * 获取签名参数
-     * @param req_map 请求参数
-     * @param body_map  请求参数
-     * @param userId    用户ID
-     * @param orderId   订单ID
-     * @return  map
+     *
+     * @param req_map  请求参数
+     * @param body_map 请求参数
+     * @param userId   用户ID
+     * @param orderId  订单ID
+     * @return map
      * @throws Exception
      */
-    private Map<String, String> getParams(Map<String, String[]> req_map,Map<String, String[]> body_map,Long userId, Long orderId) throws Exception{
+    private Map<String, String> getParams(Map<String, String[]> req_map, Map<String, String[]> body_map, Long userId, Long orderId) throws Exception {
         Map<String, String> params = new HashMap<>();
         if (req_map != null) {
             req_map.forEach((k, v) -> params.put(k, v[0]));
@@ -84,20 +112,21 @@ public class JDPay extends Controller {
         if (body_map != null)
             body_map.forEach((k, v) -> params.put(k, v[0]));
 
-        Optional<Map<String,String>> optionalOrderInfo = Optional.ofNullable(getOrderInfo(userId,orderId));
+        Optional<Map<String, String>> optionalOrderInfo = Optional.ofNullable(getOrderInfo(userId, orderId));
 
-        if (optionalOrderInfo.isPresent()){
+        if (optionalOrderInfo.isPresent()) {
             optionalOrderInfo.get().forEach(params::put);
             getBasicInfo().forEach(params::put);
             params.put("sign_data", Crypto.create_sign(params, JD_SECRET));
             return params;
-        }else return null;
+        } else return null;
     }
 
 
     /***
      * 支付订单参数配置
-     * @param userId 用户ID
+     *
+     * @param userId  用户ID
      * @param orderId 订单ID
      * @return map
      * @throws Exception
@@ -148,13 +177,18 @@ public class JDPay extends Controller {
 
                     subInfo.add(subOrderMap);
                 }
-                map.put("sub_order_info",Json.stringify(Json.toJson(subInfo)));
+                map.put("sub_order_info", Json.stringify(Json.toJson(subInfo)));
             }
             return map;
-        }else return null;
+        } else return null;
     }
 
-    private static Map<String, String> getBasicInfo(){
+    /**
+     * 京东支付POST参数
+     *
+     * @return map
+     */
+    private static Map<String, String> getBasicInfo() {
         Map<String, String> params = new HashMap<>();
 
         DateTimeFormatter f = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
@@ -164,15 +198,20 @@ public class JDPay extends Controller {
         String settle_currency = "USD";
 
         params.put("customer_no", JD_SELLER);
-        params.put("notify_url", SHOPPING_URL+"/client/pay/jd/back");
+        params.put("notify_url", SHOPPING_URL + "/client/pay/jd/back");
         params.put("request_datetime", req_date);
-        params.put("return_url",  "http://172.28.3.51:9003/client/pay/jd/front");
+        params.put("return_url", "http://172.28.3.51:9003/client/pay/jd/front");
         params.put("settle_currency", settle_currency);
         params.put("trade_currency", trade_currency);
         params.put("sign_type", sign_type);
         return params;
     }
 
+    /**
+     * 京东支付后端返回通知
+     *
+     * @return success
+     */
     public Result payBackendNotify() {
         Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
@@ -180,52 +219,163 @@ public class JDPay extends Controller {
         String sign = params.get("sign_data");
         String secret = Play.application().configuration().getString("jd_secret");
 
-        String _sign = Crypto.create_sign(params,secret);
-        if(!sign.equalsIgnoreCase(_sign)) {
-            //error
-            return ok("通知失败，签名失败！");
-        }
-
-        //update order status .
-
-        return ok("SUCCESS");
-    }
-
-    public Result payFrontNotify() {
-        Map<String, String[]> body_map = request().body().asFormUrlEncoded();
-        Map<String, String> params = new HashMap<>();
-        body_map.forEach((k, v) -> params.put(k, v[0]));
-        String sign = params.get("sign_data");
-        String secret = Play.application().configuration().getString("jd_secret");
-        String _sign = Crypto.create_sign(params,secret);
-        Logger.error("支付成功返回数据: "+Json.toJson(params));
+        String _sign = Crypto.create_sign(params, secret);
         if (!sign.equalsIgnoreCase(_sign)) {
-            return ok("error page");
-        }else {
-            if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")){
+            Logger.error("支付回调签名失败");
+            return ok("error");
+        } else {
+            if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
                 Order order = new Order();
                 order.setOrderId(Long.valueOf(params.get("out_trade_no")));
                 order.setOrderStatus("S");
                 order.setErrorStr(params.get("trade_status"));
                 order.setPgTradeNo(params.get("trade_no"));
                 try {
-                    if (cartService.updateOrder(order))  Logger.debug("支付回调订单更新payFrontNotify: "+Json.toJson(order));
+                    if (cartService.updateOrder(order)) Logger.debug("支付回调订单更新payFrontNotify: " + Json.toJson(order));
                     Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
                     IdPlus idPlus = new IdPlus();
                     idPlus.setUserId(userId);
                     Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
                     idPlus.setPayJdToken(params.get("token"));
-                    if (idPlusOptional.isPresent()){
-                        if (idService.updateIdPlus(idPlus)) Logger.debug("支付成功回调更新用户Token payFrontNotify:"+Json.toJson(idPlus));
-                    }else{
-                        if (idService.insertIdPlus(idPlus)) Logger.debug("支付成功回调创建用户Token payFrontNotify:"+Json.toJson(idPlus));
+                    if (idPlusOptional.isPresent()) {
+                        if (idService.updateIdPlus(idPlus))
+                            Logger.debug("支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
+                    } else {
+                        if (idService.insertIdPlus(idPlus))
+                            Logger.debug("支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
                     }
                 } catch (Exception e) {
-                    Logger.error("支付回调订单更新出错payFrontNotify: "+e.getMessage());
+                    Logger.error("支付回调订单更新出错payFrontNotify: " + e.getMessage());
                     e.printStackTrace();
                 }
-                return ok(views.html.jdpaysuccess.render(params));
-            }else return ok("pay error page");
+                return ok("SUCCESS");
+            } else {
+                Logger.error("支付回调参数校验失败");
+                return ok("error");
+            }
         }
     }
+
+    /**
+     * 京东支付前端返回通知接口
+     *
+     * @return success page
+     */
+    public Result payFrontNotify() {
+        Map<String, String[]> body_map = request().body().asFormUrlEncoded();
+        Map<String, String> params = new HashMap<>();
+        body_map.forEach((k, v) -> params.put(k, v[0]));
+        String sign = params.get("sign_data");
+        String secret = Play.application().configuration().getString("jd_secret");
+        String _sign = Crypto.create_sign(params, secret);
+        Logger.error("支付成功返回数据: " + Json.toJson(params));
+        if (!sign.equalsIgnoreCase(_sign)) {
+            return ok(views.html.jdpayfailed.render(params));
+        } else {
+            if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
+//                Order order = new Order();
+//                order.setOrderId(Long.valueOf(params.get("out_trade_no")));
+//                order.setOrderStatus("S");
+//                order.setErrorStr(params.get("trade_status"));
+//                order.setPgTradeNo(params.get("trade_no"));
+//                try {
+//                    if (cartService.updateOrder(order))  Logger.debug("支付回调订单更新payFrontNotify: "+Json.toJson(order));
+//                    Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
+//                    IdPlus idPlus = new IdPlus();
+//                    idPlus.setUserId(userId);
+//                    Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
+//                    idPlus.setPayJdToken(params.get("token"));
+//                    if (idPlusOptional.isPresent()){
+//                        if (idService.updateIdPlus(idPlus)) Logger.debug("支付成功回调更新用户Token payFrontNotify:"+Json.toJson(idPlus));
+//                    }else{
+//                        if (idService.insertIdPlus(idPlus)) Logger.debug("支付成功回调创建用户Token payFrontNotify:"+Json.toJson(idPlus));
+//                    }
+//                } catch (Exception e) {
+//                    Logger.error("支付回调订单更新出错payFrontNotify: "+e.getMessage());
+//                    e.printStackTrace();
+//                }
+                return ok(views.html.jdpaysuccess.render(params));
+            } else return ok(views.html.jdpayfailed.render(params));
+        }
+    }
+
+    /**
+     * 退款接口参数配置
+     *
+     * @param refund   refund
+     * @param req_map  请求map
+     * @param body_map body map
+     * @return map
+     */
+    private Map<String, String> payBackParams(Refund refund, Map<String, String[]> req_map, Map<String, String[]> body_map) {
+        Map<String, String> params = new HashMap<>();
+        if (req_map != null) {
+            req_map.forEach((k, v) -> params.put(k, v[0]));
+        }
+        if (body_map != null)
+            body_map.forEach((k, v) -> params.put(k, v[0]));
+
+        params.put("out_trade_no", refund.getId().toString());
+        params.put("original_out_trade_no", refund.getOrderId().toString());
+        params.put("trade_amount", refund.getPayBackFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
+        params.put("trade_subject", refund.getReason());
+        params.put("return_params", refund.getOrderId().toString());
+        getBasicInfo().forEach(params::put);
+        params.put("sign_data", Crypto.create_sign(params, JD_SECRET));
+        return params;
+    }
+
+    public F.Promise<Result> payBack() {
+        Form<Refund> refundForm = Form.form(Refund.class).bindFromRequest();
+        try {
+            Refund refund = refundForm.get();
+            Optional<List<Refund>> refundOptional = Optional.ofNullable(cartService.selectRefund(refund));
+            Boolean flags;
+            if (refundOptional.isPresent() && refundOptional.get().size() > 0) {
+                refund.setId(refundOptional.get().get(0).getId());
+                flags = cartService.updateRefund(refund);
+            } else flags = cartService.insertRefund(refund);
+            if (flags) {
+                Map<String, String> params = payBackParams(refund, request().queryString(), request().body().asFormUrlEncoded());
+                StringBuilder sb = new StringBuilder();
+                params.forEach((k, v) -> {
+                    sb.append(k).append("=").append(v).append("&");
+                });
+
+                return ws.url("https://cbe.wangyin.com/cashier/refund").setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
+                    JsonNode response = wsResponse.asJson();
+                    Refund re = new Refund();
+                    re.setId(response.get("out_trade_no").asLong());
+                    re.setOrderId(response.get("return_params").asLong());
+                    re.setPgCode(response.get("response_code").asText());
+                    re.setPgMessage(response.get("response_message").asText());
+                    re.setPgTradeNo(response.get("trade_no").asText());
+                    re.setState(response.get("is_success").asText());
+
+                    if (cartService.updateRefund(re)) {
+                        if (re.getState().equals("Y")) {
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.REFUND_SUCCESS.getIndex()), Message.ErrorCode.REFUND_SUCCESS.getIndex())));
+                            return ok(result);
+                        } else {
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.REFUND_FAILED.getIndex()), Message.ErrorCode.REFUND_FAILED.getIndex())));
+                            return ok(result);
+                        }
+                    } else {
+                        Logger.error("payBack update exception");
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+                        return ok(result);
+                    }
+                });
+            } else return F.Promise.promise(() -> ok("db insert error"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return F.Promise.promise(() -> ok("error"));
+        }
+    }
+
+    public Result payRefund() {
+        return ok(views.html.payback.render());
+    }
+
+
 }

@@ -50,4 +50,8 @@ public interface CartService {
     Boolean insertOrder(Order order) throws Exception;
 
     Boolean deleteCouponF(CouponVo vo) throws Exception;
+
+    Boolean insertRefund(Refund refund) throws Exception;
+    List<Refund> selectRefund(Refund refund) throws Exception;
+    Boolean updateRefund(Refund refund) throws  Exception;
 }
