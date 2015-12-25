@@ -52,7 +52,7 @@ public class OrderLineActor extends AbstractActor {
                     orderLine.setSkuId(sku.getId());
                     orderLine.setSkuImg(sku.getInvImg());
                     try {
-                        if(cartService.insertOrderLine(orderLine)) Logger.debug("OrderLine: "+orderLine);
+                        if(cartService.insertOrderLine(orderLine)) Logger.debug("订单明细ID: "+orderLine.getLineId());
                     } catch (Exception e) {
                         Logger.error("OrderLineActor Error:" + e.getMessage());
                         e.printStackTrace();

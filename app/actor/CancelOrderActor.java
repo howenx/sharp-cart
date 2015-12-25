@@ -65,7 +65,7 @@ public class CancelOrderActor extends AbstractActor {
                             }
                             try {
                                 if (skuService.updateInv(sku))
-                                    Logger.debug("CancelOrderActor 恢复库存: " + Json.toJson(sku));
+                                    Logger.debug("恢复库存ID: " + sku.getId()+" 需要恢复的数量: "+ordL.getAmount());
                             } catch (Exception e) {
                                 Logger.error("CancelOrderActor Error:" + e.getMessage());
                                 sender().tell(500,self());
@@ -76,7 +76,7 @@ public class CancelOrderActor extends AbstractActor {
                         order.setOrderStatus("C");
                         try {
                             if (cartService.updateOrder(order))
-                                Logger.debug("CancelOrderActor 更新订单状态: " + Json.toJson(order));
+                                Logger.debug("取消订单,更新订单状态,订单ID: " + order.getOrderId());
                         } catch (Exception e) {
                             sender().tell(500,self());
                             Logger.error("CancelOrderActor 更新订单状态 Error:" + e.getMessage());
@@ -92,7 +92,7 @@ public class CancelOrderActor extends AbstractActor {
                             couponVo = couponVoList.get().get(0);
                             try {
                                 if (cartService.deleteCouponF(couponVo))
-                                    Logger.debug("CancelOrderActor 删除免邮券: " + Json.toJson(order));
+                                    Logger.debug("取消订单,删除免邮券ID: " + couponVo.getCoupId());
                             } catch (Exception e) {
                                 sender().tell(500,self());
                                 Logger.error("CancelOrderActor 删除免邮券 Error:" + e.getMessage());
@@ -111,7 +111,7 @@ public class CancelOrderActor extends AbstractActor {
                                 couponVo1.setOrderId(((Integer) 0).longValue());
                                 try {
                                     if (cartService.updateCoupon(couponVo1))
-                                        Logger.debug("CancelOrderActor 更新优惠券" + Json.toJson(couponVo1));
+                                        Logger.debug("取消订单,更新优惠券ID: " + couponVo1.getCoupId());
                                 } catch (Exception e) {
                                     sender().tell(500,self());
                                     e.printStackTrace();

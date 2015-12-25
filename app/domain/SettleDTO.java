@@ -11,14 +11,16 @@ public class SettleDTO implements Serializable {
 
     private     String              invCustoms;//报关单位
     private     String              invArea;//保税仓名称
+    private     String              invAreaNm;//库存区域名称
     private     List<CartDto>       cartDtos;
 
     public SettleDTO() {
     }
 
-    public SettleDTO(String invCustoms, String invArea, List<CartDto> cartDtos) {
+    public SettleDTO(String invCustoms, String invArea, String invAreaNm, List<CartDto> cartDtos) {
         this.invCustoms = invCustoms;
         this.invArea = invArea;
+        this.invAreaNm = invAreaNm;
         this.cartDtos = cartDtos;
     }
 
@@ -38,6 +40,14 @@ public class SettleDTO implements Serializable {
         this.invArea = invArea;
     }
 
+    public String getInvAreaNm() {
+        return invAreaNm;
+    }
+
+    public void setInvAreaNm(String invAreaNm) {
+        this.invAreaNm = invAreaNm;
+    }
+
     public List<CartDto> getCartDtos() {
         return cartDtos;
     }
@@ -51,6 +61,7 @@ public class SettleDTO implements Serializable {
         return "SettleDTO{" +
                 "invCustoms='" + invCustoms + '\'' +
                 ", invArea='" + invArea + '\'' +
+                ", invAreaNm='" + invAreaNm + '\'' +
                 ", cartDtos=" + cartDtos +
                 '}';
     }

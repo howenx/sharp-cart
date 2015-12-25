@@ -26,6 +26,7 @@ import util.Crypto;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -51,6 +52,8 @@ public class JDPay extends Controller {
     private static final String JD_SECRET = Play.application().configuration().getString("jd_secret");
 
     private static final String JD_SELLER = Play.application().configuration().getString("jd_seller");
+
+    public static final Long COUNTDOWN_MILLISECONDS=Long.valueOf(Play.application().configuration().getString("order.countdown.milliseconds"));
 
     static final ObjectNode result = Json.newObject();
 
@@ -80,11 +83,19 @@ public class JDPay extends Controller {
             if (listOptional.isPresent() && listOptional.get().size() > 0) {
                 order = cartService.getOrderBy(order).get(0);
                 Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
-                if (longOptional.isPresent() && longOptional.get().compareTo(((Integer) 86400).longValue()) > 0) {
+                if (longOptional.isPresent() && longOptional.get().compareTo(COUNTDOWN_MILLISECONDS) > 0) {
                     cancelOrderActor.tell(orderId, null);
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex()), Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex())));
                     return ok(result);
-                } else return ok(views.html.cashdesk.render(params));
+                } else {
+                    SimpleDateFormat d = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// 格式化时间
+                    Calendar calendar=Calendar.getInstance();
+                    calendar.setTime(d.parse(order.getOrderCreateAt()));
+                    if (params != null && !params.isEmpty()) {
+                        params.put("orderCreateAt",String.valueOf(calendar.getTimeInMillis()));
+                    }
+                    return ok(views.html.cashdesk.render(params));
+                }
             } else return ok(views.html.jdpayfailed.render(params));
         } catch (Exception ex) {
             Logger.error("settle: " + ex.getMessage());
@@ -200,7 +211,7 @@ public class JDPay extends Controller {
         params.put("customer_no", JD_SELLER);
         params.put("notify_url", SHOPPING_URL + "/client/pay/jd/back");
         params.put("request_datetime", req_date);
-        params.put("return_url", "http://172.28.3.51:9003/client/pay/jd/front");
+        params.put("return_url", SHOPPING_URL + "/client/pay/jd/front");
         params.put("settle_currency", settle_currency);
         params.put("trade_currency", trade_currency);
         params.put("sign_type", sign_type);
@@ -325,6 +336,10 @@ public class JDPay extends Controller {
         return params;
     }
 
+    /**
+     * 退款接口
+     * @return 返回
+     */
     public F.Promise<Result> payBack() {
         Form<Refund> refundForm = Form.form(Refund.class).bindFromRequest();
         try {

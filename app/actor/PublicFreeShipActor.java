@@ -50,7 +50,7 @@ public class PublicFreeShipActor extends AbstractActor {
                     couponVo.setLimitQuota(freeShipLimit);
                     couponVo.setOrderId(orderId);
                     try {
-                        if (cartService.insertCoupon(couponVo)) Logger.debug("免邮券:"+couponVo);
+                        if (cartService.insertCoupon(couponVo)) Logger.debug("发放的免邮券ID: "+couponVo.getCoupId());
                     } catch (Exception e) {
                         Logger.error("PublicFreeShipActor error: "+e.getMessage());
                         e.printStackTrace();

@@ -25,6 +25,7 @@ public class CartListDto implements Serializable{
     @JsonSerialize(using = MoneySerializer.class)
     private     BigDecimal      shipFee;//邮费
     private     String          invArea;//库存区域区分：'B'保税区仓库发货，‘Z’韩国直邮
+    private     String          invAreaNm;//库存区域名称
     private     Integer         restrictAmount;//限购数量
     private     Integer         restAmount;//商品余量
     private     String          invImg;//sku主图
@@ -41,7 +42,7 @@ public class CartListDto implements Serializable{
     public CartListDto() {
     }
 
-    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, String invUrlAndroid) {
+    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, String invAreaNm, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, String invUrlAndroid) {
         this.cartId = cartId;
         this.skuId = skuId;
         this.amount = amount;
@@ -51,6 +52,7 @@ public class CartListDto implements Serializable{
         this.state = state;
         this.shipFee = shipFee;
         this.invArea = invArea;
+        this.invAreaNm = invAreaNm;
         this.restrictAmount = restrictAmount;
         this.restAmount = restAmount;
         this.invImg = invImg;
@@ -135,6 +137,14 @@ public class CartListDto implements Serializable{
 
     public void setInvArea(String invArea) {
         this.invArea = invArea;
+    }
+
+    public String getInvAreaNm() {
+        return invAreaNm;
+    }
+
+    public void setInvAreaNm(String invAreaNm) {
+        this.invAreaNm = invAreaNm;
     }
 
     public Integer getRestrictAmount() {
@@ -245,6 +255,7 @@ public class CartListDto implements Serializable{
                 ", state='" + state + '\'' +
                 ", shipFee=" + shipFee +
                 ", invArea='" + invArea + '\'' +
+                ", invAreaNm='" + invAreaNm + '\'' +
                 ", restrictAmount=" + restrictAmount +
                 ", restAmount=" + restAmount +
                 ", invImg='" + invImg + '\'' +

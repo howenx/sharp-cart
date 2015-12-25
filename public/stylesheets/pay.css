@@ -43,13 +43,13 @@ h1,h2,h3,h4,h5,h6{
 .pay .right-icon{
     width: 18px;height: 30px;
     position: absolute;right: 5px;top: 8px;
-    background: url("images/right.png") no-repeat;background-size: 11px;
+    background: url("/assets/images/right.png") no-repeat;background-size: 11px;
 }
 .weixin{
-    background: url("images/home-pay-icon.png") no-repeat 10px -140px;background-size: 35px;
+    background: url("/assets/images/home-pay-icon.png") no-repeat 10px -140px;background-size: 35px;
 }
 .jingdong{
-    background: url("images/home-pay-icon.png") no-repeat 10px -70px;background-size: 35px;
+    background: url("/assets/images/home-pay-icon.png") no-repeat 10px -70px;background-size: 35px;
 }
 /************ pay-result1 ***************/
 .pay-result{
@@ -65,7 +65,7 @@ h1,h2,h3,h4,h5,h6{
 }
 .pay-result .pay-suc .icon-suc{
     width: 64px;height: 64px;
-    background: url("images/iconfont-iconsuccess.png") no-repeat;
+    background: url("/assets/images/iconfont-iconsuccess.png") no-repeat;
     background-size: 100%;
     float: left;
 }
@@ -123,7 +123,7 @@ h1,h2,h3,h4,h5,h6{
 }
 .order-pay .icon-order-suc{
     width: 64px;height: 64px;margin: 20px auto;
-    background: url("images/success.png") no-repeat;
+    background: url("/assets/images/success.png") no-repeat;
     background-size: 100%;
 }
 .order-pay .pay-suc h3{
@@ -145,7 +145,7 @@ h1,h2,h3,h4,h5,h6{
 /********** order-pay-failed *************/
 .order-pay .icon-order-fail{
     width: 64px;height: 64px;margin: 20px auto;
-    background: url("images/fail.png") no-repeat;
+    background: url("/assets/images/fail.png") no-repeat;
     background-size: 100%;
 }
 /***************** refund *****************/

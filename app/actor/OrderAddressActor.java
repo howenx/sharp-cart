@@ -33,7 +33,7 @@ public class OrderAddressActor extends AbstractActor {
                 orderAddress.setDeliveryCity(address.getDeliveryCity());
                 orderAddress.setDeliveryCardNum(address.getIdCardNum());
                 orderAddress.setDeliveryAddress(address.getDeliveryDetail());
-                if (cartService.insertOrderAddress(orderAddress)) Logger.debug("orderAddress:"+orderAddress.toString());
+                if (cartService.insertOrderAddress(orderAddress)) Logger.debug("订单地址信息ID: "+orderAddress.getShipId());
             } catch (Exception e) {
                 Logger.error("OrderAddressActor Error:" + e.getMessage());
                 e.printStackTrace();

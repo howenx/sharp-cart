@@ -22,11 +22,12 @@ public class OrderSplit implements Serializable{
     private Integer totalAmount;
     private BigDecimal shipFee;
     private BigDecimal postalFee;
+    private String  cbeArea;
 
     public OrderSplit() {
     }
 
-    public OrderSplit(Long splitId, Long orderId, String state, String cbeCode, String inspReturnCode, String inspReturnMsg, String customsReturnCode, String customsReturnMsg, BigDecimal totalFee, BigDecimal totalPayFee, Integer totalAmount, BigDecimal shipFee, BigDecimal postalFee) {
+    public OrderSplit(Long splitId, Long orderId, String state, String cbeCode, String inspReturnCode, String inspReturnMsg, String customsReturnCode, String customsReturnMsg, BigDecimal totalFee, BigDecimal totalPayFee, Integer totalAmount, BigDecimal shipFee, BigDecimal postalFee, String cbeArea) {
         this.splitId = splitId;
         this.orderId = orderId;
         this.state = state;
@@ -40,6 +41,7 @@ public class OrderSplit implements Serializable{
         this.totalAmount = totalAmount;
         this.shipFee = shipFee;
         this.postalFee = postalFee;
+        this.cbeArea = cbeArea;
     }
 
     public Long getSplitId() {
@@ -146,6 +148,14 @@ public class OrderSplit implements Serializable{
         this.postalFee = postalFee;
     }
 
+    public String getCbeArea() {
+        return cbeArea;
+    }
+
+    public void setCbeArea(String cbeArea) {
+        this.cbeArea = cbeArea;
+    }
+
     @Override
     public String toString() {
         return "OrderSplit{" +
@@ -162,6 +172,7 @@ public class OrderSplit implements Serializable{
                 ", totalAmount=" + totalAmount +
                 ", shipFee=" + shipFee +
                 ", postalFee=" + postalFee +
+                ", cbeArea='" + cbeArea + '\'' +
                 '}';
     }
 }

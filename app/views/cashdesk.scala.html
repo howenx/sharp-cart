@@ -8,6 +8,7 @@
           content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
     <link rel="stylesheet" href="/assets/stylesheets/pay.css">
+    <script src="/assets/js/jquery-2.1.4.min.js"></script>
 </head>
 <body>
 <div class="pay-change">
@@ -15,7 +16,7 @@
     <em>@params.get("all_fee")元</em>
 </div>
 <hr>
-<div class="jingdong pay" onclick="jdPost()">
+<div class="jingdong pay">
     <span>京东支付</span>
     <em>京东旗下 安全极速支付</em>
 
@@ -37,9 +38,18 @@
 
     </form>
     <script>
-        function jdPost(){
-            document.forms['jdsubmit'].submit();
-        }
+    	$(function(){
+			$('.jingdong').click(function(){
+		        var createAt = @params.get("orderCreateAt")/1;//毫秒数
+		        var d = new Date();
+		        var n = d.getTime();
+		        if(n-createAt>=10000){
+    	    		alert("您的订单已经超时自动取消");
+		        }else{
+		        	document.forms['jdsubmit'].submit();
+		        }
+			})
+    	})
     </script>
 </div>
 <hr>

@@ -35,6 +35,7 @@ public class Sku {
     private     String              postalTaxRate;//税率
     private     String              postalStandard;//关税收费标准
     private     String              postalLimit;//海关规定的单笔订单金额不能超过的量值
+    private     String              invAreaNm;//库存区域名称
 
     @JsonIgnore
     private     Long                itemId;
@@ -58,7 +59,7 @@ public class Sku {
     public Sku() {
     }
 
-    public Sku(Long id, String itemColor, String itemSize, BigDecimal itemSrcPrice, BigDecimal itemPrice, BigDecimal itemDiscount, Boolean orMasterInv, String state, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String itemPreviewImgs, String invUrl, String invTitle, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, Long itemId, Integer amount, BigDecimal itemCostPrice, Integer soldAmount, Boolean orDestroy, Timestamp destroyAt, Timestamp updateAt, Timestamp createAt, String carriageModelCode) {
+    public Sku(Long id, String itemColor, String itemSize, BigDecimal itemSrcPrice, BigDecimal itemPrice, BigDecimal itemDiscount, Boolean orMasterInv, String state, String invArea, Integer restrictAmount, Integer restAmount, String invImg, String itemPreviewImgs, String invUrl, String invTitle, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, String invAreaNm, Long itemId, Integer amount, BigDecimal itemCostPrice, Integer soldAmount, Boolean orDestroy, Timestamp destroyAt, Timestamp updateAt, Timestamp createAt, String carriageModelCode) {
         this.id = id;
         this.itemColor = itemColor;
         this.itemSize = itemSize;
@@ -78,6 +79,7 @@ public class Sku {
         this.postalTaxRate = postalTaxRate;
         this.postalStandard = postalStandard;
         this.postalLimit = postalLimit;
+        this.invAreaNm = invAreaNm;
         this.itemId = itemId;
         this.amount = amount;
         this.itemCostPrice = itemCostPrice;
@@ -241,6 +243,14 @@ public class Sku {
         this.postalLimit = postalLimit;
     }
 
+    public String getInvAreaNm() {
+        return invAreaNm;
+    }
+
+    public void setInvAreaNm(String invAreaNm) {
+        this.invAreaNm = invAreaNm;
+    }
+
     public Long getItemId() {
         return itemId;
     }
@@ -335,6 +345,7 @@ public class Sku {
                 ", postalTaxRate='" + postalTaxRate + '\'' +
                 ", postalStandard='" + postalStandard + '\'' +
                 ", postalLimit='" + postalLimit + '\'' +
+                ", invAreaNm='" + invAreaNm + '\'' +
                 ", itemId=" + itemId +
                 ", amount=" + amount +
                 ", itemCostPrice=" + itemCostPrice +

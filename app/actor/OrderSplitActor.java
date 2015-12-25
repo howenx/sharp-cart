@@ -1,8 +1,7 @@
 package actor;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.Scheduler;
+import akka.Main;
+import akka.actor.*;
 import akka.japi.pf.ReceiveBuilder;
 import domain.OrderSplit;
 import play.Logger;
@@ -20,6 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -31,7 +31,7 @@ public class OrderSplitActor extends AbstractActor {
 
     @Inject
     public OrderSplitActor(CartService cartService,@Named("orderShipActor") ActorRef orderShipActor,@Named("orderDetailActor") ActorRef orderDetailActor,@Named("clearCartActor") ActorRef clearCartActor
-    ,@Named("publicFreeShipActor") ActorRef  publicFreeShipActor,@Named("reduceInvActor") ActorRef reduceInvActor,@Named("cancelOrderActor") ActorRef cancelOrderActor
+    ,@Named("publicFreeShipActor") ActorRef  publicFreeShipActor,@Named("reduceInvActor") ActorRef reduceInvActor,@Named("cancelOrderActor") ActorRef cancelOrderActor,@Named("schedulerCancelOrderActor") ActorRef schedulerCancelOrderActor
     ,@Named("publicCouponActor") ActorRef publicCouponActor) {
 
         receive(ReceiveBuilder.match(HashMap.class, maps -> {
@@ -43,6 +43,7 @@ public class OrderSplitActor extends AbstractActor {
                 orderSplitList = orderSplitList.stream().map(c -> {
                     OrderSplit orderSplit = new OrderSplit();
                     orderSplit.setCbeCode(c.get("invCustoms").toString());
+                    orderSplit.setCbeArea(c.get("invArea").toString());
                     orderSplit.setPostalFee((BigDecimal) c.get("postalFeeSingle"));
                     orderSplit.setShipFee((BigDecimal) c.get("shipFeeSingle"));
                     orderSplit.setOrderId(orderId);
@@ -50,7 +51,7 @@ public class OrderSplitActor extends AbstractActor {
                     orderSplit.setTotalFee((BigDecimal) c.get("totalFeeSingle"));
                     orderSplit.setTotalPayFee((BigDecimal) c.get("totalPayFeeSingle"));
                     try {
-                        if (cartService.insertOrderSplit(orderSplit)) Logger.debug("子订单信息: " + orderSplit);
+                        if (cartService.insertOrderSplit(orderSplit)) Logger.debug("子订单ID: " + orderSplit.getSplitId());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -71,6 +72,10 @@ public class OrderSplitActor extends AbstractActor {
                 //减库存
                 reduceInvActor.tell(orderInfo,ActorRef.noSender());
                 //24小时内未结算恢复库存并自动取消订单
+
+//                ActorSystem system = ActorSystem.create("Hello");
+//                ActorRef a = system.actorOf(Props.create(SchedulerCancelOrderActor.class), "helloWorld");
+//                system.actorOf(Props.create(TerminatorActor.class, a), "terminator");
                 context().system().scheduler().scheduleOnce(FiniteDuration.create(24,HOURS),cancelOrderActor,orderInfo.get("orderId"),context().dispatcher(), ActorRef.noSender());
 
             } catch (Exception e) {

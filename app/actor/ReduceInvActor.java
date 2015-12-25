@@ -51,7 +51,7 @@ public class ReduceInvActor extends AbstractActor {
                         sku.setSoldAmount(sku.getSoldAmount()+cartDto.getAmount());
                     }
                     try {
-                        if(skuService.updateInv(sku)) Logger.debug("ReduceInvActor: "+sku);
+                        if(skuService.updateInv(sku)) Logger.debug("需要被减的库存ID: "+sku.getId()+" 减库存的数量: "+cartDto.getAmount());
                     } catch (Exception e) {
                         Logger.error("ReduceInvActor Error:" + e.getMessage());
                         e.printStackTrace();

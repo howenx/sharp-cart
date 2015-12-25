@@ -18,6 +18,8 @@ GET           /client/order/cancel/$orderId<[0-9]+>                             
 GET           /client/order                                                             controllers.OrderCtrl.shoppingOrder(orderId:Long= 0)
 GET           /client/order/$orderId<[0-9]+>                                            controllers.OrderCtrl.shoppingOrder(orderId:Long)
 GET           /client/order/verify/$orderId<[0-9]+>                                     controllers.OrderCtrl.verifyOrder(orderId:Long)
+GET           /client/order/del/$orderId<[0-9]+>                                        controllers.OrderCtrl.delOrder(orderId:Long)
+
 
 GET           /client/pay/order/get/$orderId<[0-9]+>                                    controllers.JDPay.payOrderWeb(orderId:Long)
 POST          /client/pay/jd/back                                                       controllers.JDPay.payBackendNotify()

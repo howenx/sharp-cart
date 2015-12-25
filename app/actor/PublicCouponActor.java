@@ -30,7 +30,7 @@ public class PublicCouponActor extends AbstractActor {
                 couponVo.setCoupId(orderInfo.get("couponId").toString());
                 couponVo.setState("Y");
                 couponVo.setOrderId(orderId);
-                if (cartService.updateCoupon(couponVo)) Logger.debug("PublicCouponActor 发放优惠券 :"+couponVo);
+                if (cartService.updateCoupon(couponVo)) Logger.debug("PublicCouponActor 发放优惠券ID :"+couponVo.getCoupId());
             }
         }).matchAny(s -> Logger.error("PublicCouponActor received messages not matched: {}", s.toString())).build());
     }

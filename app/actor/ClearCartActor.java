@@ -43,10 +43,10 @@ public class ClearCartActor extends AbstractActor {
                         cart.setStatus("O");
                         cart.setOrderId(orderId);
                         try {
-                            if (cartService.updateCart(cart)) Logger.debug("ClearCartActor 清空购物车"+cart);
+                            if (cartService.updateCart(cart)) Logger.debug("清空购物车ID: "+cart.getCartId());
                         } catch (Exception e) {
                             e.printStackTrace();
-                            Logger.error("ClearCartActor 更新购物车"+e.getMessage());
+                            Logger.error("ClearCartActor 更新购物车异常"+e.getMessage());
                             context().system().scheduler().scheduleOnce(FiniteDuration.create(5, TimeUnit.MILLISECONDS),self(),orderInfo,context().dispatcher(), ActorRef.noSender());
                         }
                     });

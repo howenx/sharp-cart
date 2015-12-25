@@ -14,7 +14,6 @@ import play.mvc.Security;
 import service.CartService;
 import service.IdService;
 import service.SkuService;
-import util.CalCountDown;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -68,8 +67,6 @@ public class Application extends Controller {
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
                 List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
-
-                Logger.error("登陆前数据:" + Json.toJson(cartDtoList).toString());
 
                 for (CartDto cartDto : cartDtoList) {
 
@@ -144,10 +141,9 @@ public class Application extends Controller {
                     cart.setCartId(s);
                     cart.setStatus("N");
                     cartService.updateCart(cart);
+                    Logger.debug("失效购物车ID: " + cart.getCartId());
                 }
             }
-
-            Logger.error("购物车最终结果:" + result.toString());
             return ok(result);
 
         } catch (Exception ex) {
@@ -283,64 +279,25 @@ public class Application extends Controller {
 
             Map<String, List<CartListDto>> cartListMap = cartListDto
                     .stream()
-                    .collect(Collectors.groupingBy(CartListDto::getInvCustoms));
+                    .collect(Collectors.groupingBy(CartListDto::getInvArea));
 
             List<Map<String, Object>> list = new ArrayList<>();
 
             cartListMap
-                    .forEach((invCustoms, p) -> {
-
-                        switch (invCustoms) {
-                            case "shanghai": {
-                                Map<String, Object> mapResult = new HashMap<>();
-                                mapResult.put("invCustoms", invCustoms);
-                                mapResult.put("invArea", "韩国直邮");
-                                mapResult.put("carts", p);
-                                mapResult.put("postalStandard", POSTAL_STANDARD);
-                                mapResult.put("postalLimit", POSTAL_LIMIT);
-                                mapResult.put("freeShip", FREE_SHIP);
-                                list.add(mapResult);
-                                break;
-                            }
-                            case "guangzhou": {
-                                Map<String, Object> mapResult = new HashMap<>();
-                                mapResult.put("invCustoms", invCustoms);
-                                mapResult.put("invArea", "广州保税区");
-                                mapResult.put("postalStandard", POSTAL_STANDARD);
-                                mapResult.put("postalLimit", POSTAL_LIMIT);
-                                mapResult.put("freeShip", FREE_SHIP);
-                                mapResult.put("carts", p);
-                                list.add(mapResult);
-                                break;
-                            }
-                            case "hangzhou": {
-                                Map<String, Object> mapResult = new HashMap<>();
-                                mapResult.put("invCustoms", invCustoms);
-                                mapResult.put("invArea", "杭州保税区");
-                                mapResult.put("carts", p);
-                                mapResult.put("postalStandard", POSTAL_STANDARD);
-                                mapResult.put("postalLimit", POSTAL_LIMIT);
-                                mapResult.put("freeShip", FREE_SHIP);
-                                list.add(mapResult);
-                                break;
-                            }
-                            default: {
-                                Map<String, Object> mapResult = new HashMap<>();
-                                mapResult.put("invCustoms", invCustoms);
-                                mapResult.put("invArea", "海外直邮");
-                                mapResult.put("carts", p);
-                                mapResult.put("postalStandard", POSTAL_STANDARD);
-                                mapResult.put("postalLimit", POSTAL_LIMIT);
-                                mapResult.put("freeShip", FREE_SHIP);
-                                list.add(mapResult);
-                                break;
-                            }
-                        }
+                    .forEach((invArea, p) -> {
+                        Map<String, Object> mapResult = new HashMap<>();
+                        mapResult.put("invCustoms",p.get(0).getInvCustoms());
+                        mapResult.put("invArea", invArea);
+                        mapResult.put("invAreaNm", p.get(0).getInvAreaNm());
+                        mapResult.put("carts", p);
+                        mapResult.put("postalStandard", POSTAL_STANDARD);
+                        mapResult.put("postalLimit", POSTAL_LIMIT);
+                        mapResult.put("freeShip", FREE_SHIP);
+                        list.add(mapResult);
                     });
 
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("cartList", Json.toJson(list));
-            Logger.error("未登录时:" + Json.toJson(list));
             return ok(result);
 
         } catch (Exception ex) {
@@ -395,6 +352,7 @@ public class Application extends Controller {
                     cartList.setItemPrice(sku.getItemPrice());
                     cartList.setState(cart.getStatus());
                     cartList.setInvArea(sku.getInvArea());
+                    cartList.setInvAreaNm(sku.getInvAreaNm());
                     cartList.setRestrictAmount(sku.getRestrictAmount());
                     cartList.setRestAmount(sku.getRestAmount());
                     cartList.setInvImg(IMAGE_URL + sku.getInvImg());
@@ -413,59 +371,21 @@ public class Application extends Controller {
 
                 Map<String, List<CartListDto>> cartListMap = cartListDto
                         .stream()
-                        .collect(Collectors.groupingBy(CartListDto::getInvCustoms));
+                        .collect(Collectors.groupingBy(CartListDto::getInvArea));
 
                 List<Map<String, Object>> list = new ArrayList<>();
 
                 cartListMap
-                        .forEach((invCustoms, p) -> {
-
-                            switch (invCustoms) {
-                                case "shanghai": {
-                                    Map<String, Object> mapResult = new HashMap<>();
-                                    mapResult.put("invCustoms", invCustoms);
-                                    mapResult.put("invArea", "韩国直邮");
-                                    mapResult.put("carts", p);
-                                    mapResult.put("postalStandard", POSTAL_STANDARD);
-                                    mapResult.put("postalLimit", POSTAL_LIMIT);
-                                    mapResult.put("freeShip", FREE_SHIP);
-                                    list.add(mapResult);
-                                    break;
-                                }
-                                case "guangzhou": {
-                                    Map<String, Object> mapResult = new HashMap<>();
-                                    mapResult.put("invCustoms", invCustoms);
-                                    mapResult.put("invArea", "广州保税区");
-                                    mapResult.put("carts", p);
-                                    mapResult.put("postalStandard", POSTAL_STANDARD);
-                                    mapResult.put("postalLimit", POSTAL_LIMIT);
-                                    mapResult.put("freeShip", FREE_SHIP);
-                                    list.add(mapResult);
-                                    break;
-                                }
-                                case "hangzhou": {
-                                    Map<String, Object> mapResult = new HashMap<>();
-                                    mapResult.put("invCustoms", invCustoms);
-                                    mapResult.put("invArea", "杭州保税区");
-                                    mapResult.put("carts", p);
-                                    mapResult.put("postalStandard", POSTAL_STANDARD);
-                                    mapResult.put("postalLimit", POSTAL_LIMIT);
-                                    mapResult.put("freeShip", FREE_SHIP);
-                                    list.add(mapResult);
-                                    break;
-                                }
-                                default: {
-                                    Map<String, Object> mapResult = new HashMap<>();
-                                    mapResult.put("invCustoms", invCustoms);
-                                    mapResult.put("invArea", "海外直邮");
-                                    mapResult.put("carts", p);
-                                    mapResult.put("postalStandard", POSTAL_STANDARD);
-                                    mapResult.put("postalLimit", POSTAL_LIMIT);
-                                    mapResult.put("freeShip", FREE_SHIP);
-                                    list.add(mapResult);
-                                    break;
-                                }
-                            }
+                        .forEach((invArea, p) -> {
+                            Map<String, Object> mapResult = new HashMap<>();
+                            mapResult.put("invCustoms", p.get(0).getInvCustoms());
+                            mapResult.put("invArea", invArea);
+                            mapResult.put("invAreaNm", p.get(0).getInvAreaNm());
+                            mapResult.put("carts", p);
+                            mapResult.put("postalStandard", POSTAL_STANDARD);
+                            mapResult.put("postalLimit", POSTAL_LIMIT);
+                            mapResult.put("freeShip", FREE_SHIP);
+                            list.add(mapResult);
                         });
                 return Optional.of(list);
             } else return Optional.empty();

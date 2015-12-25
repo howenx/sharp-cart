@@ -189,6 +189,8 @@
         <if test="orderId!=null and orderId !=''">
             and t.order_id = #{orderId}
         </if>
+        and order_status !='N'
+        order by t.order_create_at DESC
     </select>
 
     <update id="updateOrder" parameterType="domain.Order">
@@ -442,13 +444,14 @@
         insert into order_split(
         order_id              ,
         cbe_code              ,
+        cbe_area              ,
         total_fee             ,
         total_pay_fee         ,
         total_amount          ,
         ship_fee              ,
         postal_fee
         )
-        values(#{orderId},#{cbeCode},#{totalFee},#{totalPayFee},#{totalAmount},#{shipFee},#{postalFee})
+        values(#{orderId},#{cbeCode},#{cbeArea},#{totalFee},#{totalPayFee},#{totalAmount},#{shipFee},#{postalFee})
     </insert>
     <update id="updateOrderSplit" parameterType="domain.OrderSplit">
         update order_split set

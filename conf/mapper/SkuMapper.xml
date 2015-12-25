@@ -11,31 +11,42 @@
     <!--<cache/>-->
 
     <sql id="invColumns">
-        ${alias}.id                  ,
-        ${alias}.item_id             ,
-        ${alias}.item_color          ,
-        ${alias}.item_size           ,
-        ${alias}.amount              ,
-        ${alias}.item_src_price      ,
-        ${alias}.item_price          ,
-        ${alias}.item_cost_price     ,
-        ${alias}.item_discount       ,
-        ${alias}.sold_amount         ,
-        ${alias}.rest_amount         ,
-        ${alias}.inv_img             ,
-        ${alias}.item_preview_imgs::text   ,
-        ${alias}.or_destroy          ,
-        ${alias}.destroy_at          ,
-        ${alias}.update_at           ,
-        ${alias}.create_at           ,
-        ${alias}.or_master_inv       ,
-        ${alias}.state               ,
-        case when ${alias}.inv_area='H' then '杭州保税区'  when ${alias}.inv_area='G' then '广州保税区' when ${alias}.inv_area='Z' then '韩国直邮' when ${alias}.inv_area='K' then '海外直邮' else '其它' end as inv_area,
-        ${alias}.restrict_amount     ,
-        ${alias}.inv_title           ,
-        ${alias}.inv_customs         ,
-        ${alias}.inv_weight          ,
-        COALESCE(${alias}.postal_tax_rate,(select f.rate from tax_code f where f.code = t.postal_tax_code)) as postal_tax_rate,
+        ${alias}.id ,
+        ${alias}.item_id ,
+        ${alias}.item_color ,
+        ${alias}.item_size ,
+        ${alias}.amount ,
+        ${alias}.item_src_price ,
+        ${alias}.item_price ,
+        ${alias}.item_cost_price ,
+        ${alias}.item_discount ,
+        ${alias}.sold_amount ,
+        ${alias}.rest_amount ,
+        ${alias}.inv_img ,
+        ${alias}.item_preview_imgs::text ,
+        ${alias}.or_destroy ,
+        ${alias}.destroy_at ,
+        ${alias}.update_at ,
+        ${alias}.create_at ,
+        ${alias}.or_master_inv ,
+        ${alias}.state ,
+        ${alias}.inv_area ,
+        case
+            when ${alias}.inv_area='H' then '杭州保税仓备货'
+            when ${alias}.inv_area='G' then '广州保税仓备货'
+            when ${alias}.inv_area='S' then '上海保税仓备货'
+            when ${alias}.inv_area='SZ' then '上海保税区直邮'
+            when ${alias}.inv_area='GZ' then '广州保税仓直邮'
+            when ${alias}.inv_area='HZ' then '杭州保税仓直邮'
+            when ${alias}.inv_area='K' then '海外直邮'
+            else '其它'
+        end as inv_area_nm,
+        ${alias}.restrict_amount ,
+        ${alias}.inv_title ,
+        ${alias}.inv_customs ,
+        ${alias}.inv_weight ,
+        COALESCE(${alias}.postal_tax_rate,(select f.rate from tax_code f where f.code = t.postal_tax_code)) as
+        postal_tax_rate,
         ${alias}.carriage_model_code,
         (select parameter_val from sys_parameter where parameter_code='POSTAL_STANDARD') as postalStandard,
         (select parameter_val from sys_parameter where parameter_code='POSTAL_LIMIT') as postalLimit
@@ -76,9 +87,9 @@
 
     <!--获取系统参数表-->
     <sql id="sysParameterColumns">
-        ${alias}.sys_id           ,
-        ${alias}.parameter_nm     ,
-        ${alias}.parameter_val    ,
+        ${alias}.sys_id ,
+        ${alias}.parameter_nm ,
+        ${alias}.parameter_val ,
         ${alias}.parameter_code
     </sql>
     <select id="getSysParameter" parameterType="domain.SysParameter" resultType="domain.SysParameter">
@@ -107,7 +118,7 @@
         COALESCE (cc.first_num,c.first_num) first_num,
         COALESCE (cc.model_code,c.model_code) model_code,
         COALESCE (cc.model_name,c.model_name) model_name
-        FROM carriage c  LEFT JOIN
+        FROM carriage c LEFT JOIN
         (SELECT c1.id,
         c1.add_fee,
         c1.add_num,
@@ -118,11 +129,11 @@
         c1.model_name
         FROM carriage c1
         WHERE 1=1
-            <if test="cityCode!=null and cityCode!=''">
-                and c1.city_code = #{cityCode}
-            </if>
+        <if test="cityCode!=null and cityCode!=''">
+            and c1.city_code = #{cityCode}
+        </if>
         ) cc
-        on  cc.model_code=c.model_code where 1=1
+        on cc.model_code=c.model_code where 1=1
         <if test="modelCode!=null and modelCode!=''">
             and c.model_code = #{modelCode}
         </if>

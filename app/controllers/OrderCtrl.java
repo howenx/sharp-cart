@@ -90,6 +90,10 @@ public class OrderCtrl extends Controller {
 
     static final ObjectNode result = Json.newObject();
 
+    /**
+     * 请求结算页面
+     * @return result
+     */
     @Security.Authenticated(UserAuth.class)
     public Result settle() {
 
@@ -101,8 +105,6 @@ public class OrderCtrl extends Controller {
 
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
-
-                Logger.error("请求JSON : " + json.get().toString());
 
                 SettleOrderDTO settleOrderDTO = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructType(SettleOrderDTO.class));
 
@@ -120,10 +122,7 @@ public class OrderCtrl extends Controller {
                 if (addressOptional.isPresent()) {
                     address = addressOptional.get();
                 }
-
-                Logger.error("地址信息:" + address);
                 resultMap.put("address", address);
-
                 //计算所有费用
                 Map<String, Object> allFee = calOrderFee(settleOrderDTO.getSettleDTOs(), userId, address);
 
@@ -147,6 +146,8 @@ public class OrderCtrl extends Controller {
                     singleCustomsFee.put("invCustoms", s.get("invCustoms").toString());
 
                     singleCustomsFee.put("invArea", s.get("invArea").toString());
+
+                    singleCustomsFee.put("invAreaNm", s.get("invAreaNm").toString());
 
                     //如果存在单个海关的金额超过1000,返回
                     if (((BigDecimal) s.get("totalFeeSingle")).compareTo(new BigDecimal(POSTAL_LIMIT)) > 0) {
@@ -211,8 +212,6 @@ public class OrderCtrl extends Controller {
                 result.putPOJO("settle", Json.toJson(resultMap));
 
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-
-                Logger.error("最终结果: " + result.toString());
 
                 return ok(result);
             } else {
@@ -286,8 +285,6 @@ public class OrderCtrl extends Controller {
 
             if (json.isPresent() && json.get().size() > 0) {
 
-                Logger.error("请求JSON : " + json.get().toString());
-
                 SettleOrderDTO settleOrderDTO = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructType(SettleOrderDTO.class));
                 settleOrderDTO.setClientIp(request().remoteAddress());
 
@@ -315,8 +312,6 @@ public class OrderCtrl extends Controller {
 
                 //前端是立即购买还是结算页提交订单
                 allFee.put("buyNow", settleOrderDTO.getBuyNow());
-
-                Logger.error("所有费用: " + allFee.toString());
 
                 //创建订单
                 Order order = createOrder(settleOrderDTO, allFee, userId);
@@ -449,6 +444,7 @@ public class OrderCtrl extends Controller {
         //海关名称
         map.put("invCustoms", settleDTO.getInvCustoms());
         map.put("invArea", settleDTO.getInvArea());
+        map.put("invAreaNm", settleDTO.getInvAreaNm());
         map.put("shipFeeSingle", shipFeeSingle.setScale(2, BigDecimal.ROUND_HALF_UP));
         map.put("postalFeeSingle", postalFeeSingle.setScale(2, BigDecimal.ROUND_HALF_UP));
         map.put("totalFeeSingle", totalFeeSingle.setScale(2, BigDecimal.ROUND_HALF_UP));
@@ -547,7 +543,10 @@ public class OrderCtrl extends Controller {
         order.setTotalFee(((BigDecimal) allFee.get("totalFee")).setScale(2, BigDecimal.ROUND_HALF_UP));
         order.setOrderIp(settleOrderDTO.getClientIp());
         order.setClientType(settleOrderDTO.getClientType());
-        if (cartService.insertOrder(order)) return order;
+        if (cartService.insertOrder(order)) {
+            Logger.debug("创建订单ID: "+order.getOrderId());
+            return order;
+        }
         else return null;
     }
 
@@ -617,7 +616,7 @@ public class OrderCtrl extends Controller {
                     o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
 
                     //未支付订单
-                    if (o.getOrderStatus().equals("I")) {
+                    if (o.getOrderStatus().equals("I") || o.getOrderStatus().equals("C")) {
 
                         OrderLine orderLine = new OrderLine();
                         orderLine.setOrderId(o.getOrderId());
@@ -703,7 +702,10 @@ public class OrderCtrl extends Controller {
             }
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("orderList", Json.toJson(mapList));
-            Logger.error("返回数据" + result.toString());
+
+            response().setHeader("Cache-Control", "no-cache");
+            response().setContentType("text/json;charset=gb2312");
+
             return ok(result);
         } catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
@@ -712,6 +714,12 @@ public class OrderCtrl extends Controller {
         }
     }
 
+    /**
+     * 校验订单状态 ,前端点击去支付时
+     *
+     * @param orderId 订单ID
+     * @return 返回消息
+     */
     @Security.Authenticated(UserAuth.class)
     public Result verifyOrder(Long orderId) {
         try {
@@ -720,23 +728,83 @@ public class OrderCtrl extends Controller {
                 Order order = new Order();
                 order.setOrderId(orderId);
                 order.setUserId(userId);
-                Optional <List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
-                if (listOptional.isPresent() && listOptional.get().size()>0){
-                    order=cartService.getOrderBy(order).get(0);
+                Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
+                if (listOptional.isPresent() && listOptional.get().size() > 0) {
+                    order = cartService.getOrderBy(order).get(0);
                     Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
-                    if (longOptional.isPresent() && longOptional.get().compareTo(((Integer) 86400).longValue())>0){
-                        cancelOrderActor.tell(orderId,null);
+                    if (longOptional.isPresent() && longOptional.get().compareTo(JDPay.COUNTDOWN_MILLISECONDS) > 0) {
+                        cancelOrderActor.tell(orderId, null);
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex()), Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex())));
                         return ok(result);
-                    }else {
+                    } else {
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                         return ok(result);
                     }
-                }else{
+                } else {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
                     return ok(result);
                 }
-            }else{
+            } else {
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
+                return ok(result);
+            }
+        } catch (Exception ex) {
+            Logger.error("server exception:" + ex.getMessage());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+    }
+
+    /**
+     * 删除订单
+     * @param orderId 订单ID
+     * @return 消息
+     */
+    @Security.Authenticated(UserAuth.class)
+    public Result delOrder(Long orderId) {
+        try {
+            Long userId = (Long) ctx().args.get("userId");
+            if (orderId != 0) {
+                Order order = new Order();
+                order.setOrderId(orderId);
+                order.setUserId(userId);
+                Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
+                if (listOptional.isPresent() && listOptional.get().size() > 0) {
+                    order = cartService.getOrderBy(order).get(0);
+
+                    switch (order.getOrderStatus()) {
+                        case "I":
+                            cancelOrderActor.tell(orderId, null);
+                            order.setOrderStatus("N");
+                            if (cartService.updateOrder(order)) {
+                                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                                return ok(result);
+                            } else {
+                                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.DATABASE_EXCEPTION.getIndex()), Message.ErrorCode.DATABASE_EXCEPTION.getIndex())));
+                                return ok(result);
+                            }
+                        case "S":
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_DEL.getIndex()), Message.ErrorCode.ORDER_DEL.getIndex())));
+                            return ok(result);
+                        case "D":
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_DEL.getIndex()), Message.ErrorCode.ORDER_DEL.getIndex())));
+                            return ok(result);
+                        default:
+                            order.setOrderStatus("N");
+                            if (cartService.updateOrder(order)) {
+                                Logger.debug("删除订单ID: "+order.getOrderId());
+                                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                                return ok(result);
+                            } else {
+                                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.DATABASE_EXCEPTION.getIndex()), Message.ErrorCode.DATABASE_EXCEPTION.getIndex())));
+                                return ok(result);
+                            }
+                    }
+                } else {
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
+                    return ok(result);
+                }
+            } else {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
                 return ok(result);
             }
