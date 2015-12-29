@@ -7,6 +7,11 @@ lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
 scalaVersion := "2.11.7"
 
+evictionWarningOptions in evicted := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
+
+updateOptions := updateOptions.value.withConsolidatedResolution(true)
+
+
 libraryDependencies ++= Seq(
   javaJdbc,
   cache,
@@ -39,6 +44,7 @@ libraryDependencies += "com.typesafe.akka" % "akka-kernel_2.11" % "2.4.1" withSo
 libraryDependencies += "com.typesafe.akka" % "akka-slf4j_2.11" % "2.4.1" withSources() withJavadoc()
 
 libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.4.1" withSources() withJavadoc()
+
 resolvers ++= Seq(
   "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
   "Apache" at "http://repo1.maven.org/maven2/",

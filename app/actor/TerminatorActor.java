@@ -8,6 +8,7 @@ import akka.japi.pf.ReceiveBuilder;
  * Terminator Actor
  * Created by howen on 15/12/24.
  */
+@SuppressWarnings("unchecked")
 public class TerminatorActor extends AbstractLoggingActor {
 
     private final ActorRef ref;
@@ -18,7 +19,7 @@ public class TerminatorActor extends AbstractLoggingActor {
         receive(ReceiveBuilder.
                 match(TerminatorActor.class, t -> {
                     log().info("{} has terminated, shutting down system", ref.path());
-                    context().system().shutdown();
+                    context().stop(self());
                 }).build());
     }
 }
