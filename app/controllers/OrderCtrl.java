@@ -544,7 +544,7 @@ public class OrderCtrl extends Controller {
         order.setOrderIp(settleOrderDTO.getClientIp());
         order.setClientType(settleOrderDTO.getClientType());
         if (cartService.insertOrder(order)) {
-            Logger.debug("创建订单ID: "+order.getOrderId());
+            Logger.error("创建订单ID: "+order.getOrderId());
             return order;
         }
         else return null;
@@ -637,7 +637,12 @@ public class OrderCtrl extends Controller {
                             orderAmount += skuDto.getAmount();
                             skuDto.setPrice(orl.getPrice());
                             skuDto.setSkuTitle(orl.getSkuTitle());
-                            skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                            if (orl.getSkuImg().contains("url")){
+                                JsonNode jsonNode  = Json.parse(orl.getSkuImg());
+                                if (jsonNode.has("url")){
+                                    skuDto.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
+                                }
+                            }else skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
                             skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
                             skuDto.setItemColor(orl.getSkuColor());
                             skuDto.setItemSize(orl.getSkuSize());
@@ -684,7 +689,12 @@ public class OrderCtrl extends Controller {
                                     skuDto.setAmount(orl.getAmount());
                                     skuDto.setPrice(orl.getPrice());
                                     skuDto.setSkuTitle(orl.getSkuTitle());
-                                    skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                                    if (orl.getSkuImg().contains("url")){
+                                        JsonNode jsonNode  = Json.parse(orl.getSkuImg());
+                                        if (jsonNode.has("url")){
+                                            skuDto.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
+                                        }
+                                    }else skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
                                     skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
                                     skuDto.setItemColor(orl.getSkuColor());
                                     skuDto.setItemSize(orl.getSkuSize());
@@ -792,7 +802,7 @@ public class OrderCtrl extends Controller {
                         default:
                             order.setOrderStatus("N");
                             if (cartService.updateOrder(order)) {
-                                Logger.debug("删除订单ID: "+order.getOrderId());
+                                Logger.error("删除订单ID: "+order.getOrderId());
                                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                                 return ok(result);
                             } else {

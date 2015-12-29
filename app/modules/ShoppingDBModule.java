@@ -49,6 +49,8 @@ public class ShoppingDBModule extends PrivateModule{
          */
         bind(CartService.class).to(CartServiceImpl.class);
         expose(CartService.class);
+
+
     }
 
     @Singleton

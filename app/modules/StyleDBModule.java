@@ -47,7 +47,7 @@ public class StyleDBModule extends PrivateModule{
         /**
          * bind service for controller or other service inject.
          */
-        bind(SkuService.class).to(SkuServiceImpl.class);
+        bind(SkuService.class).to(SkuServiceImpl.class).asEagerSingleton();
         expose(SkuService.class);
 
     }

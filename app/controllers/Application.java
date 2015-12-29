@@ -80,6 +80,7 @@ public class Application extends Controller {
 
                     cart.setItemId(sku.getItemId());
                     cart.setSkuTitle(sku.getInvTitle());
+
                     cart.setSkuImg(sku.getInvImg());
 
                     //先确定商品状态是正常,否则直接存为失效商品
@@ -141,7 +142,7 @@ public class Application extends Controller {
                     cart.setCartId(s);
                     cart.setStatus("N");
                     cartService.updateCart(cart);
-                    Logger.debug("失效购物车ID: " + cart.getCartId());
+                    Logger.error("失效购物车ID: " + cart.getCartId());
                 }
             }
             return ok(result);
@@ -261,9 +262,18 @@ public class Application extends Controller {
                 }
 
                 cartList.setInvArea(sku.getInvArea());
+                cartList.setInvAreaNm(sku.getInvAreaNm());
                 cartList.setRestrictAmount(sku.getRestrictAmount());
                 cartList.setRestAmount(sku.getRestAmount());
-                cartList.setInvImg(IMAGE_URL + sku.getInvImg());
+
+                if (sku.getInvImg().contains("url")){
+                    JsonNode jsonNode  = Json.parse(sku.getInvImg());
+                    if (jsonNode.has("url")){
+                        cartList.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
+                    }
+                }else cartList.setInvImg(IMAGE_URL +sku.getInvImg());
+
+
                 cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
                 cartList.setInvUrlAndroid(DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId());
                 cartList.setInvCustoms(sku.getInvCustoms());
@@ -355,7 +365,13 @@ public class Application extends Controller {
                     cartList.setInvAreaNm(sku.getInvAreaNm());
                     cartList.setRestrictAmount(sku.getRestrictAmount());
                     cartList.setRestAmount(sku.getRestAmount());
-                    cartList.setInvImg(IMAGE_URL + sku.getInvImg());
+
+                    if (sku.getInvImg().contains("url")){
+                        JsonNode jsonNode  = Json.parse(sku.getInvImg());
+                        if (jsonNode.has("url")){
+                            cartList.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
+                        }
+                    }else cartList.setInvImg(IMAGE_URL + sku.getInvImg());
                     cartList.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
                     cartList.setInvUrlAndroid(DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId());
                     cartList.setCartDelUrl(SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
