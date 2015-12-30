@@ -43,7 +43,7 @@
 		        var createAt = @params.get("orderCreateAt")/1;//毫秒数
 		        var d = new Date();
 		        var n = d.getTime();
-		        if(n-createAt>=10000){
+		        if(n-createAt>=86400000){
     	    		alert("您的订单已经超时自动取消");
 		        }else{
 		        	document.forms['jdsubmit'].submit();
