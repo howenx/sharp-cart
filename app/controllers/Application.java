@@ -56,7 +56,6 @@ public class Application extends Controller {
     @Security.Authenticated(UserAuth.class)
     public Result cart() {
 
-        Logger.error(request().body().toString());
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
         Boolean S_FLAG = false;
 
@@ -142,7 +141,7 @@ public class Application extends Controller {
                     cart.setCartId(s);
                     cart.setStatus("N");
                     cartService.updateCart(cart);
-                    Logger.error("失效购物车ID: " + cart.getCartId());
+                    Logger.info("失效购物车ID: " + cart.getCartId());
                 }
             }
             return ok(result);

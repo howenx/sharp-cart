@@ -231,7 +231,7 @@ public class JDPay extends Controller {
 
         String _sign = Crypto.create_sign(params, secret);
         if (!sign.equalsIgnoreCase(_sign)) {
-            Logger.error("支付回调签名失败");
+            Logger.info("支付回调签名失败");
             return ok("error");
         } else {
             if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
@@ -249,10 +249,10 @@ public class JDPay extends Controller {
                     idPlus.setPayJdToken(params.get("token"));
                     if (idPlusOptional.isPresent()) {
                         if (idService.updateIdPlus(idPlus))
-                            Logger.error("支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
+                            Logger.info("支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
                     } else {
                         if (idService.insertIdPlus(idPlus))
-                            Logger.error("支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
+                            Logger.info("支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
                     }
                 } catch (Exception e) {
                     Logger.error("支付回调订单更新出错payFrontNotify: " + e.getMessage());
@@ -278,7 +278,7 @@ public class JDPay extends Controller {
         String sign = params.get("sign_data");
         String secret = Play.application().configuration().getString("jd_secret");
         String _sign = Crypto.create_sign(params, secret);
-        Logger.error("支付成功返回数据: " + Json.toJson(params));
+        Logger.info("支付成功返回数据: " + Json.toJson(params));
         if (!sign.equalsIgnoreCase(_sign)) {
             return ok(views.html.jdpayfailed.render());
         } else {
@@ -293,18 +293,18 @@ public class JDPay extends Controller {
                         order.setErrorStr(params.get("trade_status"));
                         order.setPgTradeNo(params.get("trade_no"));
 
-                        if (cartService.updateOrder(order))  Logger.error("支付回调订单更新payFrontNotify: "+Json.toJson(order));
+                        if (cartService.updateOrder(order))  Logger.info("支付回调订单更新payFrontNotify: "+Json.toJson(order));
                         Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
                         IdPlus idPlus = new IdPlus();
                         idPlus.setUserId(userId);
                         Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
                         idPlus.setPayJdToken(params.get("token"));
                         if (idPlusOptional.isPresent()){
-                            if (idService.updateIdPlus(idPlus)) Logger.error("支付成功回调更新用户Token payFrontNotify:"+Json.toJson(idPlus));
+                            if (idService.updateIdPlus(idPlus)) Logger.info("支付成功回调更新用户Token payFrontNotify:"+Json.toJson(idPlus));
                         }else{
-                            if (idService.insertIdPlus(idPlus)) Logger.error("支付成功回调创建用户Token payFrontNotify:"+Json.toJson(idPlus));
+                            if (idService.insertIdPlus(idPlus)) Logger.info("支付成功回调创建用户Token payFrontNotify:"+Json.toJson(idPlus));
                         }
-                    }else Logger.error("支付前台回调成功,非前台更新订单状态:"+order.getOrderId());
+                    }else Logger.info("支付前台回调成功,非前台更新订单状态:"+order.getOrderId());
 
                 } catch (Exception e) {
                     Logger.error("支付回调订单更新出错payFrontNotify: "+e.getMessage());

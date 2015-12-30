@@ -559,7 +559,7 @@ public class OrderCtrl extends Controller {
     public F.Promise<Result> cancelOrder(Long orderId) {
         return F.Promise.wrap(ask(cancelOrderActor, orderId, 3000)
         ).map(response -> {
-            Logger.error(response.toString());
+            Logger.info("取消订单:"+orderId);
             if (((Integer) response) == 200) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
@@ -802,7 +802,7 @@ public class OrderCtrl extends Controller {
                         default:
                             order.setOrderStatus("N");
                             if (cartService.updateOrder(order)) {
-                                Logger.error("删除订单ID: "+order.getOrderId());
+                                Logger.info("删除订单ID: "+order.getOrderId());
                                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                                 return ok(result);
                             } else {
