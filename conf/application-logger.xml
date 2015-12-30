@@ -46,15 +46,14 @@
     The logger name is typically the Java/Scala package name.
     This configures the log level to log at for a package and its children packages.
   -->
-    <!--<logger name="play" level="DEBUG" />-->
-
-    <!--<logger name="mapper" level="DEBUG" />-->
-    <!--<logger name="controllers" level="DEBUG" />-->
+    <logger name="play" level="DEBUG" />
+    <logger name="mapper" level="DEBUG" />
+    <logger name="controllers" level="DEBUG" />
     <!--<root level="INFO">-->
         <!--<appender-ref ref="STDOUT" />-->
         <!--<appender-ref ref="FILE" />-->
     <!--</root>-->
-    <root level="ERROR">
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </root>
