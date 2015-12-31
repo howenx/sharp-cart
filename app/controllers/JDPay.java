@@ -85,13 +85,14 @@ public class JDPay extends Controller {
                 Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
                 if (longOptional.isPresent() && longOptional.get().compareTo(COUNTDOWN_MILLISECONDS) > 0) {
                     cancelOrderActor.tell(orderId, null);
-                    Logger.error("订单超时:"+order.getOrderId());
+                    Logger.error("order timeout:"+order.getOrderId());
                     return ok(views.html.jdpayfailed.render());
                 } else {
                     SimpleDateFormat d = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// 格式化时间
                     Calendar calendar=Calendar.getInstance();
                     calendar.setTime(d.parse(order.getOrderCreateAt()));
                     Map<String, String> params = getParams(calendar.getTimeInMillis(),request().queryString(), request().body().asFormUrlEncoded(), userId, orderId);
+                    Logger.info("someone paying: "+orderId);
                     return ok(views.html.cashdesk.render(params));
                 }
             } else return ok(views.html.jdpayfailed.render());

@@ -102,7 +102,6 @@ public class OrderCtrl extends Controller {
         Map<String, Object> resultMap = new HashMap<>();
 
         try {
-
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
 
@@ -196,6 +195,8 @@ public class OrderCtrl extends Controller {
 
                 //将各个海关下的费用统计返回
                 resultMap.put("singleCustoms", returnFee);
+
+                resultMap.put("postalStandard",POSTAL_STANDARD);
 
                 CouponVo couponVo = new CouponVo();
                 couponVo.setUserId(userId);
@@ -365,11 +366,7 @@ public class OrderCtrl extends Controller {
         BigDecimal postalFee = BigDecimal.ZERO;
         //计算行邮税,行邮税加和
         postalFee = postalFee.add(new BigDecimal(postalTaxRate).multiply(price).multiply(new BigDecimal(amount)).multiply(new BigDecimal(0.01)));
-
-        //统计如果各个海关的实际关税,如果关税小于50(sku.getPostalStandard())元,则免税
-        if (postalFee.compareTo(new BigDecimal(POSTAL_STANDARD)) > 0)       //公式应收税金 T=X*N*S/(1-S)
-            return price.multiply(new BigDecimal(amount)).multiply(new BigDecimal(postalTaxRate).multiply(new BigDecimal(0.01)));
-        else return BigDecimal.ZERO;
+        return postalFee;
     }
 
     //获取用户地址
