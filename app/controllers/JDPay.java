@@ -236,6 +236,8 @@ public class JDPay extends Controller {
             return ok("error");
         } else {
             if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
+
+                Logger.info("京东支付异步通知结果: "+params.toString());
                 Order order = new Order();
                 order.setOrderId(Long.valueOf(params.get("out_trade_no")));
                 order.setOrderStatus("S");

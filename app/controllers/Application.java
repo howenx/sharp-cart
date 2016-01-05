@@ -64,6 +64,10 @@ public class Application extends Controller {
         ObjectNode result = Json.newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
+
+            Boolean flag_restrict =false;//标志是否是超出限购数量
+            Boolean flag_rest  = false;//标志是否超出最大库存量
+
             if (json.isPresent() && json.get().size() > 0) {
                 List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
 
@@ -93,11 +97,14 @@ public class Application extends Controller {
 
                     if (sku.getRestrictAmount() != 0 && sku.getRestrictAmount() <= cartDto.getAmount()) {
                         cart.setAmount(sku.getRestrictAmount());
+                        flag_restrict =true;
                     } else cart.setAmount(cartDto.getAmount());
+
 
                     //判断是否超过库存余量,超过库存余量直接给最大库存余量
                     if (cart.getAmount() > sku.getRestAmount()) {
                         cart.setAmount(sku.getRestAmount());
+                        flag_rest = true;
                     }
 
                     if (cartDto.getCartId() == 0) {
@@ -110,8 +117,10 @@ public class Application extends Controller {
                                 cart.setAmount(cart.getAmount() + carts.get(0).getAmount());//购买数量累加
                                 if (cart.getAmount() > sku.getRestrictAmount() && sku.getRestrictAmount() != 0) {
                                     cart.setAmount(sku.getRestrictAmount());
+                                    flag_restrict =true;
                                 } else if (cart.getAmount() > sku.getRestAmount()) {
                                     cart.setAmount(sku.getRestAmount());
+                                    flag_rest = true;
                                 }
                                 cartService.updateCart(cart);
                                 if (cart.getStatus().equals("S")) sCartIds.add(cart.getCartId());
@@ -131,7 +140,11 @@ public class Application extends Controller {
 
             if (cartAllMap(userId).isPresent()) {
                 result.putPOJO("cartList", Json.toJson(cartAllMap(userId).get()));
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                if (flag_restrict){
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex()), Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex())));
+                }else if (flag_rest){
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
+                }else result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             } else
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex()), Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex())));
 
