@@ -154,28 +154,28 @@ public class OrderCtrl extends Controller {
                         return ok(result);
                     }
                     //每个海关的总费用统计
-                    singleCustomsFee.put("singleCustomsSumFee", ((BigDecimal) s.get("totalFeeSingle")).toPlainString());
+                    singleCustomsFee.put("singleCustomsSumFee", ((BigDecimal) s.get("totalFeeSingle")).stripTrailingZeros().toPlainString());
 
                     //每个海关购买的总数量
                     singleCustomsFee.put("singleCustomsSumAmount", ((Integer) s.get("totalAmount")));
 
                     //每个海关邮费统计
-                    singleCustomsFee.put("shipSingleCustomsFee", ((BigDecimal) s.get("shipFeeSingle")).toPlainString());
+                    singleCustomsFee.put("shipSingleCustomsFee", ((BigDecimal) s.get("shipFeeSingle")).stripTrailingZeros().toPlainString());
 
                     //每个海关的实际邮费统计
                     if (((BigDecimal) s.get("shipFeeSingle")).compareTo(new BigDecimal(FREE_SHIP)) > 0) {
                         singleCustomsFee.put("factSingleCustomsShipFee", "0");//实际邮费
                     } else
-                        singleCustomsFee.put("factSingleCustomsShipFee", ((BigDecimal) s.get("shipFeeSingle")).toPlainString());//每次计算出的邮费
+                        singleCustomsFee.put("factSingleCustomsShipFee", ((BigDecimal) s.get("shipFeeSingle")).stripTrailingZeros().toPlainString());//每次计算出的邮费
 
                     //每个海关的关税统计
-                    singleCustomsFee.put("portalSingleCustomsFee", ((BigDecimal) s.get("postalFeeSingle")).toPlainString());
+                    singleCustomsFee.put("portalSingleCustomsFee", ((BigDecimal) s.get("postalFeeSingle")).stripTrailingZeros().toPlainString());
 
                     //统计如果各个海关的实际关税,如果关税小于50元,则免税
                     if (((BigDecimal) s.get("postalFeeSingle")).compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
                         singleCustomsFee.put("factPortalFeeSingleCustoms", "0");
                     else
-                        singleCustomsFee.put("factPortalFeeSingleCustoms", ((BigDecimal) s.get("postalFeeSingle")).toPlainString());
+                        singleCustomsFee.put("factPortalFeeSingleCustoms", ((BigDecimal) s.get("postalFeeSingle")).stripTrailingZeros().toPlainString());
 
                     returnFee.add(singleCustomsFee);
                 }
@@ -184,14 +184,14 @@ public class OrderCtrl extends Controller {
                 if (((BigDecimal) allFee.get("shipFee")).compareTo(new BigDecimal(FREE_SHIP)) > 0) {
                     resultMap.put("factShipFee", "0");//实际邮费
                 } else
-                    resultMap.put("factShipFee", ((BigDecimal) allFee.get("shipFee")).toPlainString());//每次计算出的邮费
+                    resultMap.put("factShipFee", ((BigDecimal) allFee.get("shipFee")).stripTrailingZeros().toPlainString());//每次计算出的邮费
 
-                resultMap.put("shipFee", ((BigDecimal) allFee.get("shipFee")).toPlainString());
-                resultMap.put("portalFee", ((BigDecimal) allFee.get("postalFee")).toPlainString());
+                resultMap.put("shipFee", ((BigDecimal) allFee.get("shipFee")).stripTrailingZeros().toPlainString());
+                resultMap.put("portalFee", ((BigDecimal) allFee.get("postalFee")).stripTrailingZeros().toPlainString());
                 //统计如果各个海关的实际关税,如果关税小于50元,则免税
                 if (((BigDecimal) allFee.get("postalFee")).compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
                     resultMap.put("factPortalFee", "0");
-                else resultMap.put("factPortalFee", ((BigDecimal) allFee.get("postalFee")).toPlainString());
+                else resultMap.put("factPortalFee", ((BigDecimal) allFee.get("postalFee")).stripTrailingZeros().toPlainString());
 
                 //将各个海关下的费用统计返回
                 resultMap.put("singleCustoms", returnFee);
@@ -439,8 +439,6 @@ public class OrderCtrl extends Controller {
         //支付费用
         totalPayFeeSingle = shipFeeSingle.add(postalFeeSingle).add(totalFeeSingle);
 
-        Logger.error("尼玛的支付费用: "+totalPayFeeSingle);
-
         //海关名称
         map.put("invCustoms", settleDTO.getInvCustoms());
         map.put("invArea", settleDTO.getInvArea());
@@ -516,13 +514,13 @@ public class OrderCtrl extends Controller {
             }
         }
         allFee.put("singleCustoms", singleCustoms);
-        allFee.put("shipFee", shipFee.setScale(2, BigDecimal.ROUND_HALF_UP));
-        allFee.put("postalFee", postalFee.setScale(2, BigDecimal.ROUND_HALF_UP));
-        allFee.put("totalFee", totalFee.setScale(2, BigDecimal.ROUND_HALF_UP));
-        allFee.put("totalPayFee", totalPayFee.setScale(2, BigDecimal.ROUND_HALF_UP));
+        allFee.put("shipFee", shipFee.setScale(2, BigDecimal.ROUND_HALF_UP).stripTrailingZeros());
+        allFee.put("postalFee", postalFee.setScale(2, BigDecimal.ROUND_HALF_UP).stripTrailingZeros());
+        allFee.put("totalFee", totalFee.setScale(2, BigDecimal.ROUND_HALF_UP).stripTrailingZeros());
+        allFee.put("totalPayFee", totalPayFee.setScale(2, BigDecimal.ROUND_HALF_UP).stripTrailingZeros());
         allFee.put("address", address);
         allFee.put("userId", userId);
-        allFee.put("freeShipLimit", new BigDecimal(FREE_SHIP).setScale(2, BigDecimal.ROUND_DOWN));
+        allFee.put("freeShipLimit", new BigDecimal(FREE_SHIP).setScale(2, BigDecimal.ROUND_DOWN).stripTrailingZeros());
         return allFee;
     }
 

@@ -1,5 +1,8 @@
 package domain;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.MoneySerializer;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -17,10 +20,14 @@ public class OrderSplit implements Serializable{
     private String inspReturnMsg;
     private String customsReturnCode;
     private String customsReturnMsg;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal totalFee;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal totalPayFee;
     private Integer totalAmount;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal shipFee;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal postalFee;
     private String  cbeArea;
 

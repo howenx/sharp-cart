@@ -160,7 +160,7 @@ public class JDPay extends Controller {
 //            map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).setScale(0,BigDecimal.ROUND_DOWN).toPlainString());
             map.put("trade_amount", String.valueOf(1));
             //自用字断
-            map.put("all_fee", order.getPayTotal().toPlainString());
+            map.put("all_fee", order.getPayTotal().stripTrailingZeros().toPlainString());
             if (idPlusOptional.isPresent()) {
                 map.put("token", idPlusOptional.get().getPayJdToken());
             }

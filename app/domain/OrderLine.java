@@ -1,5 +1,8 @@
 package domain;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.MoneySerializer;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -14,6 +17,7 @@ public class OrderLine implements Serializable {
     private Long skuId;
     private Long itemId;
     private Integer amount;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal price;
     private String skuTitle;
     private String skuImg;

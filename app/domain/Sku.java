@@ -2,6 +2,7 @@ package domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.DiscountSerializer;
 import util.MoneySerializer;
 
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ public class Sku {
     @JsonSerialize(using = MoneySerializer.class)
     private     BigDecimal          itemPrice;//商品价格
 
+    @JsonSerialize(using = DiscountSerializer.class)
     private     BigDecimal          itemDiscount;//商品折扣
     private     Boolean             orMasterInv;//是否主商品
     private     String              state;//状态
