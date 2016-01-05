@@ -433,10 +433,13 @@ public class OrderCtrl extends Controller {
                 //sku总计费用
                 totalFeeSingle = totalFeeSingle.add(sku.getItemPrice().multiply(new BigDecimal(cartDto.getAmount())));
 
-                //支付费用
-                totalPayFeeSingle = totalPayFeeSingle.add(shipFeeSingle).add(postalFeeSingle).add(totalFeeSingle);
             }
         }
+
+        //支付费用
+        totalPayFeeSingle = shipFeeSingle.add(postalFeeSingle).add(totalFeeSingle);
+
+        Logger.error("尼玛的支付费用: "+totalPayFeeSingle);
 
         //海关名称
         map.put("invCustoms", settleDTO.getInvCustoms());
