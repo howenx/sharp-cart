@@ -247,18 +247,20 @@ public class JDPay extends Controller {
                     order.setPgTradeNo(params.get("trade_no"));
                     try {
                         if (cartService.updateOrder(order)) Logger.error("京东支付回调订单更新payFrontNotify: " + Json.toJson(order));
-//                        Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
-//                        IdPlus idPlus = new IdPlus();
-//                        idPlus.setUserId(userId);
-//                        Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
-//                        idPlus.setPayJdToken(params.get("token"));
-//                        if (idPlusOptional.isPresent()) {
-//                            if (idService.updateIdPlus(idPlus))
-//                                Logger.info("京东支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
-//                        } else {
-//                            if (idService.insertIdPlus(idPlus))
-//                                Logger.info("京东支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
-//                        }
+                        if (params.containsKey("token")){
+                            Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
+                            IdPlus idPlus = new IdPlus();
+                            idPlus.setUserId(userId);
+                            Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
+                            idPlus.setPayJdToken(params.get("token"));
+                            if (idPlusOptional.isPresent()) {
+                                if (idService.updateIdPlus(idPlus))
+                                    Logger.info("京东支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
+                            } else {
+                                if (idService.insertIdPlus(idPlus))
+                                    Logger.info("京东支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
+                            }
+                        }
                     } catch (Exception e) {
                         Logger.error("支付回调订单更新出错payFrontNotify: " + e.getMessage());
                         e.printStackTrace();
@@ -272,10 +274,9 @@ public class JDPay extends Controller {
             }else if (params.containsKey("trade_class") && params.get("trade_class").equals("REFD")){
                 Logger.info("京东退款异步通知数据: "+params.toString());
                 if (params.containsKey("out_trade_no") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("ACSU")) {
-                    Logger.info("京东支付异步通知数据: "+params.toString());
                     Refund re = new Refund();
-                    re.setId(Long.valueOf(params.get("out_trade_no")));
-                    re.setOrderId(Long.valueOf(params.get("return_params")));
+                    re.setId(Long.valueOf(params.get("return_params")));
+                    re.setOrderId(Long.valueOf(params.get("out_trade_no")));
                     re.setPgCode(params.get("trade_status"));
                     re.setPgMessage(params.get("trade_subject"));
                     re.setPgTradeNo(params.get("trade_no"));
@@ -377,7 +378,7 @@ public class JDPay extends Controller {
         params.put("original_out_trade_no", refund.getOrderId().toString());
         params.put("trade_amount", refund.getPayBackFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
         params.put("trade_subject", refund.getReason());
-        params.put("return_params", refund.getOrderId().toString());
+        params.put("return_params", refund.getId().toString());
         getBasicInfo().forEach(params::put);
         params.put("sign_data", Crypto.create_sign(params, JD_SECRET));
         return params;
@@ -406,7 +407,7 @@ public class JDPay extends Controller {
 
                 return ws.url("https://cbe.wangyin.com/cashier/refund").setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
                     JsonNode response = wsResponse.asJson();
-                    Logger.info("京东退款返回数据JSON: "+response.asText());
+                    Logger.info("京东退款返回数据JSON: "+response.toString());
                     Refund re = new Refund();
                     re.setId(response.get("out_trade_no").asLong());
                     re.setOrderId(response.get("return_params").asLong());
