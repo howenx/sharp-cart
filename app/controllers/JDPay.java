@@ -161,7 +161,7 @@ public class JDPay extends Controller {
             map.put("trade_amount", String.valueOf(1));
             //自用字断
             map.put("all_fee", order.getPayTotal().stripTrailingZeros().toPlainString());
-            if (idPlusOptional.isPresent()) {
+            if (idPlusOptional.isPresent() && idPlusOptional.get().getPayJdToken()!=null) {
                 map.put("token", idPlusOptional.get().getPayJdToken());
             }
             //buyer info json
@@ -237,7 +237,7 @@ public class JDPay extends Controller {
         } else {
             //异步通知支付接口
             if (params.containsKey("trade_class") && params.get("trade_class").equals("SALE")){
-                if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
+                if (params.containsKey("out_trade_no") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
 
                     Logger.info("京东支付异步通知数据: "+params.toString());
                     Order order = new Order();
@@ -247,18 +247,18 @@ public class JDPay extends Controller {
                     order.setPgTradeNo(params.get("trade_no"));
                     try {
                         if (cartService.updateOrder(order)) Logger.error("京东支付回调订单更新payFrontNotify: " + Json.toJson(order));
-                        Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
-                        IdPlus idPlus = new IdPlus();
-                        idPlus.setUserId(userId);
-                        Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
-                        idPlus.setPayJdToken(params.get("token"));
-                        if (idPlusOptional.isPresent()) {
-                            if (idService.updateIdPlus(idPlus))
-                                Logger.info("京东支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
-                        } else {
-                            if (idService.insertIdPlus(idPlus))
-                                Logger.info("京东支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
-                        }
+//                        Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
+//                        IdPlus idPlus = new IdPlus();
+//                        idPlus.setUserId(userId);
+//                        Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
+//                        idPlus.setPayJdToken(params.get("token"));
+//                        if (idPlusOptional.isPresent()) {
+//                            if (idService.updateIdPlus(idPlus))
+//                                Logger.info("京东支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
+//                        } else {
+//                            if (idService.insertIdPlus(idPlus))
+//                                Logger.info("京东支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
+//                        }
                     } catch (Exception e) {
                         Logger.error("支付回调订单更新出错payFrontNotify: " + e.getMessage());
                         e.printStackTrace();
@@ -330,7 +330,7 @@ public class JDPay extends Controller {
 
                 try {
                     Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
-                    if (listOptional.isPresent() && listOptional.get().size()>0 && listOptional.get().get(0).getOrderStatus().equals("I")){
+                    if (listOptional.isPresent() && listOptional.get().size()>0){
                         order.setOrderStatus("S");
                         order.setErrorStr(params.get("trade_status"));
                         order.setPgTradeNo(params.get("trade_no"));
@@ -346,7 +346,7 @@ public class JDPay extends Controller {
                         }else{
                             if (idService.insertIdPlus(idPlus)) Logger.info("支付成功回调创建用户Token payFrontNotify:"+Json.toJson(idPlus));
                         }
-                    }else Logger.info("支付前台回调成功,非前台更新订单状态:"+order.getOrderId());
+                    }else Logger.info("支付前台回调成功:"+order.getOrderId());
 
                 } catch (Exception e) {
                     Logger.error("支付回调订单更新出错payFrontNotify: "+e.getMessage());
