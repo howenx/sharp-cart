@@ -271,7 +271,7 @@ public class JDPay extends Controller {
 
             }else if (params.containsKey("trade_class") && params.get("trade_class").equals("REFD")){
                 Logger.info("京东退款异步通知数据: "+params.toString());
-                if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("ACSU")) {
+                if (params.containsKey("out_trade_no") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("ACSU")) {
                     Logger.info("京东支付异步通知数据: "+params.toString());
                     Refund re = new Refund();
                     re.setId(Long.valueOf(params.get("out_trade_no")));
