@@ -116,7 +116,6 @@ public class Application extends Controller {
                                 cart.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
                                 cart.setAmount(cart.getAmount() + carts.get(0).getAmount());//购买数量累加
                                 if (cart.getAmount() > sku.getRestrictAmount() && sku.getRestrictAmount() != 0) {
-                                    Logger.error("尼玛的数量: "+cart.getAmount());
                                     cart.setAmount(sku.getRestrictAmount());
                                     flag_restrict =true;
                                 } else if (cart.getAmount() > sku.getRestAmount()) {
