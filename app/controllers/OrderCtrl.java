@@ -86,16 +86,31 @@ public class OrderCtrl extends Controller {
     static final String ID_URL = play.Play.application().configuration().getString("id.server.url");
 
     //将Json串转换成List
-    static final ObjectMapper mapper = new ObjectMapper();
+    private static ObjectMapper mapper = new ObjectMapper();
 
-    static final ObjectNode result = Json.newObject();
-
+//    static ObjectMapper newDefaultMapper() {
+//        ObjectMapper mapper = new ObjectMapper();
+//        mapper.registerModule(new Jdk8Module());
+//        mapper.registerModule(new JSR310Module());
+//        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//        mapper.configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
+//
+//        SimpleModule testModule = new SimpleModule("MyModule");
+//        testModule.addSerializer(new StringUnicodeSerializer()); // assuming serializer declares correct class to bind to
+//        mapper.registerModule(testModule);
+//
+//        Json.setObjectMapper(mapper);
+//        return mapper;
+//    }
+//
     /**
      * 请求结算页面
      * @return result
      */
     @Security.Authenticated(UserAuth.class)
     public Result settle() {
+
+        ObjectNode result = Json.newObject();
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
 
@@ -279,6 +294,7 @@ public class OrderCtrl extends Controller {
     @Security.Authenticated(UserAuth.class)
     public Result submitOrder() {
 
+        ObjectNode result = Json.newObject();
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
         try {
             /*******取用户ID*********/
@@ -555,6 +571,7 @@ public class OrderCtrl extends Controller {
      * @return promise
      */
     public F.Promise<Result> cancelOrder(Long orderId) {
+        ObjectNode result = Json.newObject();
         return F.Promise.wrap(ask(cancelOrderActor, orderId, 3000)
         ).map(response -> {
             Logger.info("取消订单:"+orderId);
@@ -705,14 +722,12 @@ public class OrderCtrl extends Controller {
                             }
                         }
                     }
-
                 }
             }
+
+
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("orderList", Json.toJson(mapList));
-
-            response().setHeader("Cache-Control", "no-cache");
-            response().setContentType("text/json;charset=gb2312");
 
             return ok(result);
         } catch (Exception ex) {
@@ -730,6 +745,7 @@ public class OrderCtrl extends Controller {
      */
     @Security.Authenticated(UserAuth.class)
     public Result verifyOrder(Long orderId) {
+        ObjectNode result = Json.newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
             if (orderId != 0) {
@@ -770,6 +786,7 @@ public class OrderCtrl extends Controller {
      */
     @Security.Authenticated(UserAuth.class)
     public Result delOrder(Long orderId) {
+        ObjectNode result = Json.newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
             if (orderId != 0) {

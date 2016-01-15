@@ -1,22 +1,14 @@
 package filters;
 
-import domain.SysParameter;
-import mapper.SkuMapper;
-import org.apache.ibatis.mapping.Environment;
-import org.apache.ibatis.session.Configuration;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.apache.ibatis.transaction.TransactionFactory;
-import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
-import play.Application;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import domain.Message;
 import play.GlobalSettings;
 import play.Logger;
-import play.db.DB;
-import play.db.DBApi;
+import play.libs.F;
+import play.libs.Json;
+import play.mvc.Http;
 
-import javax.sql.DataSource;
-import java.io.InputStream;
+import static play.mvc.Results.notFound;
 
 /**
  *
@@ -24,9 +16,23 @@ import java.io.InputStream;
  */
 public class Global extends GlobalSettings {
 
-    public void onStart(Application app) {}
+    public F.Promise<play.mvc.Result> onHandlerNotFound(Http.RequestHeader request) {
+        Logger.error("请求未找到: "+request.host()+request.uri()+" "+request.remoteAddress()+" "+request.getHeader("User-Agent"));
+        ObjectNode result = Json.newObject();
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE_REQUEST_HANDLER_NOT_FOUND.getIndex()), Message.ErrorCode.FAILURE_REQUEST_HANDLER_NOT_FOUND.getIndex())));
+        return F.Promise.<play.mvc.Result>pure(notFound(result));
+    }
+    public F.Promise<play.mvc.Result> onError(Http.RequestHeader request, Throwable t) {
+        Logger.error("请求出错: "+request.host()+request.uri()+" "+request.remoteAddress()+" "+request.getHeader("User-Agent"));
+        ObjectNode result = Json.newObject();
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE_REQUEST_ERROR.getIndex()), Message.ErrorCode.FAILURE_REQUEST_ERROR.getIndex())));
+        return F.Promise.<play.mvc.Result>pure(notFound(result));
+    }
 
-    public void onStop(Application app) {
-        Logger.error("Application shutdown...");
+    public F.Promise<play.mvc.Result> onBadRequest(Http.RequestHeader request, String error) {
+        Logger.error("有错误请求: "+request.host()+request.uri()+" "+request.remoteAddress()+" "+request.getHeader("User-Agent"));
+        ObjectNode result = Json.newObject();
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE_BAD_REQUEST.getIndex()), Message.ErrorCode.FAILURE_BAD_REQUEST.getIndex())));
+        return F.Promise.<play.mvc.Result>pure(notFound(result));
     }
 }

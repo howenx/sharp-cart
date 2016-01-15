@@ -19,6 +19,14 @@ libraryDependencies ++= Seq(
   filters
 )
 
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.6.3"
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3"
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-annotations" % "2.6.3"
+libraryDependencies += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.6.3"
+libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jdk8" % "2.6.3"
+libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.6.3"
+
+
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4" withSources() withJavadoc()
 
 libraryDependencies += "org.postgresql" % "postgresql" % "9.4-1205-jdbc42" withSources() withJavadoc()

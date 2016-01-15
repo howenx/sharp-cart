@@ -189,7 +189,7 @@
         <if test="orderId!=null and orderId !=''">
             and t.order_id = #{orderId}
         </if>
-        and order_status !='N'
+        and order_status !='N' and order_status !='P'
         order by t.order_create_at DESC
     </select>
 
@@ -236,6 +236,9 @@
         order_desc           ,
         ship_fee             ,
         postal_fee           ,
+        <if test="orderStatus!=null and orderStatus!=''">
+            order_status         ,
+        </if>
         total_fee
         )values(
             #{userId},
@@ -255,6 +258,9 @@
             #{orderDesc}          ,
             #{shipFee}            ,
             #{postalFee},
+            <if test="orderStatus!=null and orderStatus!=''">
+                #{orderStatus}    ,
+            </if>
             #{totalFee}
         )
     </insert>

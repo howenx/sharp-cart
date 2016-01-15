@@ -55,7 +55,6 @@ public class JDPay extends Controller {
 
     public static final Long COUNTDOWN_MILLISECONDS=Long.valueOf(Play.application().configuration().getString("order.countdown.milliseconds"));
 
-    static final ObjectNode result = Json.newObject();
 
     @Inject
     public JDPay(CartService cartService, IdService idService, @Named("cancelOrderActor") ActorRef cancelOrderActor) {
@@ -72,6 +71,7 @@ public class JDPay extends Controller {
      */
     @Security.Authenticated(UserAuth.class)
     public Result payOrderWeb(Long orderId) {
+        ObjectNode result = Json.newObject();
 
         try {
             Long userId = (Long) ctx().args.get("userId");
@@ -389,6 +389,7 @@ public class JDPay extends Controller {
      * @return 返回
      */
     public F.Promise<Result> payBack() {
+        ObjectNode result = Json.newObject();
         Form<Refund> refundForm = Form.form(Refund.class).bindFromRequest();
         try {
             Refund refund = refundForm.get();
@@ -437,6 +438,10 @@ public class JDPay extends Controller {
         }
     }
 
+    /**
+     * 退款页面
+     * @return page
+     */
     public Result payRefund() {
         return ok(views.html.payback.render());
     }

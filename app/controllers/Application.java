@@ -48,6 +48,7 @@ public class Application extends Controller {
     //将Json串转换成List
     final static ObjectMapper mapper = new ObjectMapper();
 
+
     /**
      * 用户登陆后同步所有购物车商品,以及详细页面点击Add时候掉用接口
      *
@@ -56,12 +57,13 @@ public class Application extends Controller {
     @Security.Authenticated(UserAuth.class)
     public Result cart() {
 
+        ObjectNode result = Json.newObject();
+
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
         Boolean S_FLAG = false;
 
         List<Long> sCartIds = new ArrayList<>();
 
-        ObjectNode result = Json.newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
 
@@ -224,6 +226,8 @@ public class Application extends Controller {
      */
     public Result getCartSku() {
 
+        ObjectNode result = Json.newObject();
+
         //行邮税收税标准
         final String POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
 
@@ -234,7 +238,6 @@ public class Application extends Controller {
         final String FREE_SHIP = skuService.getSysParameter(new SysParameter(null, null, null, "FREE_SHIP")).getParameterVal();
 
         JsonNode json = request().body().asJson();
-        ObjectNode result = Json.newObject();
         List<CartListDto> cartListDto = new ArrayList<>();
         try {
             List<CartDto> cartDtoList = mapper.readValue(json.toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
@@ -320,6 +323,7 @@ public class Application extends Controller {
 
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("cartList", Json.toJson(list));
+
             return ok(result);
 
         } catch (Exception ex) {
