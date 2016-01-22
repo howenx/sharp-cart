@@ -25,6 +25,8 @@ libraryDependencies += "com.fasterxml.jackson.core" % "jackson-annotations" % "2
 libraryDependencies += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.6.3"
 libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jdk8" % "2.6.3"
 libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.6.3"
+libraryDependencies += "commons-io" % "commons-io" % "2.4"
+libraryDependencies += "com.squareup.okhttp" % "okhttp" % "2.7.2"
 
 
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4" withSources() withJavadoc()

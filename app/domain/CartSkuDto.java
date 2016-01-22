@@ -25,19 +25,21 @@ public class CartSkuDto implements Serializable{
     private     String          skuTitle;  //sku标题
     private     String          invImg;//sku主图
     private     String          invUrl;//用于方便前段获取库存跳转链接
+    private     String          invAndroidUrl;//用于方便前段获取库存跳转链接
     private     String          itemColor;//颜色
     private     String          itemSize;//尺码
 
     public CartSkuDto() {
     }
 
-    public CartSkuDto(Long skuId, Integer amount, BigDecimal price, String skuTitle, String invImg, String invUrl, String itemColor, String itemSize) {
+    public CartSkuDto(Long skuId, Integer amount, BigDecimal price, String skuTitle, String invImg, String invUrl, String invAndroidUrl, String itemColor, String itemSize) {
         this.skuId = skuId;
         this.amount = amount;
         this.price = price;
         this.skuTitle = skuTitle;
         this.invImg = invImg;
         this.invUrl = invUrl;
+        this.invAndroidUrl = invAndroidUrl;
         this.itemColor = itemColor;
         this.itemSize = itemSize;
     }
@@ -90,6 +92,14 @@ public class CartSkuDto implements Serializable{
         this.invUrl = invUrl;
     }
 
+    public String getInvAndroidUrl() {
+        return invAndroidUrl;
+    }
+
+    public void setInvAndroidUrl(String invAndroidUrl) {
+        this.invAndroidUrl = invAndroidUrl;
+    }
+
     public String getItemColor() {
         return itemColor;
     }
@@ -115,6 +125,7 @@ public class CartSkuDto implements Serializable{
                 ", skuTitle='" + skuTitle + '\'' +
                 ", invImg='" + invImg + '\'' +
                 ", invUrl='" + invUrl + '\'' +
+                ", invAndroidUrl='" + invAndroidUrl + '\'' +
                 ", itemColor='" + itemColor + '\'' +
                 ", itemSize='" + itemSize + '\'' +
                 '}';

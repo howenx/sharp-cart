@@ -643,60 +643,113 @@
     <!--退款页面-->
     <insert id="insertRefund" parameterType="domain.Refund" useGeneratedKeys="true" keyProperty="id">
         insert into sp_refund(
-            order_id       ,
-            pay_back_fee   ,
-            reason         ,
-            create_at
+        order_id            ,
+        pay_back_fee        ,
+        reason              ,
+        create_at           ,
+        amount              ,
+        <if test="refundImg!=null and refundImg!=''">
+            refund_img          ,
+        </if>
+        contact_name        ,
+        contact_tel         ,
+        user_id             ,
+        split_order_id      ,
+        sku_id
         )values(
-            #{orderId},
-            #{payBackFee},
-            #{reason},
-            CURRENT_TIMESTAMP(0)
+        #{orderId},
+        #{payBackFee},
+        #{reason},
+        CURRENT_TIMESTAMP(0),
+        #{amount},
+        <if test="refundImg!=null and refundImg!=''">
+            #{refundImg}          ,
+        </if>
+        #{contactName},
+        #{contactTel},
+        #{userId},
+        #{splitOrderId},
+        #{skuId}
         )
     </insert>
-    <select id="selectRefund" parameterType="domain.Refund" resultType="domain.Refund" >
-        select
-        id             ,
-        order_id       ,
-        pay_back_fee   ,
-        reason         ,
-        state          ,
-        create_at      ,
-        pg_trade_no,pg_code,pg_message    from sp_refund where 1=1
-        <if test="id!=null and id!=''">
-            and id = #{id}
+
+    <!--退款页面-->
+    <insert id="updateRefund" parameterType="domain.Refund">
+        update sp_refund set update_at = CURRENT_TIMESTAMP(0)
+        <if test="refundImg!=null and refundImg!=''">
+            ,refund_img = #{refundImg}
         </if>
-        <if test="orderId!=null and orderId!=''">
-            and order_id =#{orderId}
-        </if>
-    </select>
-    <update id="updateRefund" parameterType="domain.Refund">
-        update sp_refund set
         <if test="payBackFee!=null and payBackFee!=''">
-            pay_back_fee = #{payBackFee},
-        </if>
-        <if test="state!=null and state!=''">
-            state = #{state},
+            ,pay_back_fee =  #{payBackFee}
         </if>
         <if test="reason!=null and reason!=''">
-            reason = #{reason},
+            ,reason =  #{reason}
         </if>
-        <if test="pgTradeNo!=null and pgTradeNo!=''">
-            pg_trade_no = #{pgTradeNo},
+        <if test="amount!=null and amount!=''">
+            ,amount =  #{amount}
         </if>
-        <if test="pgCode!=null and pgCode!=''">
-            pg_code = #{pgCode},
+        <if test="contactName!=null and contactName!=''">
+            ,contact_name =  #{contactName}
         </if>
-        <if test="pgMessage!=null and pgMessage!=''">
-            pg_message = #{pgMessage},
+        <if test="contactTel!=null and contactTel!=''">
+            ,contact_tel =  #{contactTel}
         </if>
-        update_at =CURRENT_TIMESTAMP(0)
         where 1=1
         <if test="id!=null and id!=''">
             and id = #{id}
         </if>
-        <if test="orderId!=null and orderId!=''">
-            and order_id =#{orderId}
+        <if test="userId!=null and userId!=''">
+            and user_id = #{userId}
         </if>
-    </update>
+        <if test="splitOrderId!=null and splitOrderId!=''">
+            and split_order_id = #{splitOrderId}
+        </if>
+        <if test="skuId!=null and skuId!=''">
+            and sku_id = #{skuId}
+        </if>
+        <if test="orderId!=null and orderId!=''">
+            and order_id = #{orderId}
+        </if>
+    </insert>
+
+    <select id="selectRefund" parameterType="domain.Refund" resultType="domain.Refund" >
+        select
+        id                  ,
+        order_id            ,
+        pay_back_fee        ,
+        reason              ,
+        state               ,
+        create_at           ,
+        pg_trade_no         ,
+        update_at           ,
+        pg_code             ,
+        pg_message          ,
+        amount              ,
+        refund_img          ,
+        contact_name        ,
+        contact_tel         ,
+        express_company     ,
+        express_comp_code   ,
+        express_num         ,
+        reject_reason       ,
+        user_id             ,
+        split_order_id      ,
+        sku_id
+        from sp_refund where 1=1
+        <if test="id!=null and id!=''">
+            and id = #{id}
+        </if>
+        <if test="userId!=null and userId!=''">
+            and user_id = #{userId}
+        </if>
+        <if test="splitOrderId!=null and splitOrderId!=''">
+            and split_order_id = #{splitOrderId}
+        </if>
+        <if test="skuId!=null and skuId!=''">
+            and sku_id = #{skuId}
+        </if>
+        <if test="orderId!=null and orderId!=''">
+            and order_id = #{orderId}
+        </if>
+    </select>
 </mapper>

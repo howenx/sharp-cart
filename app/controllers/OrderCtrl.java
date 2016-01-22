@@ -6,12 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
 import filters.UserAuth;
+import org.apache.commons.io.FileUtils;
 import play.Logger;
 import play.libs.F;
 import play.libs.Json;
-import play.mvc.Controller;
-import play.mvc.Result;
-import play.mvc.Security;
+import play.mvc.*;
 import service.CartService;
 import service.IdService;
 import service.SkuService;
@@ -27,6 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static akka.pattern.Patterns.ask;
+import static play.libs.Json.newObject;
 
 /**
  * 订单相关,提交订单,优惠券
@@ -46,6 +46,8 @@ public class OrderCtrl extends Controller {
 
     private ActorRef cancelOrderActor;
 
+    private ActorRef uploadImagesActor;
+
     //行邮税收税标准
     static String POSTAL_STANDARD;
 
@@ -56,12 +58,14 @@ public class OrderCtrl extends Controller {
     static String FREE_SHIP;
 
     @Inject
-    public OrderCtrl(SkuService skuService, CartService cartService, IdService idService, @Named("subOrderActor") ActorRef orderSplitActor, @Named("cancelOrderActor") ActorRef cancelOrderActor) {
+    public OrderCtrl(SkuService skuService, CartService cartService, IdService idService, @Named("uploadImagesActor") ActorRef uploadImagesActor, @Named("subOrderActor") ActorRef orderSplitActor, @Named("cancelOrderActor") ActorRef cancelOrderActor) {
         this.cartService = cartService;
         this.idService = idService;
         this.orderSplitActor = orderSplitActor;
         this.skuService = skuService;
         this.cancelOrderActor = cancelOrderActor;
+        this.uploadImagesActor = uploadImagesActor;
+
         //行邮税收税标准
         POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
 
@@ -85,6 +89,8 @@ public class OrderCtrl extends Controller {
     //id服务器url
     static final String ID_URL = play.Play.application().configuration().getString("id.server.url");
 
+    static final String IMG_PROCESS_URL = play.Play.application().configuration().getString("imgprocess.server.url");
+
     //将Json串转换成List
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -103,14 +109,16 @@ public class OrderCtrl extends Controller {
 //        return mapper;
 //    }
 //
+
     /**
      * 请求结算页面
+     *
      * @return result
      */
     @Security.Authenticated(UserAuth.class)
     public Result settle() {
 
-        ObjectNode result = Json.newObject();
+        ObjectNode result = newObject();
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
 
@@ -206,12 +214,13 @@ public class OrderCtrl extends Controller {
                 //统计如果各个海关的实际关税,如果关税小于50元,则免税
                 if (((BigDecimal) allFee.get("postalFee")).compareTo(new BigDecimal(POSTAL_STANDARD)) <= 0)
                     resultMap.put("factPortalFee", "0");
-                else resultMap.put("factPortalFee", ((BigDecimal) allFee.get("postalFee")).stripTrailingZeros().toPlainString());
+                else
+                    resultMap.put("factPortalFee", ((BigDecimal) allFee.get("postalFee")).stripTrailingZeros().toPlainString());
 
                 //将各个海关下的费用统计返回
                 resultMap.put("singleCustoms", returnFee);
 
-                resultMap.put("postalStandard",POSTAL_STANDARD);
+                resultMap.put("postalStandard", POSTAL_STANDARD);
 
                 CouponVo couponVo = new CouponVo();
                 couponVo.setUserId(userId);
@@ -269,7 +278,7 @@ public class OrderCtrl extends Controller {
     @Security.Authenticated(UserAuth.class)
     public Result couponsList() {
 
-        ObjectNode result = Json.newObject();
+        ObjectNode result = newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
 
@@ -294,7 +303,7 @@ public class OrderCtrl extends Controller {
     @Security.Authenticated(UserAuth.class)
     public Result submitOrder() {
 
-        ObjectNode result = Json.newObject();
+        ObjectNode result = newObject();
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
         try {
             /*******取用户ID*********/
@@ -558,10 +567,9 @@ public class OrderCtrl extends Controller {
         order.setOrderIp(settleOrderDTO.getClientIp());
         order.setClientType(settleOrderDTO.getClientType());
         if (cartService.insertOrder(order)) {
-            Logger.error("创建订单ID: "+order.getOrderId());
+            Logger.error("创建订单ID: " + order.getOrderId());
             return order;
-        }
-        else return null;
+        } else return null;
     }
 
     /**
@@ -571,10 +579,10 @@ public class OrderCtrl extends Controller {
      * @return promise
      */
     public F.Promise<Result> cancelOrder(Long orderId) {
-        ObjectNode result = Json.newObject();
+        ObjectNode result = newObject();
         return F.Promise.wrap(ask(cancelOrderActor, orderId, 3000)
         ).map(response -> {
-            Logger.info("取消订单:"+orderId);
+            Logger.info("取消订单:" + orderId);
             if (((Integer) response) == 200) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
@@ -592,7 +600,7 @@ public class OrderCtrl extends Controller {
      */
     @Security.Authenticated(UserAuth.class)
     public Result shoppingOrder(Long orderId) {
-        ObjectNode result = Json.newObject();
+        ObjectNode result = newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
             Order order = new Order();
@@ -652,13 +660,14 @@ public class OrderCtrl extends Controller {
                             orderAmount += skuDto.getAmount();
                             skuDto.setPrice(orl.getPrice());
                             skuDto.setSkuTitle(orl.getSkuTitle());
-                            if (orl.getSkuImg().contains("url")){
-                                JsonNode jsonNode  = Json.parse(orl.getSkuImg());
-                                if (jsonNode.has("url")){
+                            if (orl.getSkuImg().contains("url")) {
+                                JsonNode jsonNode = Json.parse(orl.getSkuImg());
+                                if (jsonNode.has("url")) {
                                     skuDto.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
                                 }
-                            }else skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                            } else skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
                             skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                            skuDto.setInvAndroidUrl(DEPLOY_URL + "/comm/detail/web/" + orl.getItemId() + "/" + orl.getSkuId());
                             skuDto.setItemColor(orl.getSkuColor());
                             skuDto.setItemSize(orl.getSkuSize());
                             skuDtoList.add(skuDto);
@@ -704,13 +713,14 @@ public class OrderCtrl extends Controller {
                                     skuDto.setAmount(orl.getAmount());
                                     skuDto.setPrice(orl.getPrice());
                                     skuDto.setSkuTitle(orl.getSkuTitle());
-                                    if (orl.getSkuImg().contains("url")){
-                                        JsonNode jsonNode  = Json.parse(orl.getSkuImg());
-                                        if (jsonNode.has("url")){
+                                    if (orl.getSkuImg().contains("url")) {
+                                        JsonNode jsonNode = Json.parse(orl.getSkuImg());
+                                        if (jsonNode.has("url")) {
                                             skuDto.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
                                         }
-                                    }else skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                                    } else skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
                                     skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                                    skuDto.setInvAndroidUrl(DEPLOY_URL + "/comm/detail/web/" + orl.getItemId() + "/" + orl.getSkuId());
                                     skuDto.setItemColor(orl.getSkuColor());
                                     skuDto.setItemSize(orl.getSkuSize());
                                     skuDtoList.add(skuDto);
@@ -745,7 +755,7 @@ public class OrderCtrl extends Controller {
      */
     @Security.Authenticated(UserAuth.class)
     public Result verifyOrder(Long orderId) {
-        ObjectNode result = Json.newObject();
+        ObjectNode result = newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
             if (orderId != 0) {
@@ -781,12 +791,13 @@ public class OrderCtrl extends Controller {
 
     /**
      * 删除订单
+     *
      * @param orderId 订单ID
      * @return 消息
      */
     @Security.Authenticated(UserAuth.class)
     public Result delOrder(Long orderId) {
-        ObjectNode result = Json.newObject();
+        ObjectNode result = newObject();
         try {
             Long userId = (Long) ctx().args.get("userId");
             if (orderId != 0) {
@@ -817,7 +828,7 @@ public class OrderCtrl extends Controller {
                         default:
                             order.setOrderStatus("N");
                             if (cartService.updateOrder(order)) {
-                                Logger.info("删除订单ID: "+order.getOrderId());
+                                Logger.info("删除订单ID: " + order.getOrderId());
                                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                                 return ok(result);
                             } else {
@@ -833,6 +844,77 @@ public class OrderCtrl extends Controller {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
                 return ok(result);
             }
+        } catch (Exception ex) {
+            Logger.error("server exception:" + ex.getMessage());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+    }
+
+    /**
+     * 退货申请
+     *
+     * @return result
+     */
+    @Security.Authenticated(UserAuth.class)
+    @BodyParser.Of(value = BodyParser.MultipartFormData.class, maxLength = 50 * 1024 * 1024)
+    public Result refundApply() {
+
+        ObjectNode result = newObject();
+
+        Http.MultipartFormData body = request().body().asMultipartFormData();
+
+        Map<String,String[]> stringMap = body.asFormUrlEncoded();
+        Map<String,String> map = new HashMap<>();
+
+        stringMap.forEach((k, v) -> map.put(k,v[0]));
+
+        Optional<JsonNode> json = Optional.ofNullable(Json.toJson(map));
+
+        Long userId = (Long) ctx().args.get("userId");
+        try {
+            if (json.isPresent() && json.get().size() > 0) {
+
+                Refund refund = Json.fromJson(json.get(),Refund.class);
+                if (refund.getOrderId()!=null && refund.getSkuId()!=null){
+                    OrderLine orderLine = new OrderLine();
+                    orderLine.setOrderId(refund.getOrderId());
+                    orderLine.setSkuId(refund.getSkuId());
+                    List<OrderLine> orderLines = cartService.selectOrderLine(orderLine);
+                    if (orderLines.size()>0) orderLine = orderLines.get(0);
+                    refund.setPayBackFee(orderLine.getPrice().multiply(new BigDecimal(refund.getAmount())).setScale(2,BigDecimal.ROUND_HALF_UP));
+                }
+                refund.setUserId(userId);
+                List<Http.MultipartFormData.FilePart> fileParts = body.getFiles();
+
+                Boolean flag = cartService.insertRefund(refund);
+
+                Logger.error("有没有传递文件:::::  "+fileParts.size());
+                if (!fileParts.isEmpty() && flag) {
+                    Map<String,Object> mapActor = new HashMap<>();
+                    List<byte[]> files = new ArrayList<>();
+                    mapActor.put("refundId",refund.getId());
+                    for (Http.MultipartFormData.FilePart filePart : fileParts) {
+                        if (!"image/jpeg".equalsIgnoreCase(filePart.getContentType()) &&  !"image/png".equalsIgnoreCase(filePart.getContentType())) {
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FILE_TYPE_NOT_SUPPORTED.getIndex()), Message.ErrorCode.FILE_TYPE_NOT_SUPPORTED.getIndex())));
+                            return badRequest(result);
+                        }else{
+                            files.add(FileUtils.readFileToByteArray(filePart.getFile()));
+                        }
+                    }
+                    mapActor.put("files",files);
+                    mapActor.put("url",IMG_PROCESS_URL);
+                    uploadImagesActor.tell(mapActor, ActorRef.noSender());
+                }
+
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                return ok(result);
+
+            }else{
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
+                return ok(result);
+            }
+
         } catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
