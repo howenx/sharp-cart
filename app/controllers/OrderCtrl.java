@@ -282,6 +282,8 @@ public class OrderCtrl extends Controller {
         try {
             Long userId = (Long) ctx().args.get("userId");
 
+            Logger.error(userId+"");
+
             CouponVo couponVo = new CouponVo();
             couponVo.setUserId(userId);
             couponVo.setState("N");
@@ -889,7 +891,6 @@ public class OrderCtrl extends Controller {
 
                 Boolean flag = cartService.insertRefund(refund);
 
-                Logger.error("有没有传递文件:::::  "+fileParts.size());
                 if (!fileParts.isEmpty() && flag) {
                     Map<String,Object> mapActor = new HashMap<>();
                     List<byte[]> files = new ArrayList<>();

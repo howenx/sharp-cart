@@ -7,6 +7,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
+    <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.ico">
     <link rel="stylesheet" href="/assets/stylesheets/pay.css">
     <script src="/assets/js/jquery-2.1.4.min.js"></script>
 </head>
@@ -26,16 +27,13 @@
 <div class="weixin pay" style="display:none;">
     <span>微信支付</span>
     <em>仅安装微信6.0.2及以上版本客户端使用</em>
-
     <div class="right-icon"></div>
 </div>
 <div style="display:none">
     <form id="jdsubmit" name="jdsubmit" action="https://cbe.wangyin.com/cashier/mobile/payment" method="POST">
         @for((k,v) <- params) {
-                @k,@v
-                <input type="hidden" name="@k" value="@v"/>
-            }
-
+            <input type="hidden" name="@k" value="@v"/>
+        }
     </form>
     <script>
     	$(function(){
@@ -46,7 +44,7 @@
 		        if(n-createAt>=86400000){
     	    		alert("您的订单已经超时自动取消");
 		        }else{
-		        	document.forms['jdsubmit'].submit();
+		        	$('#jdsubmit').submit();
 		        }
 			})
     	})
