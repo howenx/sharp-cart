@@ -1,6 +1,7 @@
 package mapper;
 
 import domain.Address;
+import domain.ID;
 import domain.IdPlus;
 
 /**
@@ -15,4 +16,6 @@ public interface IdMapper {
     int insertIdPlus(IdPlus idPlus) throws Exception;
 
     int updateIdPlus(IdPlus idPlus) throws Exception;
+
+    ID getID(Long userId) throws Exception;
 }

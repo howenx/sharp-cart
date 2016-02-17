@@ -12,15 +12,21 @@ public class CartDto implements Serializable {
     private Long skuId;//skuID
     private Integer amount;//购买数量
     private String state;//状态
+    private String skuType;//商品类型 1.vary,2.item,3.customize,4.pin
+    private Long skuTypeId;//商品类型所对应的ID
+    private Long pinTieredPriceId;//拼购价格ID
 
     public CartDto() {
     }
 
-    public CartDto(Long cartId, Long skuId, Integer amount, String state) {
+    public CartDto(Long cartId, Long skuId, Integer amount, String state, String skuType, Long skuTypeId, Long pinTieredPriceId) {
         this.cartId = cartId;
         this.skuId = skuId;
         this.amount = amount;
         this.state = state;
+        this.skuType = skuType;
+        this.skuTypeId = skuTypeId;
+        this.pinTieredPriceId = pinTieredPriceId;
     }
 
     public Long getCartId() {
@@ -55,6 +61,30 @@ public class CartDto implements Serializable {
         this.state = state;
     }
 
+    public String getSkuType() {
+        return skuType;
+    }
+
+    public void setSkuType(String skuType) {
+        this.skuType = skuType;
+    }
+
+    public Long getSkuTypeId() {
+        return skuTypeId;
+    }
+
+    public void setSkuTypeId(Long skuTypeId) {
+        this.skuTypeId = skuTypeId;
+    }
+
+    public Long getPinTieredPriceId() {
+        return pinTieredPriceId;
+    }
+
+    public void setPinTieredPriceId(Long pinTieredPriceId) {
+        this.pinTieredPriceId = pinTieredPriceId;
+    }
+
     @Override
     public String toString() {
         return "CartDto{" +
@@ -62,6 +92,9 @@ public class CartDto implements Serializable {
                 ", skuId=" + skuId +
                 ", amount=" + amount +
                 ", state='" + state + '\'' +
+                ", skuType='" + skuType + '\'' +
+                ", skuTypeId=" + skuTypeId +
+                ", pinTieredPriceId=" + pinTieredPriceId +
                 '}';
     }
 }

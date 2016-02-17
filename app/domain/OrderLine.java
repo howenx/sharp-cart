@@ -24,11 +24,14 @@ public class OrderLine implements Serializable {
     private Long splitId;
     private String skuSize;
     private String skuColor;
+    private String skuType;
+    private Long    skuTypeId;
+    private Long    pinTieredPriceId;
 
     public OrderLine() {
     }
 
-    public OrderLine(Long lineId, Long orderId, Long skuId, Long itemId, Integer amount, BigDecimal price, String skuTitle, String skuImg, Long splitId, String skuSize, String skuColor) {
+    public OrderLine(Long lineId, Long orderId, Long skuId, Long itemId, Integer amount, BigDecimal price, String skuTitle, String skuImg, Long splitId, String skuSize, String skuColor, String skuType, Long skuTypeId, Long pinTieredPriceId) {
         this.lineId = lineId;
         this.orderId = orderId;
         this.skuId = skuId;
@@ -40,6 +43,9 @@ public class OrderLine implements Serializable {
         this.splitId = splitId;
         this.skuSize = skuSize;
         this.skuColor = skuColor;
+        this.skuType = skuType;
+        this.skuTypeId = skuTypeId;
+        this.pinTieredPriceId = pinTieredPriceId;
     }
 
     public Long getLineId() {
@@ -130,6 +136,30 @@ public class OrderLine implements Serializable {
         this.skuColor = skuColor;
     }
 
+    public String getSkuType() {
+        return skuType;
+    }
+
+    public void setSkuType(String skuType) {
+        this.skuType = skuType;
+    }
+
+    public Long getSkuTypeId() {
+        return skuTypeId;
+    }
+
+    public void setSkuTypeId(Long skuTypeId) {
+        this.skuTypeId = skuTypeId;
+    }
+
+    public Long getPinTieredPriceId() {
+        return pinTieredPriceId;
+    }
+
+    public void setPinTieredPriceId(Long pinTieredPriceId) {
+        this.pinTieredPriceId = pinTieredPriceId;
+    }
+
     @Override
     public String toString() {
         return "OrderLine{" +
@@ -144,6 +174,9 @@ public class OrderLine implements Serializable {
                 ", splitId=" + splitId +
                 ", skuSize='" + skuSize + '\'' +
                 ", skuColor='" + skuColor + '\'' +
+                ", skuType='" + skuType + '\'' +
+                ", skuTypeId=" + skuTypeId +
+                ", pinTieredPriceId=" + pinTieredPriceId +
                 '}';
     }
 }

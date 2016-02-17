@@ -66,4 +66,38 @@
         where 1=1 and user_id =#{userId}
     </update>
 
+    <sql id="idColumns">
+        ${alias}.user_id,
+        ${alias}.nickname,
+        ${alias}.passwd,
+        ${alias}.email,
+        ${alias}.phone_num,
+        ${alias}.gender,
+        ${alias}.birthday,
+        ${alias}.photo_url,
+        ${alias}.real_name,
+        ${alias}.card_type,
+        ${alias}.card_num,
+        ${alias}.card_img ::text,
+        ${alias}.reg_ip ::text,
+        ${alias}.reg_dt,
+        ${alias}."active_YN",
+        ${alias}."real_YN",
+        ${alias}.alter_dt,
+        ${alias}.lastlogin_dt,
+        ${alias}.lastlogin_ip ::text,
+        ${alias}.lastpwdchg_dt,
+        ${alias}.desc,
+        ${alias}.status
+    </sql>
+
+    <!-- 获取一条用户信息 -->
+    <select id="getID" resultType="domain.ID" parameterType="java.lang.Integer">
+        select
+        <include refid="idColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from "ID" t where user_id=${value}
+    </select>
+
 </mapper>

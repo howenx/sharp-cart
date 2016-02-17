@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.VaryPriceMapper">
+
+    <sql id="varyPriceColumns">
+        ${alias}.id,
+        ${alias}.inv_id,
+        ${alias}.price,
+        ${alias}.sold_amount,
+        ${alias}.limit_amount,
+        ${alias}.status
+    </sql>
+
+    <!-- 录入一条多样化价格信息 -->
+    <insert id="insertVaryPrice" parameterType="domain.VaryPrice" useGeneratedKeys="true" keyProperty="id">
+        insert into vary_price
+        (inv_id,price,sold_amount,limit_amount,status)
+        values
+        (#{invId}, #{price}, 0, #{limitAmount}, #{status})
+    </insert>
+
+    <!-- 更新一条多样化价格信息 -->
+    <update id="updateVaryPrice" parameterType="domain.VaryPrice">
+        update vary_price
+        set
+        inv_id=#{invId}, price=#{price}, sold_amount=#{soldAmount}, limit_amount=#{limitAmount}, status=#{status}
+        where id = #{id}
+    </update>
+
+    <!-- 获取一条或多条多样化价格信息 -->
+    <select id="getVaryPriceBy" resultType="domain.VaryPrice" parameterType="domain.VaryPrice">
+        select
+        <include refid="varyPriceColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from vary_price t where 1=1
+        <if test="id!=null and id!=''">
+            and t.id = #{id}
+        </if>
+        <if test="invId!=null and invId!=''">
+            and t.inv_id = #{invId}
+        </if>
+    </select>
+
+    <!-- 获取所有的多样化价格信息 -->
+    <select id="getAllVaryPrices" resultType="domain.VaryPrice">
+        select
+        <include refid="varyPriceColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from vary_price t where 1=1
+        ORDER BY id
+    </select>
+
+</mapper>

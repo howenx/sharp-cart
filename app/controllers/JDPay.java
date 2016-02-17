@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Singleton;
 import domain.*;
 import filters.UserAuth;
+import middle.JDPayMid;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -20,12 +21,14 @@ import play.mvc.Result;
 import play.mvc.Security;
 import service.CartService;
 import service.IdService;
+import service.PromotionService;
 import util.CalCountDown;
 import util.Crypto;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -45,6 +48,10 @@ public class JDPay extends Controller {
 
     private ActorRef cancelOrderActor;
 
+    private PromotionService promotionService;
+
+    private JDPayMid jdPayMid;
+
     @Inject
     WSClient ws;
 
@@ -57,12 +64,15 @@ public class JDPay extends Controller {
 
     public static final Long COUNTDOWN_MILLISECONDS = Long.valueOf(Play.application().configuration().getString("order.countdown.milliseconds"));
 
+    public static final Long PIN_MILLISECONDS = Long.valueOf(Play.application().configuration().getString("pin.activity.milliseconds"));
 
     @Inject
-    public JDPay(CartService cartService, IdService idService, @Named("cancelOrderActor") ActorRef cancelOrderActor) {
+    public JDPay(CartService cartService, IdService idService, PromotionService promotionService, @Named("cancelOrderActor") ActorRef cancelOrderActor) {
         this.cartService = cartService;
         this.idService = idService;
         this.cancelOrderActor = cancelOrderActor;
+        this.promotionService = promotionService;
+        this.jdPayMid = new JDPayMid(cartService, idService, promotionService);
     }
 
     @Security.Authenticated(UserAuth.class)
@@ -231,66 +241,18 @@ public class JDPay extends Controller {
             //异步通知支付接口
             if (params.containsKey("trade_class") && params.get("trade_class").equals("SALE")) {
                 if (params.containsKey("out_trade_no") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
-
                     Logger.info("京东支付异步通知数据: " + params.toString());
-                    Order order = new Order();
-                    order.setOrderId(Long.valueOf(params.get("out_trade_no")));
-                    order.setOrderStatus("S");
-                    order.setErrorStr(params.get("trade_status"));
-                    order.setPgTradeNo(params.get("trade_no"));
-                    try {
-                        if (cartService.updateOrder(order))
-                            Logger.error("京东支付回调订单更新payFrontNotify: " + Json.toJson(order));
-                        if (params.containsKey("token")) {
-                            Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
-                            IdPlus idPlus = new IdPlus();
-                            idPlus.setUserId(userId);
-                            Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
-                            idPlus.setPayJdToken(params.get("token"));
-                            if (idPlusOptional.isPresent()) {
-                                if (idService.updateIdPlus(idPlus))
-                                    Logger.info("京东支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
-                            } else {
-                                if (idService.insertIdPlus(idPlus))
-                                    Logger.info("京东支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
-                            }
-                        }
-                    } catch (Exception e) {
-                        Logger.error("支付回调订单更新出错payFrontNotify: " + e.getMessage());
-                        e.printStackTrace();
-                    }
-                    return ok("success");
+                    return ok(jdPayMid.asynPay(params));
                 } else {
                     Logger.error("支付回调参数校验失败或者支付状态有误: " + params.toString());
                     return ok("error");
                 }
-
-            } else if (params.containsKey("trade_class") && params.get("trade_class").equals("REFD")) {
+            }
+            //异步通知退款接口
+            else if (params.containsKey("trade_class") && params.get("trade_class").equals("REFD")) {
                 Logger.info("京东退款异步通知数据: " + params.toString());
                 if (params.containsKey("out_trade_no") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("ACSU")) {
-                    Refund re = new Refund();
-                    re.setId(Long.valueOf(params.get("return_params")));
-                    re.setOrderId(Long.valueOf(params.get("out_trade_no")));
-                    re.setPgCode(params.get("trade_status"));
-                    re.setPgMessage(params.get("trade_subject"));
-                    re.setPgTradeNo(params.get("trade_no"));
-                    if (params.get("trade_status").equals("ACSU"))
-                        re.setState("Y");
-                    else re.setState("N");
-
-                    try {
-                        if (cartService.updateRefund(re)) {
-                            return ok("success");
-                        } else {
-                            Logger.error("refundBack update exception");
-                            return ok("error");
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Logger.error("refundBack update exception " + e.getMessage());
-                        return ok("error");
-                    }
-
+                    return ok(jdPayMid.asynRefund(params));
                 } else {
                     Logger.error("退款回调参数校验失败或者退款状态有误: " + params.toString());
                     return ok("error");
@@ -319,37 +281,9 @@ public class JDPay extends Controller {
             return ok(views.html.jdpayfailed.render());
         } else {
             if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
-                Order order = new Order();
-                order.setOrderId(Long.valueOf(params.get("out_trade_no")));
-
-                try {
-                    Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
-                    if (listOptional.isPresent() && listOptional.get().size() > 0) {
-                        order.setOrderStatus("S");
-                        order.setErrorStr(params.get("trade_status"));
-                        order.setPgTradeNo(params.get("trade_no"));
-
-                        if (cartService.updateOrder(order))
-                            Logger.info("支付回调订单更新payFrontNotify: " + Json.toJson(order));
-                        Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
-                        IdPlus idPlus = new IdPlus();
-                        idPlus.setUserId(userId);
-                        Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
-                        idPlus.setPayJdToken(params.get("token"));
-                        if (idPlusOptional.isPresent()) {
-                            if (idService.updateIdPlus(idPlus))
-                                Logger.info("支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
-                        } else {
-                            if (idService.insertIdPlus(idPlus))
-                                Logger.info("支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
-                        }
-                    } else Logger.info("支付前台回调成功:" + order.getOrderId());
-
-                } catch (Exception e) {
-                    Logger.error("支付回调订单更新出错payFrontNotify: " + e.getMessage());
-                    e.printStackTrace();
-                }
+                if (jdPayMid.asynPay(params).equals("success"))
                 return ok(views.html.jdpaysuccess.render(params));
+                else return ok(views.html.jdpayfailed.render());
             } else return ok(views.html.jdpayfailed.render());
         }
     }
@@ -413,7 +347,6 @@ public class JDPay extends Controller {
                     re.setPgMessage(response.get("response_message").asText());
                     re.setPgTradeNo(response.get("trade_no").asText());
                     re.setState(response.get("is_success").asText());
-
 
 
                     if (cartService.updateRefund(re)) {

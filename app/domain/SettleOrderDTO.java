@@ -17,12 +17,12 @@ public class SettleOrderDTO {
     private String  orderDesc;      //订单备注
     private String payMethod;       //支付方式JD.京东 APAY.支付宝 WEIXIN.微信
     private Integer buyNow;         //1.立即支付,2.购物车结算
-
+    private Long pinActiveId;       //拼购活动ID
 
     public SettleOrderDTO() {
     }
 
-    public SettleOrderDTO(List<SettleDTO> settleDTOs, Long addressId, String couponId, String clientIp, Integer clientType, Integer shipTime, String orderDesc, String payMethod, Integer buyNow) {
+    public SettleOrderDTO(List<SettleDTO> settleDTOs, Long addressId, String couponId, String clientIp, Integer clientType, Integer shipTime, String orderDesc, String payMethod, Integer buyNow, Long pinActiveId) {
         this.settleDTOs = settleDTOs;
         this.addressId = addressId;
         this.couponId = couponId;
@@ -32,6 +32,7 @@ public class SettleOrderDTO {
         this.orderDesc = orderDesc;
         this.payMethod = payMethod;
         this.buyNow = buyNow;
+        this.pinActiveId = pinActiveId;
     }
 
     public List<SettleDTO> getSettleDTOs() {
@@ -106,6 +107,14 @@ public class SettleOrderDTO {
         this.buyNow = buyNow;
     }
 
+    public Long getPinActiveId() {
+        return pinActiveId;
+    }
+
+    public void setPinActiveId(Long pinActiveId) {
+        this.pinActiveId = pinActiveId;
+    }
+
     @Override
     public String toString() {
         return "SettleOrderDTO{" +
@@ -118,6 +127,7 @@ public class SettleOrderDTO {
                 ", orderDesc='" + orderDesc + '\'' +
                 ", payMethod='" + payMethod + '\'' +
                 ", buyNow=" + buyNow +
+                ", pinActiveId=" + pinActiveId +
                 '}';
     }
 }

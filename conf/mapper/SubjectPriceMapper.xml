@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.SubjectPriceMapper">
+    <!--    主题多元化价格    -->
+    <sql id="subjectPriceColumns">
+        ${alias}.id,
+        ${alias}.theme_id,
+        ${alias}.inv_id,
+        ${alias}.price,
+        ${alias}.discount,
+        ${alias}.create_at,
+        ${alias}.update_at
+    </sql>
+    <select id="getSbjPrice" parameterType="domain.SubjectPrice" resultType="domain.SubjectPrice">
+        select
+        <include refid="subjectPriceColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from subject_price t where theme_id = #{themeId} and inv_id = #{invId}
+    </select>
+
+    <select id="getSbjPriceByThemeId" parameterType="java.lang.Long" resultType="domain.SubjectPrice">
+        select
+        <include refid="subjectPriceColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from subject_price t where theme_id = ${value}
+    </select>
+
+    <select id="getSbjPriceById" parameterType="java.lang.Long" resultType="domain.SubjectPrice">
+        select
+        <include refid="subjectPriceColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from subject_price t where id = ${value}
+    </select>
+
+    <insert id="sbjPriceAdd" parameterType="domain.SubjectPrice" useGeneratedKeys="true" keyProperty="id">
+        insert into subject_price(theme_id,inv_id,price,discount,create_at)
+        values(#{themeId},#{invId},#{price},#{discount},CURRENT_TIMESTAMP(0))
+    </insert>
+
+    <update id="sbjPriceUpd" parameterType="domain.SubjectPrice">
+        update subject_price
+        set theme_id=#{themeId},inv_id=#{invId},price=#{price},discount=#{discount},update_at=CURRENT_TIMESTAMP(0)
+        where id = #{id}
+    </update>
+
+    <delete id="sbjPriceDelById" parameterType="java.lang.Long">
+        delete from subject_price where id = ${value}
+    </delete>
+    <delete id="sbjPriceDelByThemeId" parameterType="java.lang.Long">
+        delete from subject_price where theme_id = ${value}
+    </delete>
+
+</mapper>

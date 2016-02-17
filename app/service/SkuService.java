@@ -1,8 +1,8 @@
 package service;
 
-import domain.Carriage;
-import domain.Sku;
-import domain.SysParameter;
+import domain.*;
+
+import java.util.List;
 
 /**
  * sku service
@@ -17,4 +17,9 @@ public interface SkuService {
     Carriage getCarriage(Carriage carriage) throws Exception;
 
     SysParameter getSysParameter(SysParameter sysParameter);
+
+    List<VaryPrice> getVaryPriceBy(VaryPrice varyPrice);
+
+    SubjectPrice getSbjPriceById(Long id);
+
 }

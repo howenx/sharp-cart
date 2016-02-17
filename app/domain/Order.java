@@ -49,11 +49,15 @@ public class Order implements Serializable {
     private Integer             orderAmount;//订单购买货物总数
     private Long                orderSplitId;//子订单编号
     private Long                countDown;//倒计时
+    @JsonIgnore
+    private Integer             orderType;//订单类型
+    @JsonIgnore
+    private Long                pinActiveId;       //拼购活动ID
 
     public Order() {
     }
 
-    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId, Long countDown) {
+    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId, Long countDown, Integer orderType, Long pinActiveId) {
         this.orderId = orderId;
         this.userId = userId;
         this.payTotal = payTotal;
@@ -77,6 +81,8 @@ public class Order implements Serializable {
         this.orderAmount = orderAmount;
         this.orderSplitId = orderSplitId;
         this.countDown = countDown;
+        this.orderType = orderType;
+        this.pinActiveId = pinActiveId;
     }
 
     public Long getOrderId() {
@@ -263,6 +269,22 @@ public class Order implements Serializable {
         this.countDown = countDown;
     }
 
+    public Integer getOrderType() {
+        return orderType;
+    }
+
+    public void setOrderType(Integer orderType) {
+        this.orderType = orderType;
+    }
+
+    public Long getPinActiveId() {
+        return pinActiveId;
+    }
+
+    public void setPinActiveId(Long pinActiveId) {
+        this.pinActiveId = pinActiveId;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -289,6 +311,8 @@ public class Order implements Serializable {
                 ", orderAmount=" + orderAmount +
                 ", orderSplitId=" + orderSplitId +
                 ", countDown=" + countDown +
+                ", orderType=" + orderType +
+                ", pinActiveId=" + pinActiveId +
                 '}';
     }
 }

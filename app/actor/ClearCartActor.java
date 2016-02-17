@@ -3,40 +3,36 @@ package actor;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.japi.pf.ReceiveBuilder;
-import domain.Address;
 import domain.Cart;
 import domain.CartDto;
-import domain.OrderAddress;
+import domain.SettleFeeVo;
+import domain.SettleVo;
 import play.Logger;
 import scala.concurrent.duration.FiniteDuration;
 import service.CartService;
 
 import javax.inject.Inject;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
  * 清空购物车
  * Created by howen on 15/12/18.
  */
-@SuppressWarnings("unchecked")
 public class ClearCartActor extends AbstractActor {
     @Inject
     public ClearCartActor(CartService cartService) {
 
-        receive(ReceiveBuilder.match(HashMap.class, maps -> {
+        receive(ReceiveBuilder.match(SettleVo.class, settleVo -> {
 
-            Map<String, Object> orderInfo = (Map<String, Object>) maps;
-            Long orderId = (Long) orderInfo.get("orderId");
-            List<Map<String, Object>> orderSplitList = (List<Map<String, Object>>) orderInfo.get("singleCustoms");
+            Long orderId = settleVo.getOrderId();
+            List<SettleFeeVo> settleFeeVos = settleVo.getSingleCustoms();
 
-            Integer buyNow = (Integer)orderInfo.get("buyNow");
+            Integer buyNow = settleVo.getBuyNow();
             //如果是购物车页结算,就去清空购物车
             if (buyNow==2){
-                orderSplitList.forEach(m -> {
-                    List<CartDto> cartDtos = (List<CartDto>) m.get("cartDtos");
+                settleFeeVos.forEach(m -> {
+                    List<CartDto> cartDtos = m.getCartDtos();
                     cartDtos.forEach(cartDto -> {
                         Cart cart = new Cart();
                         cart.setCartId(cartDto.getCartId());
@@ -47,7 +43,7 @@ public class ClearCartActor extends AbstractActor {
                         } catch (Exception e) {
                             e.printStackTrace();
                             Logger.error("ClearCartActor 更新购物车异常"+e.getMessage());
-                            context().system().scheduler().scheduleOnce(FiniteDuration.create(5, TimeUnit.MILLISECONDS),self(),orderInfo,context().dispatcher(), ActorRef.noSender());
+                            context().system().scheduler().scheduleOnce(FiniteDuration.create(5, TimeUnit.MILLISECONDS),self(),settleVo,context().dispatcher(), ActorRef.noSender());
                         }
                     });
                 });

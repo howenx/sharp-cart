@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.PinSkuMapper">
+    <sql id="pinSkuColumns">
+        ${alias}.pin_id,
+        ${alias}.pin_img,
+        ${alias}.share_url,
+        ${alias}.status,
+        ${alias}.create_at,
+        ${alias}.update_at,
+        ${alias}.pin_title,
+        ${alias}.start_at,
+        ${alias}.end_at,
+        <!--${alias}.pin_price_rule,-->
+        ${alias}.restrict_amount,
+        ${alias}.floor_price,
+        ${alias}.inv_id,
+        ${alias}.pin_discount
+    </sql>
+
+    <select id="getPinSkuById" resultType="domain.PinSku" parameterType="java.lang.Long">
+        select
+        <include refid="pinSkuColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from pin_sku t where pin_id = ${value}
+    </select>
+
+    <sql id="tieredPriceColumns">
+        ${alias}.id,
+        ${alias}.master_coupon_class,
+        ${alias}.master_coupon_start_at,
+        ${alias}.master_coupon_end_at,
+        ${alias}.master_coupon_quota,
+        ${alias}.member_coupon,
+        ${alias}.member_coupon_class,
+        ${alias}.member_coupon_start_at,
+        ${alias}.member_coupon_end_at,
+        ${alias}.member_coupon_quota,
+        ${alias}.pin_id,
+        ${alias}.people_num,
+        ${alias}.price,
+        ${alias}.master_min_price,
+        ${alias}.member_min_price,
+        ${alias}.master_coupon
+    </sql>
+
+    <select id="getTieredPriceByPinId" parameterType="java.lang.Long" resultType="domain.PinTieredPrice">
+        select
+        <include refid="tieredPriceColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from pin_tiered_price t where t.pin_id = ${value} order by t.people_num
+    </select>
+
+    <select id="getTieredPriceById" parameterType="domain.PinTieredPrice" resultType="domain.PinTieredPrice">
+        select
+        <include refid="tieredPriceColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from pin_tiered_price t where t.id = #{id}  and t.pin_id = #{pinId} order by t.people_num
+    </select>
+
+    <insert id="insertPinActivity" parameterType="domain.PinActivity" useGeneratedKeys="true" keyProperty="pinActiveId">
+        insert into pin_activity (
+        pin_id           ,
+        master_user_id   ,
+        person_num       ,
+        pin_price        ,
+        join_persons     ,
+        create_at        ,
+        status           ,
+        end_at
+        ) values (
+            #{pinId},
+            #{masterUserId},
+            #{personNum},
+            #{pinPrice},
+            #{joinPersons},
+            CURRENT_TIMESTAMP(0),
+            #{status},
+            #{end_at}
+        )
+    </insert>
+
+    <update id="updatePinActivity" parameterType="domain.PinActivity">
+        update pin_activity set
+        status = #{status}
+        <if test="joinPersons!=null and joinPersons!=''">
+            ,join_persons = #{joinPersons}
+        </if>
+        <if test="pinUrl!=null and pinUrl!=''">
+            ,pin_url = #{pinUrl}
+        </if>
+        where pin_active_id = #{pinActiveId}
+    </update>
+
+    <select id="selectPinActivityById" parameterType="java.lang.Long">
+        select
+        pin_active_id    ,
+        pin_id           ,
+        master_user_id   ,
+        person_num       ,
+        pin_price        ,
+        join_persons     ,
+        create_at        ,
+        status           ,
+        end_at           ,
+        pin_url
+        from pin_activity where pin_active_id = ${value}
+    </select>
+
+    <insert id="insertPinUser" parameterType="domain.PinUser" useGeneratedKeys="true" keyProperty="id">
+        insert into pin_user (
+        user_id         ,
+        or_master       ,
+        pin_active_id   ,
+        user_ip         ,
+        or_robot        ,
+        user_img
+        ) values (
+            #{userId},
+            #{orMaster},
+            #{pinActiveId},
+            #{userIp}::cidr,
+            #{orRobot},
+            #{userImg}
+        )
+    </insert>
+
+    <select id="selectPinUser" parameterType="domain.PinUser">
+        select
+        id              ,
+        user_id         ,
+        or_master       ,
+        pin_active_id   ,
+        user_ip         ,
+        or_robot        ,
+        user_img
+        from pin_user
+        where 1=1
+        <if test="id!=null and id!=''">
+            and id=#{id}
+        </if>
+        <if test="pinActiveId!=null and pinActiveId!=''">
+            and pin_active_id = #{pinActiveId}
+        </if>
+        order by or_master DESC
+    </select>
+
+</mapper>
