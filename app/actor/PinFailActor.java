@@ -10,13 +10,13 @@ import service.CartService;
 import javax.inject.Inject;
 
 /**
- * 发放购物券
- * Created by howen on 15/12/19.
+ * 拼购失败
+ * Created by howen on 16/2/17.
  */
-public class PublicCouponActor extends AbstractActor {
+public class PinFailActor extends AbstractActor {
 
     @Inject
-    public PublicCouponActor(CartService cartService) {
+    public PinFailActor(CartService cartService) {
 
         receive(ReceiveBuilder.match(SettleVo.class, settleVo -> {
             Long userId = settleVo.getUserId();

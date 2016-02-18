@@ -4,27 +4,24 @@ import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
 import domain.Address;
 import domain.OrderAddress;
+import domain.SettleVo;
 import play.Logger;
 import service.CartService;
 
 import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 订单地址信息
  * Created by howen on 15/12/18.
  */
-@SuppressWarnings("unchecked")
 public class OrderAddressActor extends AbstractActor {
     @Inject
     public OrderAddressActor(CartService cartService) {
 
-        receive(ReceiveBuilder.match(HashMap.class, maps -> {
+        receive(ReceiveBuilder.match(SettleVo.class, settleVo -> {
 
-            Map<String, Object> orderInfo = (Map<String, Object>) maps;
-            Address address = (Address) orderInfo.get("address");
-            Long orderId = (Long) orderInfo.get("orderId");
+            Address address = settleVo.getAddress();
+            Long orderId = settleVo.getOrderId();
             try {
                 OrderAddress orderAddress = new OrderAddress();
                 orderAddress.setOrderId(orderId);

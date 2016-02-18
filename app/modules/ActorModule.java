@@ -13,8 +13,8 @@ public class ActorModule extends AbstractModule implements AkkaGuiceSupport {
     protected void configure() {
 
         bindActor(OrderSplitActor.class, "subOrderActor");
-        bindActor(OrderAddressActor.class, "orderShipActor");
-        bindActor(OrderLineActor.class, "orderDetailActor");
+        bindActor(OrderAddressActor.class, "orderAddressActor");
+        bindActor(OrderLineActor.class, "orderLineActor");
         bindActor(ClearCartActor.class,"clearCartActor");
         bindActor(PublicFreeShipActor.class,"publicFreeShipActor");
         bindActor(ReduceInvActor.class,"reduceInvActor");

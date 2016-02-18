@@ -1,6 +1,7 @@
 package service;
 
 import domain.Address;
+import domain.ID;
 import domain.IdPlus;
 
 /**
@@ -16,4 +17,6 @@ public interface IdService {
     Boolean insertIdPlus(IdPlus idPlus) throws Exception;
 
     Boolean updateIdPlus(IdPlus idPlus) throws Exception;
+
+    ID getID(Long userId) throws Exception;
 }

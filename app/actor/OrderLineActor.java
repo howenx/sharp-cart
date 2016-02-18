@@ -5,32 +5,30 @@ import akka.japi.pf.ReceiveBuilder;
 import domain.*;
 import play.Logger;
 import service.CartService;
+import service.PromotionService;
 import service.SkuService;
 
 import javax.inject.Inject;
-import java.util.HashMap;
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 订单明细
  * Created by howen on 15/12/18.
  */
-@SuppressWarnings("unchecked")
 public class OrderLineActor extends AbstractActor {
 
     @Inject
-    public OrderLineActor(CartService cartService, SkuService skuService) {
+    public OrderLineActor(CartService cartService, SkuService skuService, PromotionService promotionService) {
 
-        receive(ReceiveBuilder.match(HashMap.class, maps -> {
+        receive(ReceiveBuilder.match(SettleVo.class, settleVo -> {
 
-            Map<String, Object> orderInfo = (Map<String, Object>) maps;
-            Long orderId = (Long) orderInfo.get("orderId");
-            List<Map<String, Object>> orderSplitList = (List<Map<String, Object>>) orderInfo.get("singleCustoms");
+            Long orderId = settleVo.getOrderId();
+            List<SettleFeeVo> settleFeeVos = settleVo.getSingleCustoms();
 
-            orderSplitList.forEach(m->{
-                Long splitId = (Long)m.get("splitId");
-                List<CartDto> cartDtos = (List<CartDto>)m.get("cartDtos");
+            settleFeeVos.forEach(m->{
+                Long splitId = m.getSplitId();
+                List<CartDto> cartDtos = m.getCartDtos();
                 cartDtos.forEach(cartDto -> {
                     Sku sku = new Sku();
                     sku.setId(cartDto.getSkuId());
@@ -44,13 +42,47 @@ public class OrderLineActor extends AbstractActor {
                     orderLine.setItemId(sku.getItemId());
                     orderLine.setOrderId(orderId);
                     orderLine.setAmount(cartDto.getAmount());
-                    orderLine.setPrice(sku.getItemPrice());
+                    orderLine.setSkuTitle(sku.getInvTitle());
+
+                    switch (cartDto.getSkuType()) {
+                        case "item":
+                            orderLine.setPrice(sku.getItemPrice());
+                            break;
+                        case "vary":
+                            VaryPrice varyPrice = new VaryPrice();
+                            varyPrice.setId(cartDto.getSkuTypeId());
+                            List<VaryPrice> varyPriceList = skuService.getVaryPriceBy(varyPrice);
+                            if (varyPriceList.size() > 0) {
+                                varyPrice = varyPriceList.get(0);
+                            }
+                            orderLine.setPrice(varyPrice.getPrice());
+                            break;
+                        case "customize":
+                            SubjectPrice subjectPrice = skuService.getSbjPriceById(cartDto.getSkuTypeId());
+                            orderLine.setPrice(subjectPrice.getPrice());
+                            break;
+                        case "pin":
+                            PinTieredPrice pinTieredPrice = new PinTieredPrice();
+                            pinTieredPrice.setId(cartDto.getPinTieredPriceId());
+                            pinTieredPrice.setPinId(cartDto.getSkuTypeId());
+                            pinTieredPrice = promotionService.getTieredPriceById(pinTieredPrice);
+                            orderLine.setPrice(pinTieredPrice.getPrice());
+                            PinSku pinSku = promotionService.getPinSkuById(cartDto.getSkuTypeId());
+                            orderLine.setSkuTitle(pinSku.getPinTitle());
+                            break;
+                    }
+
                     orderLine.setSkuColor(sku.getItemColor());
                     orderLine.setSkuSize(sku.getItemSize());
-                    orderLine.setSkuTitle(sku.getInvTitle());
+
                     orderLine.setSplitId(splitId);
                     orderLine.setSkuId(sku.getId());
                     orderLine.setSkuImg(sku.getInvImg());
+                    orderLine.setSkuType(cartDto.getSkuType());
+                    orderLine.setSkuTypeId(cartDto.getSkuTypeId());
+                    if (cartDto.getPinTieredPriceId()!=null){
+                        orderLine.setPinTieredPriceId(cartDto.getPinTieredPriceId());
+                    }
                     try {
                         if(cartService.insertOrderLine(orderLine)) Logger.debug("订单明细ID: "+orderLine.getLineId());
                     } catch (Exception e) {
@@ -58,7 +90,6 @@ public class OrderLineActor extends AbstractActor {
                         e.printStackTrace();
                     }
                 });
-
             });
         }).matchAny(s -> Logger.error("OrderLineActor received messages not matched: {}", s.toString())).build());
     }

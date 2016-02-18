@@ -1,12 +1,13 @@
 package service;
 
-import domain.Carriage;
-import domain.Sku;
-import domain.SysParameter;
+import domain.*;
 import mapper.SkuMapper;
+import mapper.SubjectPriceMapper;
+import mapper.VaryPriceMapper;
 import play.Logger;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * impl
@@ -15,6 +16,12 @@ import javax.inject.Inject;
 public class SkuServiceImpl implements SkuService{
     @Inject
     private SkuMapper skuMapper;
+
+    @Inject
+    private VaryPriceMapper varyPriceMapper;
+
+    @Inject
+    private SubjectPriceMapper subjectPriceMapper;
 
     @Override
     public Sku getInv(Sku sku) throws Exception{
@@ -40,4 +47,15 @@ public class SkuServiceImpl implements SkuService{
             return null;
         }
     }
+
+    @Override
+    public List<VaryPrice> getVaryPriceBy(VaryPrice varyPrice) {
+        return varyPriceMapper.getVaryPriceBy(varyPrice);
+    }
+
+    @Override
+    public SubjectPrice getSbjPriceById(Long id) {
+        return subjectPriceMapper.getSbjPriceById(id);
+    }
+
 }

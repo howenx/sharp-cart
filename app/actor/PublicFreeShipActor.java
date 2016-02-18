@@ -3,6 +3,8 @@ package actor;
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
 import domain.CouponVo;
+import domain.SettleFeeVo;
+import domain.SettleVo;
 import play.Logger;
 import service.CartService;
 import util.GenCouponCode;
@@ -11,34 +13,30 @@ import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 发放免邮的优惠券
  * Created by howen on 15/12/18.
  */
-@SuppressWarnings("unchecked")
 public class PublicFreeShipActor extends AbstractActor {
 
     @Inject
     public PublicFreeShipActor(CartService cartService) {
 
-        receive(ReceiveBuilder.match(HashMap.class, maps -> {
+        receive(ReceiveBuilder.match(SettleVo.class, settleVo -> {
 
-            Map<String, Object> orderInfo = (Map<String, Object>) maps;
-            Long userId = (Long) orderInfo.get("userId");
-            Long orderId = (Long) orderInfo.get("orderId");
-            BigDecimal freeShipLimit = (BigDecimal) orderInfo.get("freeShipLimit");
-            List<Map<String, Object>> orderSplitList = (List<Map<String, Object>>) orderInfo.get("singleCustoms");
+            List<SettleFeeVo> settleFeeVos = settleVo.getSingleCustoms();
+            Long userId = settleVo.getUserId();
+            Long orderId = settleVo.getOrderId();
+            BigDecimal freeShipLimit =settleVo.getFreeShipLimit();
 
-            orderSplitList.forEach(m->{
+            settleFeeVos.forEach(m->{
                 //免邮
-                if ((Boolean)m.get("freeShip")) {
+                if (m.getFreeShip()) {
                     CouponVo couponVo = new CouponVo();
                     couponVo.setUserId(userId);
-                    couponVo.setDenomination((BigDecimal)m.get("shipFeeSingle"));
+                    couponVo.setDenomination(m.getShipSingleCustomsFee());
                     Calendar cal = Calendar.getInstance();
                     couponVo.setStartAt(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cal.getTime()));
                     couponVo.setEndAt(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cal.getTime()));

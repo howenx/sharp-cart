@@ -1,6 +1,7 @@
 package service;
 
 import domain.Address;
+import domain.ID;
 import domain.IdPlus;
 import mapper.IdMapper;
 
@@ -33,5 +34,10 @@ public class IdServiceImpl implements IdService{
     @Override
     public Boolean updateIdPlus(IdPlus idPlus) throws Exception {
         return idMapper.updateIdPlus((idPlus))>=0;
+    }
+
+    @Override
+    public ID getID(Long userId) throws Exception {
+        return idMapper.getID(userId);
     }
 }

@@ -11,7 +11,6 @@ GET           /client/cart/verify/amount/$skuId<[0-9]+>/$amount<[0-9]+>         
 
 POST          /client/settle                                                            controllers.OrderCtrl.settle()
 GET           /client/coupons/list                                                      controllers.OrderCtrl.couponsList()
-GET           /client/public/coupons                                                    controllers.OrderCtrl.publicCoupons()
 POST          /client/order/submit                                                      controllers.OrderCtrl.submitOrder()
 GET           /client/order/submit                                                      controllers.OrderCtrl.submitOrder()
 GET           /client/order/cancel/$orderId<[0-9]+>                                     controllers.OrderCtrl.cancelOrder(orderId:Long)

@@ -1,82 +1,76 @@
 package actor;
 
-import akka.Main;
-import akka.actor.*;
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
 import akka.japi.pf.ReceiveBuilder;
 import domain.OrderSplit;
+import domain.SettleFeeVo;
+import domain.SettleVo;
 import play.Logger;
-import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 import service.CartService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * 创建子订单Actor
  * Created by howen on 15/12/14.
  */
-@SuppressWarnings("unchecked")
 public class OrderSplitActor extends AbstractActor {
 
     @Inject
-    public OrderSplitActor(CartService cartService,@Named("orderShipActor") ActorRef orderShipActor,@Named("orderDetailActor") ActorRef orderDetailActor,@Named("clearCartActor") ActorRef clearCartActor
-    ,@Named("publicFreeShipActor") ActorRef  publicFreeShipActor,@Named("reduceInvActor") ActorRef reduceInvActor,@Named("cancelOrderActor") ActorRef cancelOrderActor,@Named("schedulerCancelOrderActor") ActorRef schedulerCancelOrderActor
-    ,@Named("publicCouponActor") ActorRef publicCouponActor) {
+    public OrderSplitActor(CartService cartService, @Named("orderAddressActor") ActorRef orderAddressActor, @Named("orderLineActor") ActorRef orderLineActor, @Named("clearCartActor") ActorRef clearCartActor
+            , @Named("publicFreeShipActor") ActorRef publicFreeShipActor, @Named("reduceInvActor") ActorRef reduceInvActor, @Named("cancelOrderActor") ActorRef cancelOrderActor, @Named("schedulerCancelOrderActor") ActorRef schedulerCancelOrderActor
+            , @Named("publicCouponActor") ActorRef publicCouponActor) {
 
-        receive(ReceiveBuilder.match(HashMap.class, maps -> {
+        receive(ReceiveBuilder.match(SettleVo.class, settleVo -> {
 
-            Map<String, Object> orderInfo = (Map<String, Object>) maps;
-            Long orderId = (Long) orderInfo.get("orderId");
-            List<Map<String, Object>> orderSplitList = (List<Map<String, Object>>) orderInfo.get("singleCustoms");
+            List<SettleFeeVo> settleFeeVos = settleVo.getSingleCustoms();
             try {
-                orderSplitList = orderSplitList.stream().map(c -> {
+                settleFeeVos = settleFeeVos.stream().map(c -> {
                     OrderSplit orderSplit = new OrderSplit();
-                    orderSplit.setCbeCode(c.get("invCustoms").toString());
-                    orderSplit.setCbeArea(c.get("invArea").toString());
-                    orderSplit.setPostalFee((BigDecimal) c.get("postalFeeSingle"));
-                    orderSplit.setShipFee((BigDecimal) c.get("shipFeeSingle"));
-                    orderSplit.setOrderId(orderId);
-                    orderSplit.setTotalAmount((Integer) c.get("totalAmount"));
-                    orderSplit.setTotalFee((BigDecimal) c.get("totalFeeSingle"));
-                    orderSplit.setTotalPayFee((BigDecimal) c.get("totalPayFeeSingle"));
+                    orderSplit.setCbeCode(c.getInvCustoms());
+                    orderSplit.setCbeArea(c.getInvArea());
+                    orderSplit.setPostalFee(c.getPortalSingleCustomsFee());
+                    orderSplit.setShipFee(c.getShipSingleCustomsFee());
+                    orderSplit.setOrderId(settleVo.getOrderId());
+                    orderSplit.setTotalAmount(c.getSingleCustomsSumAmount());
+                    orderSplit.setTotalFee(c.getSingleCustomsSumFee());
+                    orderSplit.setTotalPayFee(c.getSingleCustomsSumPayFee());
                     try {
                         if (cartService.insertOrderSplit(orderSplit)) Logger.debug("子订单ID: " + orderSplit.getSplitId());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    c.put("splitId", orderSplit.getSplitId());
+                    c.setSplitId(orderSplit.getSplitId());
                     return c;
                 }).collect(Collectors.toList());
-                orderInfo.put("singleCustoms",orderSplitList);
+
+                settleVo.setSingleCustoms(settleFeeVos);
+
                 //调用订单地址信息创建Actor
-                orderShipActor.tell(orderInfo,ActorRef.noSender());
+                orderAddressActor.tell(settleVo, ActorRef.noSender());
                 //调用订单详细信息创建Actor
-                orderDetailActor.tell(orderInfo,ActorRef.noSender());
+                orderLineActor.tell(settleVo, ActorRef.noSender());
                 //清空购物车
-                if ((Integer)orderInfo.get("buyNow")==2) clearCartActor.tell(orderInfo,ActorRef.noSender());
+                if (settleVo.getBuyNow() == 2) clearCartActor.tell(settleVo, ActorRef.noSender());
                 //发放免邮券
-                publicFreeShipActor.tell(orderInfo,ActorRef.noSender());
+                publicFreeShipActor.tell(settleVo, ActorRef.noSender());
                 //更改优惠券
-                publicCouponActor.tell(orderInfo,ActorRef.noSender());
+                publicCouponActor.tell(settleVo, ActorRef.noSender());
                 //减库存
-                reduceInvActor.tell(orderInfo,ActorRef.noSender());
+                reduceInvActor.tell(settleVo, ActorRef.noSender());
                 //24小时内未结算恢复库存并自动取消订单
 
 //                ActorSystem system = ActorSystem.create("Hello");
 //                ActorRef a = system.actorOf(Props.create(SchedulerCancelOrderActor.class), "helloWorld");
 //                system.actorOf(Props.create(TerminatorActor.class, a), "terminator");
-                context().system().scheduler().scheduleOnce(FiniteDuration.create(24,HOURS),cancelOrderActor,orderInfo.get("orderId"),context().dispatcher(), ActorRef.noSender());
+                context().system().scheduler().scheduleOnce(FiniteDuration.create(24, HOURS), cancelOrderActor, settleVo.getOrderId(), context().dispatcher(), ActorRef.noSender());
 
             } catch (Exception e) {
                 Logger.error("OrderSplitActor Error:" + e.getMessage());

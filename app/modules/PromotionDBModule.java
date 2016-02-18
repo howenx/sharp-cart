@@ -3,15 +3,13 @@ package modules;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
-import mapper.SkuMapper;
-import mapper.SubjectPriceMapper;
-import mapper.VaryPriceMapper;
+import mapper.PinSkuMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.mybatis.guice.session.SqlSessionManagerProvider;
 import play.db.DBApi;
-import service.SkuService;
-import service.SkuServiceImpl;
+import service.PromotionService;
+import service.PromotionServiceImpl;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -22,7 +20,7 @@ import javax.sql.DataSource;
  *
  * Created by howen on 15/10/28.
  */
-public class StyleDBModule extends PrivateModule{
+public class PromotionDBModule extends PrivateModule{
 
     @Override
     protected void configure() {
@@ -30,30 +28,27 @@ public class StyleDBModule extends PrivateModule{
         install(new org.mybatis.guice.MyBatisModule() {
             @Override
             protected void initialize() {
-                environmentId("style");
+                environmentId("promotion");
                 //开启驼峰自动映射
                 mapUnderscoreToCamelCase(true);
 
                 bindDataSourceProviderType(DevDataSourceProvider.class);
                 bindTransactionFactoryType(JdbcTransactionFactory.class);
-                addMapperClass(SkuMapper.class);
-                addMapperClass(VaryPriceMapper.class);
-                addMapperClass(SubjectPriceMapper.class);
+                addMapperClass(PinSkuMapper.class);
             }
         });
 
         /**
          * bind SQLsession to isolate the multiple datasources.
          */
-        bind(SqlSession.class).annotatedWith(Names.named("style")).toProvider(SqlSessionManagerProvider.class).in(Scopes.SINGLETON);
-        expose(SqlSession.class).annotatedWith(Names.named("style"));
+        bind(SqlSession.class).annotatedWith(Names.named("promotion")).toProvider(SqlSessionManagerProvider.class).in(Scopes.SINGLETON);
+        expose(SqlSession.class).annotatedWith(Names.named("promotion"));
 
         /**
          * bind service for controller or other service inject.
          */
-        bind(SkuService.class).to(SkuServiceImpl.class).asEagerSingleton();
-        expose(SkuService.class);
-
+        bind(PromotionService.class).to(PromotionServiceImpl.class);
+        expose(PromotionService.class);
     }
 
     @Singleton
@@ -68,7 +63,7 @@ public class StyleDBModule extends PrivateModule{
 
         @Override
         public DataSource get() {
-            return db.getDatabase("style").getDataSource();
+            return db.getDatabase("promotion").getDataSource();
         }
     }
 
