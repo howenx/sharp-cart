@@ -818,4 +818,54 @@
             and order_id = #{orderId}
         </if>
     </select>
+
+
+    <insert id="insertCollect" parameterType="domain.Collect" useGeneratedKeys="true" keyProperty="id">
+        insert into sp_collect(
+        user_id             ,
+        sku_id              ,
+        create_at           ,
+        sku_type            ,
+        sku_type_id
+        )values(
+        #{userId},
+        #{skuId},
+        CURRENT_TIMESTAMP(0),
+        #{skuType},
+        #{skuTypeId}
+        )
+    </insert>
+
+    <select id="selectCollect" parameterType="domain.Collect" resultType="domain.Collect" >
+        select
+        collect_id          ,
+        user_id             ,
+        sku_id              ,
+        create_at           ,
+        sku_type            ,
+        sku_type_id
+        from sp_collect where 1=1
+        <if test="collectId!=null and collectId!=''">
+            and collect_id = #{collectId}
+        </if>
+        <if test="userId!=null and userId!=''">
+            and user_id = #{userId}
+        </if>
+        <if test="skuId!=null and skuId!=''">
+            and sku_id = #{skuId}
+        </if>
+
+    </select>
+
+    <delete id="deleteCollect" parameterType="domain.Collect">
+        delete from sp_collect where 1=1
+        <if test="collectId!=null and collectId !=''">
+            and collect_id = #{collectId}
+        </if>
+        <if test="userId!=null and userId!=''">
+            and user_id =#{userId}
+        </if>
+    </delete>
+
+
 </mapper>

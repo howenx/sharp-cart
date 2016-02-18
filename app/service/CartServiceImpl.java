@@ -147,4 +147,18 @@ public class CartServiceImpl  implements CartService{
     public List<Order> getOrder(Order order) throws Exception {
         return shoppingCartMapper.getOrder(order);
     }
+
+    public Boolean insertCollect(Collect collect) throws Exception {
+        return shoppingCartMapper.insertCollect(collect)>=0;
+    }
+
+    @Override
+    public List<Collect> selectCollect(Collect collect) throws Exception {
+        return shoppingCartMapper.selectCollect(collect);
+    }
+
+    @Override
+    public Boolean deleteCollect(Collect collect) throws Exception {
+        return shoppingCartMapper.deleteCollect(collect)>=0;
+    }
 }

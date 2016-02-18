@@ -60,4 +60,7 @@ public interface CartService {
     List<Order> getOrder(Order order) throws  Exception;
 
 
+    Boolean insertCollect(Collect collect)throws Exception;
+    List<Collect> selectCollect(Collect collect)throws Exception;
+    Boolean deleteCollect(Collect collect)throws Exception;
 }

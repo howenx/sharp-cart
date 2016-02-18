@@ -58,4 +58,7 @@ public interface ShoppingCartMapper {
     List<Order> getPinOrder(Order order) throws  Exception;
 
     List<Order> getOrder(Order order) throws  Exception;
+    int insertCollect(Collect collect)throws Exception;
+    List<Collect> selectCollect(Collect collect)throws Exception;
+    int deleteCollect(Collect collect)throws Exception;
 }
