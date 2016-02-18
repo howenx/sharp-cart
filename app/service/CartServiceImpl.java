@@ -137,4 +137,19 @@ public class CartServiceImpl  implements CartService{
     public Boolean updateRefund(Refund refund) throws Exception {
         return shoppingCartMapper.updateRefund(refund)>=0;
     }
+
+    @Override
+    public Boolean insertCollect(Collect collect) throws Exception {
+        return shoppingCartMapper.insertCollect(collect)>=0;
+    }
+
+    @Override
+    public List<Collect> selectCollect(Collect collect) throws Exception {
+        return shoppingCartMapper.selectCollect(collect);
+    }
+
+    @Override
+    public Boolean deleteCollect(Collect collect) throws Exception {
+        return shoppingCartMapper.deleteCollect(collect)>=0;
+    }
 }

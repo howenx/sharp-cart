@@ -922,4 +922,148 @@ public class OrderCtrl extends Controller {
             return ok(result);
         }
     }
+
+
+    /**
+     * 收藏
+     * @return
+     */
+    public Result submitCollect(){
+        /*******取用户ID*********/
+        ObjectNode result = newObject();
+        Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
+        try{
+
+            //客户端发过来的收藏数据
+            CollectSubmitDTO collectSubmitDTO = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructType(CollectSubmitDTO.class));
+            Logger.info("客户端发过来的收藏数据="+collectSubmitDTO);
+            Long userId = (Long) ctx().args.get("userId");
+            userId=123L;
+
+            Collect collect = createCollect(userId,collectSubmitDTO);
+            if(null!=collect){
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                return ok(result);
+            }
+
+        }catch (Exception ex) {
+            Logger.error("server exception:" + ex.getMessage());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+        return ok(result);
+    }
+
+    /**
+     * 创建收藏数据
+     * @param userId
+     * @param collectSubmitDTO
+     * @return
+     * @throws Exception
+     */
+    private Collect createCollect(Long userId,CollectSubmitDTO collectSubmitDTO) throws Exception {
+        Collect collect=new Collect();
+        collect.setUserId(userId);
+        collect.setSkuId(collectSubmitDTO.getSkuId());
+        collect.setSkuType(collectSubmitDTO.getSkuType());
+        collect.setSkuTypeId(collectSubmitDTO.getSkuTypeId());
+        if(cartService.insertCollect(collect)){
+            return collect;
+        }
+        return null;
+    }
+
+    /**
+     * 删除收藏
+     * @param collectId
+     * @return
+     */
+    public Result delCollect(Long collectId){
+        /*******取用户ID*********/
+
+        ObjectNode result = newObject();
+        try{
+            Long userId = (Long) ctx().args.get("userId");
+            Collect collect=new Collect();
+            collect.setCollectId(collectId);
+            collect.setUserId(userId);
+            if(cartService.deleteCollect(collect)){
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                return ok(result);
+            }
+
+        }catch (Exception ex) {
+            Logger.error("server exception:" + ex.getMessage());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+        return ok(result);
+    }
+
+    /***
+     * 获取所有收藏数据
+     * @return
+     */
+   // @Security.Authenticated(UserAuth.class)
+    public Result getCollect(){
+
+        ObjectNode result = newObject();
+        try{
+            Long userId = (Long) ctx().args.get("userId");
+            Collect collect=new Collect();
+            collect.setUserId(userId);
+
+            List<Collect> collectList=cartService.selectCollect(collect);
+            List<CollectDto> collectDtoList=new ArrayList<CollectDto>();
+
+            for(Collect c:collectList){
+                CollectDto collectDto=new CollectDto();
+                collectDto.setCollectId(c.getCollectId());
+                collectDto.setCreateAt(c.getCreateAt());
+
+                Sku sku = new Sku();
+                sku.setId(c.getSkuId());
+                sku = skuService.getInv(sku);
+                if(null==sku){
+                    Logger.info("collect sku not exist ,skuId="+c.getSkuId()); //TODO del???
+                   continue;
+                }
+
+
+                CartSkuDto skuDto = new CartSkuDto();
+                skuDto.setSkuId(c.getSkuId());
+                skuDto.setSkuTitle(sku.getInvTitle());
+                skuDto.setAmount(sku.getAmount());
+                //TODO ...
+                if("item".equals(c.getSkuType())){
+                    skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                    skuDto.setInvAndroidUrl(DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId());
+                }
+                else
+
+
+      //          skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId()+"/"+sku.getId()+"/"+pin.getPinId());
+      //          skuDto.setInvAndroidUrl(Application.DEPLOY_URL + "/comm/pin/detail/web/" + sku.getItemId()+"/"+sku.getId()+"/"+pin.getPinId());
+
+
+                skuDto.setInvImg(sku.getInvImg());
+                skuDto.setItemColor(sku.getItemColor());
+                skuDto.setItemSize(sku.getItemSize());
+                skuDto.setPrice(sku.getItemPrice());
+                collectDto.setCartSkuDto(skuDto);
+                collectDtoList.add(collectDto);
+
+            }
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            result.putPOJO("collectList", Json.toJson(collectDtoList));
+
+            return ok(result);
+        }catch (Exception ex) {
+            Logger.error("server exception:" + ex.getMessage());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+    }
 }
