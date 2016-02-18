@@ -54,4 +54,8 @@ public interface ShoppingCartMapper {
     int insertRefund(Refund refund) throws Exception;
     List<Refund> selectRefund(Refund refund) throws Exception;
     int updateRefund(Refund refund) throws  Exception;
+
+    List<Order> getPinOrder(Order order) throws  Exception;
+
+    List<Order> getOrder(Order order) throws  Exception;
 }

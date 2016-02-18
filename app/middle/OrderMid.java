@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import controllers.OrderCtrl;
 import domain.*;
+import org.apache.commons.collections.CollectionUtils;
 import play.Logger;
 import play.libs.Json;
 import service.CartService;
@@ -12,9 +13,7 @@ import service.PromotionService;
 import service.SkuService;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -121,7 +120,9 @@ public class OrderMid {
             //计算单个海关费用
             SettleFeeVo settleFeeVo = calCustomsFee(settleDTO, address);
 
-            skuTypeList.addAll(settleFeeVo.getSkuTypeList());
+            CollectionUtils.addAll(skuTypeList,new Object[settleFeeVo.getSkuTypeList().size()]);
+
+            Collections.copy(skuTypeList,settleFeeVo.getSkuTypeList());
 
             if (settleFeeVo.getMessageCode() != null) {
                 settleVo.setMessageCode(settleFeeVo.getMessageCode());
@@ -208,6 +209,8 @@ public class OrderMid {
                 if (address != null && address.getProvinceCode() != null) {
                     shipFeeSingle = shipFeeSingle.add(calculateShipFee(address.getProvinceCode(), sku.getCarriageModelCode(), cartDto.getAmount()));
                 } else shipFeeSingle = BigDecimal.ZERO;
+
+                Logger.error("订单类型:---->\n"+cartDto.getSkuType());
 
                 switch (cartDto.getSkuType()) {
                     case "item":
@@ -366,6 +369,7 @@ public class OrderMid {
         order.setTotalFee(settleVo.getTotalFee());
         order.setOrderIp(settleOrderDTO.getClientIp());
         order.setClientType(settleOrderDTO.getClientType());
+
 
         if (settleVo.getSkuTypeList().contains("pin")){
             order.setOrderType(2);//1:正常购买订单，2：拼购订单

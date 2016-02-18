@@ -1,5 +1,6 @@
 package util;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -18,6 +19,22 @@ public class CalCountDown {
             calendar.setTime(d.parse(createAt));
 
             return  cal.getTimeInMillis()-calendar.getTimeInMillis();
+
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    public  static Long getEndTimeSubtract(Timestamp endAt){
+        try {
+            Calendar cal=Calendar.getInstance();
+            cal.setTime(new java.util.Date());
+
+            Calendar calendar=Calendar.getInstance();
+            calendar.setTime(endAt);
+
+            return  calendar.getTimeInMillis()-cal.getTimeInMillis();
 
         }catch (Exception ex){
             ex.printStackTrace();

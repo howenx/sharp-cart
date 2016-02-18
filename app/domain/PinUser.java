@@ -1,24 +1,37 @@
 package domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
+import java.sql.Timestamp;
 
 /**
  * 拼购用户
  * Created by tiffany on 16/1/20.
  */
 public class PinUser implements Serializable {
+    @JsonIgnore
     private Long id;            //主键ID
+    @JsonIgnore
     private Long userId;        //用户ID
     private boolean orMaster;   //是否团长
+    @JsonIgnore
     private Long pinActiveId;   //拼购活动ID
+    @JsonIgnore
     private String userIp;      //用户参与活动时IP
+    @JsonIgnore
     private boolean orRobot;    //是否机器人
     private String userImg;     //用户头像
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    private Timestamp joinAt;   //参团时间
+
+    private String userNm;//用户名称
 
     public PinUser() {
     }
 
-    public PinUser(Long id, Long userId, boolean orMaster, Long pinActiveId, String userIp, boolean orRobot, String userImg) {
+    public PinUser(Long id, Long userId, boolean orMaster, Long pinActiveId, String userIp, boolean orRobot, String userImg, Timestamp joinAt, String userNm) {
         this.id = id;
         this.userId = userId;
         this.orMaster = orMaster;
@@ -26,21 +39,9 @@ public class PinUser implements Serializable {
         this.userIp = userIp;
         this.orRobot = orRobot;
         this.userImg = userImg;
+        this.joinAt = joinAt;
+        this.userNm = userNm;
     }
-
-    @Override
-    public String toString() {
-        return "PinUser{" +
-                "id=" + id +
-                ", userId=" + userId +
-                ", orMaster=" + orMaster +
-                ", pinActiveId=" + pinActiveId +
-                ", userIp='" + userIp + '\'' +
-                ", orRobot=" + orRobot +
-                ", userImg='" + userImg + '\'' +
-                '}';
-    }
-
 
     public Long getId() {
         return id;
@@ -96,5 +97,36 @@ public class PinUser implements Serializable {
 
     public void setUserImg(String userImg) {
         this.userImg = userImg;
+    }
+
+    public Timestamp getJoinAt() {
+        return joinAt;
+    }
+
+    public void setJoinAt(Timestamp joinAt) {
+        this.joinAt = joinAt;
+    }
+
+    public String getUserNm() {
+        return userNm;
+    }
+
+    public void setUserNm(String userNm) {
+        this.userNm = userNm;
+    }
+
+    @Override
+    public String toString() {
+        return "PinUser{" +
+                "id=" + id +
+                ", userId=" + userId +
+                ", orMaster=" + orMaster +
+                ", pinActiveId=" + pinActiveId +
+                ", userIp='" + userIp + '\'' +
+                ", orRobot=" + orRobot +
+                ", userImg='" + userImg + '\'' +
+                ", joinAt=" + joinAt +
+                ", userNm='" + userNm + '\'' +
+                '}';
     }
 }

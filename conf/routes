@@ -26,6 +26,11 @@ POST          /client/pay/jd/front                                              
 GET           /client/payback                                                           controllers.JDPay.payRefund()
 POST          /client/payback/refund                                                    controllers.JDPay.payBack()
 
+#拼购
+GET           /client/pin/activity/$pinActivity<[0-9]+>                                 controllers.PinCtrl.pinActivity(pinActivity:Long,pay: Integer ?= 1)
+GET           /client/pin/activity/pay/$pinActivity<[0-9]+>                             controllers.PinCtrl.pinActivity(pinActivity:Long,pay: Integer ?= 2)
+
+GET           /client/test/pin                                                          controllers.PinCtrl.testpin()
 
 GET           /assets/*file                                                             controllers.Assets.versioned(path="/public", file: Asset)
 

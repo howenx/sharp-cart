@@ -31,6 +31,26 @@ public class GenCouponCode {
         return code+pass;
     }
 
+    public static String GetCode(int length){
+        Random r = new Random();
+        String pass = "";
+        while (pass.length () != length){
+            if(pass.length()==0){
+                int spot = r.nextInt (25);
+                pass += uCase.charAt(spot);
+            }
+            int rPick = r.nextInt(4);
+            if (rPick == 1 || rPick == 0) {
+                int spot = r.nextInt (25);
+                pass += uCase.charAt(spot);
+            } else if (rPick == 2 || rPick ==3) {
+                int spot = r.nextInt (9);
+                pass += intChar.charAt (spot);
+            }
+        }
+        return pass;
+    }
+
 
     public enum CouponClassCode{
 

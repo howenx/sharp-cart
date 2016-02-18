@@ -137,4 +137,14 @@ public class CartServiceImpl  implements CartService{
     public Boolean updateRefund(Refund refund) throws Exception {
         return shoppingCartMapper.updateRefund(refund)>=0;
     }
+
+    @Override
+    public List<Order> getPinOrder(Order order) throws Exception {
+        return shoppingCartMapper.getPinOrder(order);
+    }
+
+    @Override
+    public List<Order> getOrder(Order order) throws Exception {
+        return shoppingCartMapper.getOrder(order);
+    }
 }

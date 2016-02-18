@@ -28,7 +28,6 @@ import util.Crypto;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -56,11 +55,11 @@ public class JDPay extends Controller {
     WSClient ws;
 
     //shopping服务器url
-    private static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
+    public static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
 
-    private static final String JD_SECRET = Play.application().configuration().getString("jd_secret");
+    public static final String JD_SECRET = Play.application().configuration().getString("jd_secret");
 
-    private static final String JD_SELLER = Play.application().configuration().getString("jd_seller");
+    public static final String JD_SELLER = Play.application().configuration().getString("jd_seller");
 
     public static final Long COUNTDOWN_MILLISECONDS = Long.valueOf(Play.application().configuration().getString("order.countdown.milliseconds"));
 
@@ -83,9 +82,9 @@ public class JDPay extends Controller {
             Order order = new Order();
             order.setOrderId(orderId);
             order.setUserId(userId);
-            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
+            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
             if (listOptional.isPresent() && listOptional.get().size() > 0) {
-                order = cartService.getOrderBy(order).get(0);
+                order = listOptional.get().get(0);
                 Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
                 if (longOptional.isPresent() && longOptional.get().compareTo(COUNTDOWN_MILLISECONDS) > 0) {
                     cancelOrderActor.tell(orderId, null);
@@ -149,19 +148,19 @@ public class JDPay extends Controller {
         Map<String, String> map = new HashMap<>();
         Order order = new Order();
         order.setOrderId(orderId);
-        Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
+        Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
 
         IdPlus idPlus = new IdPlus();
         idPlus.setUserId(userId);
         Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
 
         if (listOptional.isPresent() && listOptional.get().size() > 0) {
-            order = cartService.getOrderBy(order).get(0);
+            order = listOptional.get().get(0);
             map.put("out_trade_no", orderId.toString());
             map.put("return_params", orderId.toString());//成功支付,或者查询时候,返回订单编号
             map.put("trade_subject", "韩秘美-订单编号" + orderId);
-            map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
-//            map.put("trade_amount", String.valueOf(1));
+//            map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
+            map.put("trade_amount", String.valueOf(1));
             //自用字断
             map.put("all_fee", order.getPayTotal().stripTrailingZeros().toPlainString());
             if (idPlusOptional.isPresent() && idPlusOptional.get().getPayJdToken() != null) {
@@ -186,8 +185,8 @@ public class JDPay extends Controller {
                     orderLine.setSplitId(orderSp.getSplitId());
                     subOrderMap.put("sub_order_no", orderSp.getSplitId().toString());
                     subOrderMap.put("sub_order_name", "韩秘美-子订单号" + orderSp.getSplitId());
-                    subOrderMap.put("sub_order_amount", orderSp.getTotalPayFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
-//                    subOrderMap.put("sub_order_amount", String.valueOf(1));
+//                    subOrderMap.put("sub_order_amount", orderSp.getTotalPayFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
+                    subOrderMap.put("sub_order_amount", String.valueOf(1));
 
                     subInfo.add(subOrderMap);
                 }
@@ -281,9 +280,24 @@ public class JDPay extends Controller {
             return ok(views.html.jdpayfailed.render());
         } else {
             if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
-                if (jdPayMid.asynPay(params).equals("success"))
-                return ok(views.html.jdpaysuccess.render(params));
-                else return ok(views.html.jdpayfailed.render());
+                if (jdPayMid.asynPay(params).equals("success")) {
+                    Order order = new Order();
+                    order.setOrderId(Long.valueOf(params.get("out_trade_no")));
+
+                    try {
+                        List<Order> orders = cartService.getOrder(order);
+                        if (orders.size()>0){
+                            order = orders.get(0);
+                            if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
+                                params.put("pinActivity",SHOPPING_URL+"/client/pin/activity/pay/"+order.getPinActiveId());
+                                return ok(views.html.pin.render(params));
+                            }else return ok(views.html.jdpaysuccess.render(params));
+                        }else return ok(views.html.jdpayfailed.render());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return ok(views.html.jdpayfailed.render());
+                    }
+                }else return ok(views.html.jdpayfailed.render());
             } else return ok(views.html.jdpayfailed.render());
         }
     }
@@ -347,7 +361,6 @@ public class JDPay extends Controller {
                     re.setPgMessage(response.get("response_message").asText());
                     re.setPgTradeNo(response.get("trade_no").asText());
                     re.setState(response.get("is_success").asText());
-
 
                     if (cartService.updateRefund(re)) {
                         if (re.getState().equals("Y")) {

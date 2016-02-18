@@ -42,7 +42,7 @@ public class JDPayMid {
         order.setOrderId(Long.valueOf(params.get("out_trade_no")));
 
         try {
-            List<Order> orders = cartService.getOrderBy(order);
+            List<Order> orders = cartService.getOrder(order);
 
             if (orders.size()>0) order = orders.get(0);
 
