@@ -58,6 +58,13 @@ libraryDependencies += "com.typesafe.akka" % "akka-slf4j_2.11" % "2.4.1" withSou
 
 libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.4.1" withSources() withJavadoc()
 
+libraryDependencies ++= Seq(
+  "com.typesafe.akka" %% "akka-persistence" % "2.4.1",
+  "org.iq80.leveldb" % "leveldb" % "0.7",
+  "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
+)
+
+
 resolvers ++= Seq(
   "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
   "Apache" at "http://repo1.maven.org/maven2/",

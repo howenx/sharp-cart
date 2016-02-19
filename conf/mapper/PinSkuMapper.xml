@@ -76,22 +76,27 @@
         join_persons     ,
         create_at        ,
         status           ,
-        end_at
+        end_at,
+        pin_tiered_id
         ) values (
-            #{pinId},
-            #{masterUserId},
-            #{personNum},
-            #{pinPrice},
-            #{joinPersons},
-            CURRENT_TIMESTAMP(0),
-            #{status},
-            #{endAt}
+        #{pinId},
+        #{masterUserId},
+        #{personNum},
+        #{pinPrice},
+        #{joinPersons},
+        CURRENT_TIMESTAMP(0),
+        #{status},
+        #{endAt},
+        #{pinTieredId}
         )
     </insert>
 
     <update id="updatePinActivity" parameterType="domain.PinActivity">
         update pin_activity set
-        status = #{status}
+        update_at= CURRENT_TIMESTAMP(0)
+        <if test="status!=null and status!=''">
+            ,status = #{status}
+        </if>
         <if test="joinPersons!=null and joinPersons!=''">
             ,join_persons = #{joinPersons}
         </if>
@@ -112,7 +117,8 @@
         create_at        ,
         status           ,
         end_at           ,
-        pin_url
+        pin_url,
+        pin_tiered_id
         from pin_activity where pin_active_id = ${value}
     </select>
 
@@ -153,6 +159,9 @@
         </if>
         <if test="pinActiveId!=null and pinActiveId!=''">
             and pin_active_id = #{pinActiveId}
+        </if>
+        <if test="userId!=null and userId!=''">
+            and user_id = #{userId}
         </if>
         order by or_master DESC
     </select>

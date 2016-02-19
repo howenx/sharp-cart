@@ -35,11 +35,13 @@ public class Refund implements Serializable{
 
     private Long        userId;//用户ID
 
+    private String      refundType;//退款类型，pin：拼购自动退款，receive：收货后申请退款，deliver：发货前退款
+
 
     public Refund() {
     }
 
-    public Refund(Long id, Long orderId, Long splitOrderId, Long skuId, BigDecimal payBackFee, String reason, String state, String pgTradeNo, String pgCode, String pgMessage, Timestamp createAt, Timestamp updateAt, Integer amount, String refundImg, String contactName, String contactTel, String expressCompany, String expressCompCode, String expressNum, String rejectReason, Long userId) {
+    public Refund(Long id, Long orderId, Long splitOrderId, Long skuId, BigDecimal payBackFee, String reason, String state, String pgTradeNo, String pgCode, String pgMessage, Timestamp createAt, Timestamp updateAt, Integer amount, String refundImg, String contactName, String contactTel, String expressCompany, String expressCompCode, String expressNum, String rejectReason, Long userId, String refundType) {
         this.id = id;
         this.orderId = orderId;
         this.splitOrderId = splitOrderId;
@@ -61,6 +63,7 @@ public class Refund implements Serializable{
         this.expressNum = expressNum;
         this.rejectReason = rejectReason;
         this.userId = userId;
+        this.refundType = refundType;
     }
 
     public Long getId() {
@@ -231,6 +234,14 @@ public class Refund implements Serializable{
         this.userId = userId;
     }
 
+    public String getRefundType() {
+        return refundType;
+    }
+
+    public void setRefundType(String refundType) {
+        this.refundType = refundType;
+    }
+
     @Override
     public String toString() {
         return "Refund{" +
@@ -255,6 +266,7 @@ public class Refund implements Serializable{
                 ", expressNum='" + expressNum + '\'' +
                 ", rejectReason='" + rejectReason + '\'' +
                 ", userId=" + userId +
+                ", refundType='" + refundType + '\'' +
                 '}';
     }
 }

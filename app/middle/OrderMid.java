@@ -120,9 +120,7 @@ public class OrderMid {
             //计算单个海关费用
             SettleFeeVo settleFeeVo = calCustomsFee(settleDTO, address);
 
-            CollectionUtils.addAll(skuTypeList,new Object[settleFeeVo.getSkuTypeList().size()]);
-
-            Collections.copy(skuTypeList,settleFeeVo.getSkuTypeList());
+            skuTypeList.addAll(settleFeeVo.getSkuTypeList());
 
             if (settleFeeVo.getMessageCode() != null) {
                 settleVo.setMessageCode(settleFeeVo.getMessageCode());
@@ -210,7 +208,7 @@ public class OrderMid {
                     shipFeeSingle = shipFeeSingle.add(calculateShipFee(address.getProvinceCode(), sku.getCarriageModelCode(), cartDto.getAmount()));
                 } else shipFeeSingle = BigDecimal.ZERO;
 
-                Logger.error("订单类型:---->\n"+cartDto.getSkuType());
+                Logger.info("订单类型:---->\n"+cartDto.getSkuType());
 
                 switch (cartDto.getSkuType()) {
                     case "item":

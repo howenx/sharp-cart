@@ -79,6 +79,8 @@ public class JDPayMid {
                         activity.setPinId(orderLine.getSkuTypeId());
                         activity.setStatus("Y");
                         activity.setEndAt(new Timestamp(new Date().getTime()+ JDPay.PIN_MILLISECONDS));
+                        activity.setPinTieredId(pinTieredPrice.getId());
+
                         if (promotionService.insertPinActivity(activity)){
                             order.setPinActiveId(activity.getPinActiveId());
                             PinUser pinUser = new PinUser();
@@ -91,8 +93,7 @@ public class JDPayMid {
                             promotionService.insertPinUser(pinUser);
                         }
                     }else{
-                        PinActivity activity  = new PinActivity();
-                        activity.setPinActiveId(order.getPinActiveId());
+                        PinActivity activity = promotionService.selectPinActivityById(order.getPinActiveId());
                         activity.setJoinPersons(activity.getJoinPersons()+1);
                         if (promotionService.updatePinActivity(activity)){
                             order.setPinActiveId(activity.getPinActiveId());

@@ -717,11 +717,18 @@
         <if test="refundImg!=null and refundImg!=''">
             refund_img          ,
         </if>
-        contact_name        ,
-        contact_tel         ,
+        <if test="contactName!=null and contactName!=''">
+            contact_name        ,
+        </if>
+        <if test="contactTel!=null and contactTel!=''">
+            contact_tel,
+        </if>
         user_id             ,
         split_order_id      ,
         sku_id
+        <if test="refundType!=null and refundType!=''">
+            ,refund_type
+        </if>
         )values(
         #{orderId},
         #{payBackFee},
@@ -731,11 +738,18 @@
         <if test="refundImg!=null and refundImg!=''">
             #{refundImg}          ,
         </if>
-        #{contactName},
-        #{contactTel},
+        <if test="contactName!=null and contactName!=''">
+            #{contactName},
+        </if>
+        <if test="contactTel!=null and contactTel!=''">
+            #{contactTel},
+        </if>
         #{userId},
         #{splitOrderId},
         #{skuId}
+        <if test="refundType!=null and refundType!=''">
+            ,#{refundType}
+        </if>
         )
     </insert>
 
@@ -759,6 +773,12 @@
         </if>
         <if test="contactTel!=null and contactTel!=''">
             ,contact_tel =  #{contactTel}
+        </if>
+        <if test="refundType!=null and refundType!=''">
+            ,refund_type =  #{refundType}
+        </if>
+        <if test="state!=null and state!=''">
+            ,state =  #{state}
         </if>
         where 1=1
         <if test="id!=null and id!=''">
@@ -800,7 +820,8 @@
         reject_reason       ,
         user_id             ,
         split_order_id      ,
-        sku_id
+        sku_id,
+        refund_type
         from sp_refund where 1=1
         <if test="id!=null and id!=''">
             and id = #{id}

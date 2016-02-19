@@ -1,6 +1,7 @@
 package controllers;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Singleton;
@@ -19,6 +20,7 @@ import play.libs.ws.WSClient;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
+import scala.concurrent.duration.FiniteDuration;
 import service.CartService;
 import service.IdService;
 import service.PromotionService;
@@ -31,8 +33,9 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static play.libs.F.Promise.promise;
-
 
 /**
  * Created by handy on 15/12/16.
@@ -47,15 +50,20 @@ public class JDPay extends Controller {
 
     private ActorRef cancelOrderActor;
 
+    private ActorRef pinFailActor;
+
     private PromotionService promotionService;
 
     private JDPayMid jdPayMid;
+
 
     @Inject
     WSClient ws;
 
     //shopping服务器url
     public static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
+
+    public static final String PROMOTION_URL = play.Play.application().configuration().getString("promotion.server.url");
 
     public static final String JD_SECRET = Play.application().configuration().getString("jd_secret");
 
@@ -66,11 +74,15 @@ public class JDPay extends Controller {
     public static final Long PIN_MILLISECONDS = Long.valueOf(Play.application().configuration().getString("pin.activity.milliseconds"));
 
     @Inject
-    public JDPay(CartService cartService, IdService idService, PromotionService promotionService, @Named("cancelOrderActor") ActorRef cancelOrderActor) {
+    ActorSystem system;
+
+    @Inject
+    public JDPay(CartService cartService, IdService idService, PromotionService promotionService, @Named("cancelOrderActor") ActorRef cancelOrderActor, @Named("pinFailActor") ActorRef pinFailActor) {
         this.cartService = cartService;
         this.idService = idService;
         this.cancelOrderActor = cancelOrderActor;
         this.promotionService = promotionService;
+        this.pinFailActor = pinFailActor;
         this.jdPayMid = new JDPayMid(cartService, idService, promotionService);
     }
 
@@ -289,7 +301,20 @@ public class JDPay extends Controller {
                         if (orders.size()>0){
                             order = orders.get(0);
                             if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
-                                params.put("pinActivity",SHOPPING_URL+"/client/pin/activity/pay/"+order.getPinActiveId());
+
+                                PinUser pinUser = new PinUser();
+                                pinUser.setUserId(order.getUserId());
+                                pinUser.setPinActiveId(order.getPinActiveId());
+
+                                List<PinUser> pinUsers = promotionService.selectPinUser(pinUser);
+                                if (pinUsers.size()>0){
+                                    pinUser = pinUsers.get(0);
+                                }
+                                if (pinUser.isOrMaster()) {
+                                    params.put("pinActivity",PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/1");
+                                    //24小时后去检查此团的状态
+                                    system.scheduler().scheduleOnce(FiniteDuration.create(2, MINUTES), pinFailActor, order.getPinActiveId(), system.dispatcher(), ActorRef.noSender());
+                                } else params.put("pinActivity",PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/2");
                                 return ok(views.html.pin.render(params));
                             }else return ok(views.html.jdpaysuccess.render(params));
                         }else return ok(views.html.jdpayfailed.render());
@@ -310,7 +335,7 @@ public class JDPay extends Controller {
      * @param body_map body map
      * @return map
      */
-    private Map<String, String> payBackParams(Refund refund, Map<String, String[]> req_map, Map<String, String[]> body_map) {
+    public static Map<String, String> payBackParams(Refund refund, Map<String, String[]> req_map, Map<String, String[]> body_map) {
         Map<String, String> params = new HashMap<>();
         if (req_map != null) {
             req_map.forEach((k, v) -> params.put(k, v[0]));
@@ -361,6 +386,7 @@ public class JDPay extends Controller {
                     re.setPgMessage(response.get("response_message").asText());
                     re.setPgTradeNo(response.get("trade_no").asText());
                     re.setState(response.get("is_success").asText());
+                    re.setRefundType("receive");
 
                     if (cartService.updateRefund(re)) {
                         if (re.getState().equals("Y")) {

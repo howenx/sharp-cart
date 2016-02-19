@@ -67,9 +67,7 @@ public class OrderSplitActor extends AbstractActor {
                 reduceInvActor.tell(settleVo, ActorRef.noSender());
                 //24小时内未结算恢复库存并自动取消订单
 
-//                ActorSystem system = ActorSystem.create("Hello");
-//                ActorRef a = system.actorOf(Props.create(SchedulerCancelOrderActor.class), "helloWorld");
-//                system.actorOf(Props.create(TerminatorActor.class, a), "terminator");
+
                 context().system().scheduler().scheduleOnce(FiniteDuration.create(24, HOURS), cancelOrderActor, settleVo.getOrderId(), context().dispatcher(), ActorRef.noSender());
 
             } catch (Exception e) {

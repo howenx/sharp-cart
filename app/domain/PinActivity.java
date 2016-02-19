@@ -1,6 +1,8 @@
 package domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.MoneySerializer;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -16,6 +18,7 @@ public class PinActivity implements Serializable {
     private Long pinId;         //拼购ID
     private Long masterUserId;  //团长用户ID
     private int personNum;      //拼购人数
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal pinPrice;//拼购价格
     private int joinPersons;    //已参加活动人数
     @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
@@ -23,11 +26,12 @@ public class PinActivity implements Serializable {
     private String status;      //状态
     @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
     private Timestamp endAt;    //截止时间
+    private Long    pinTieredId;//拼购阶梯价格ID
 
     public PinActivity() {
     }
 
-    public PinActivity(Long pinActiveId, String pinUrl, Long pinId, Long masterUserId, int personNum, BigDecimal pinPrice, int joinPersons, Timestamp createAt, String status, Timestamp endAt) {
+    public PinActivity(Long pinActiveId, String pinUrl, Long pinId, Long masterUserId, int personNum, BigDecimal pinPrice, int joinPersons, Timestamp createAt, String status, Timestamp endAt, Long pinTieredId) {
         this.pinActiveId = pinActiveId;
         this.pinUrl = pinUrl;
         this.pinId = pinId;
@@ -38,24 +42,8 @@ public class PinActivity implements Serializable {
         this.createAt = createAt;
         this.status = status;
         this.endAt = endAt;
+        this.pinTieredId = pinTieredId;
     }
-
-    @Override
-    public String toString() {
-        return "PinActivity{" +
-                "pinActiveId=" + pinActiveId +
-                ", pinUrl='" + pinUrl + '\'' +
-                ", pinId=" + pinId +
-                ", masterUserId=" + masterUserId +
-                ", personNum=" + personNum +
-                ", pinPrice=" + pinPrice +
-                ", joinPersons=" + joinPersons +
-                ", createAt=" + createAt +
-                ", status='" + status + '\'' +
-                ", endAt=" + endAt +
-                '}';
-    }
-
 
     public Long getPinActiveId() {
         return pinActiveId;
@@ -135,5 +123,30 @@ public class PinActivity implements Serializable {
 
     public void setEndAt(Timestamp endAt) {
         this.endAt = endAt;
+    }
+
+    public Long getPinTieredId() {
+        return pinTieredId;
+    }
+
+    public void setPinTieredId(Long pinTieredId) {
+        this.pinTieredId = pinTieredId;
+    }
+
+    @Override
+    public String toString() {
+        return "PinActivity{" +
+                "pinActiveId=" + pinActiveId +
+                ", pinUrl='" + pinUrl + '\'' +
+                ", pinId=" + pinId +
+                ", masterUserId=" + masterUserId +
+                ", personNum=" + personNum +
+                ", pinPrice=" + pinPrice +
+                ", joinPersons=" + joinPersons +
+                ", createAt=" + createAt +
+                ", status='" + status + '\'' +
+                ", endAt=" + endAt +
+                ", pinTieredId=" + pinTieredId +
+                '}';
     }
 }
