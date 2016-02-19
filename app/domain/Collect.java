@@ -17,7 +17,6 @@ public class Collect implements Serializable {
     /**商品ID*/
     private Long skuId;
     /**创建时间*/
-    @JsonIgnore
     private Timestamp createAt;
     /**商品类型 1.vary,2.item,3.customize,4.pin*/
     private String skuType;

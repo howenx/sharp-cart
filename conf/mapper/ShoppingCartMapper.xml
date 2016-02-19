@@ -841,7 +841,7 @@
     </select>
 
 
-    <insert id="insertCollect" parameterType="domain.Collect" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertCollect" parameterType="domain.Collect" useGeneratedKeys="true" keyProperty="collectId">
         insert into sp_collect(
         user_id             ,
         sku_id              ,
@@ -875,6 +875,14 @@
         <if test="skuId!=null and skuId!=''">
             and sku_id = #{skuId}
         </if>
+        <if test="skuType!=null and skuType!=''">
+            and sku_type = #{skuType}
+        </if>
+        <if test="skuTypeId!=null and skuTypeId!=''">
+            and sku_type_id = #{skuTypeId}
+        </if>
+
+        ORDER BY create_at DESC,sku_id
 
     </select>
 
