@@ -2,12 +2,14 @@ package actor;
 
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
-import domain.CouponVo;
-import domain.SettleVo;
+import domain.Order;
+import domain.PinActivity;
 import play.Logger;
 import service.CartService;
+import service.PromotionService;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * 拼购失败
@@ -16,19 +18,29 @@ import javax.inject.Inject;
 public class PinFailActor extends AbstractActor {
 
     @Inject
-    public PinFailActor(CartService cartService) {
+    public PinFailActor(PromotionService promotionService, CartService cartService) {
 
-        receive(ReceiveBuilder.match(SettleVo.class, settleVo -> {
-            Long userId = settleVo.getUserId();
-            Long orderId = settleVo.getOrderId();
-            if (settleVo.getCouponId()!=null){
-                CouponVo couponVo = new CouponVo();
-                couponVo.setUserId(userId);
-                couponVo.setCoupId(settleVo.getCouponId());
-                couponVo.setState("Y");
-                couponVo.setOrderId(orderId);
-                if (cartService.updateCoupon(couponVo)) Logger.debug("PublicCouponActor 发放优惠券ID :"+couponVo.getCoupId());
+        receive(ReceiveBuilder.match(Long.class, activityId -> {
+
+            PinActivity pinActivity = promotionService.selectPinActivityById(activityId);
+
+            //如果加入人数小于要求成团的人数就拼购失败
+            if (pinActivity.getJoinPersons()<pinActivity.getPersonNum()){
+                pinActivity.setStatus("F");
             }
+            promotionService.updatePinActivity(pinActivity);
+
+            Order order = new Order();
+            order.setPinActiveId(activityId);
+
+            List<Order> orders = cartService.getPinOrder(order);
+
+            orders.stream().forEach(o->{
+
+
+
+            });
+
         }).matchAny(s -> Logger.error("PublicCouponActor received messages not matched: {}", s.toString())).build());
     }
 }

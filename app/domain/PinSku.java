@@ -31,12 +31,14 @@ public class PinSku implements Serializable {
     private Long  invId;            //库存ID
     private BigDecimal pinDiscount; //拼购最低折扣
     private Long itemId;            //商品ID
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    private Timestamp joinAt;//参团时间
 
 
     public PinSku() {
     }
 
-    public PinSku(Long pinId, String pinImg, String shareUrl, String status, Timestamp createAt, Timestamp updateAt, String pinTitle, Timestamp startAt, Timestamp endAt, String pinPriceRule, int restrictAmount, String floorPrice, Long invId, BigDecimal pinDiscount, Long itemId) {
+    public PinSku(Long pinId, String pinImg, String shareUrl, String status, Timestamp createAt, Timestamp updateAt, String pinTitle, Timestamp startAt, Timestamp endAt, String pinPriceRule, int restrictAmount, String floorPrice, Long invId, BigDecimal pinDiscount, Long itemId, Timestamp joinAt) {
         this.pinId = pinId;
         this.pinImg = pinImg;
         this.shareUrl = shareUrl;
@@ -52,6 +54,7 @@ public class PinSku implements Serializable {
         this.invId = invId;
         this.pinDiscount = pinDiscount;
         this.itemId = itemId;
+        this.joinAt = joinAt;
     }
 
     public Long getPinId() {
@@ -172,5 +175,35 @@ public class PinSku implements Serializable {
 
     public void setItemId(Long itemId) {
         this.itemId = itemId;
+    }
+
+    public Timestamp getJoinAt() {
+        return joinAt;
+    }
+
+    public void setJoinAt(Timestamp joinAt) {
+        this.joinAt = joinAt;
+    }
+
+    @Override
+    public String toString() {
+        return "PinSku{" +
+                "pinId=" + pinId +
+                ", pinImg='" + pinImg + '\'' +
+                ", shareUrl='" + shareUrl + '\'' +
+                ", status='" + status + '\'' +
+                ", createAt=" + createAt +
+                ", updateAt=" + updateAt +
+                ", pinTitle='" + pinTitle + '\'' +
+                ", startAt=" + startAt +
+                ", endAt=" + endAt +
+                ", pinPriceRule='" + pinPriceRule + '\'' +
+                ", restrictAmount=" + restrictAmount +
+                ", floorPrice='" + floorPrice + '\'' +
+                ", invId=" + invId +
+                ", pinDiscount=" + pinDiscount +
+                ", itemId=" + itemId +
+                ", joinAt=" + joinAt +
+                '}';
     }
 }

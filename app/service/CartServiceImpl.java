@@ -139,6 +139,15 @@ public class CartServiceImpl  implements CartService{
     }
 
     @Override
+    public List<Order> getPinOrder(Order order) throws Exception {
+        return shoppingCartMapper.getPinOrder(order);
+    }
+
+    @Override
+    public List<Order> getOrder(Order order) throws Exception {
+        return shoppingCartMapper.getOrder(order);
+    }
+
     public Boolean insertCollect(Collect collect) throws Exception {
         return shoppingCartMapper.insertCollect(collect)>=0;
     }

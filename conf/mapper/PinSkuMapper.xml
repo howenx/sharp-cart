@@ -60,7 +60,11 @@
         <include refid="tieredPriceColumns">
             <property name="alias" value="t"/>
         </include>
-        from pin_tiered_price t where t.id = #{id}  and t.pin_id = #{pinId} order by t.people_num
+        from pin_tiered_price t where t.id = #{id}
+        <if test="pinId!=null and pinId!=''">
+            and t.pin_id = #{pinId}
+        </if>
+        order by t.people_num
     </select>
 
     <insert id="insertPinActivity" parameterType="domain.PinActivity" useGeneratedKeys="true" keyProperty="pinActiveId">
@@ -81,7 +85,7 @@
             #{joinPersons},
             CURRENT_TIMESTAMP(0),
             #{status},
-            #{end_at}
+            #{endAt}
         )
     </insert>
 
@@ -97,7 +101,7 @@
         where pin_active_id = #{pinActiveId}
     </update>
 
-    <select id="selectPinActivityById" parameterType="java.lang.Long">
+    <select id="selectPinActivityById" parameterType="java.lang.Long" resultType="domain.PinActivity">
         select
         pin_active_id    ,
         pin_id           ,
@@ -119,18 +123,20 @@
         pin_active_id   ,
         user_ip         ,
         or_robot        ,
-        user_img
+        user_img,
+        join_at
         ) values (
             #{userId},
             #{orMaster},
             #{pinActiveId},
             #{userIp}::cidr,
             #{orRobot},
-            #{userImg}
+            #{userImg},
+            CURRENT_TIMESTAMP(0)
         )
     </insert>
 
-    <select id="selectPinUser" parameterType="domain.PinUser">
+    <select id="selectPinUser" parameterType="domain.PinUser" resultType="domain.PinUser">
         select
         id              ,
         user_id         ,
@@ -138,7 +144,8 @@
         pin_active_id   ,
         user_ip         ,
         or_robot        ,
-        user_img
+        user_img,
+        join_at
         from pin_user
         where 1=1
         <if test="id!=null and id!=''">

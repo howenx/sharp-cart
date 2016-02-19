@@ -27,6 +27,8 @@ libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jdk8
 libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.6.3"
 libraryDependencies += "commons-io" % "commons-io" % "2.4"
 libraryDependencies += "com.squareup.okhttp" % "okhttp" % "2.7.2"
+libraryDependencies += "commons-beanutils" % "commons-beanutils" % "1.9.2"
+
 
 
 

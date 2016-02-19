@@ -54,6 +54,12 @@ public interface CartService {
     Boolean insertRefund(Refund refund) throws Exception;
     List<Refund> selectRefund(Refund refund) throws Exception;
     Boolean updateRefund(Refund refund) throws  Exception;
+
+    List<Order> getPinOrder(Order order) throws  Exception;
+
+    List<Order> getOrder(Order order) throws  Exception;
+
+
     Boolean insertCollect(Collect collect)throws Exception;
     List<Collect> selectCollect(Collect collect)throws Exception;
     Boolean deleteCollect(Collect collect)throws Exception;
