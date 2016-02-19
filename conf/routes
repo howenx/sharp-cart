@@ -21,7 +21,7 @@ GET           /client/order/del/$orderId<[0-9]+>                                
 POST          /client/order/apply/refund                                                controllers.OrderCtrl.refundApply()
 
 
-POST           /client/collect/submit/                                                   controllers.OrderCtrl.submitCollect()
+POST           /client/collect/submit/                                                  controllers.OrderCtrl.submitCollect()
 GET           /client/collect/get/collect/list                                          controllers.OrderCtrl.getCollect()
 GET           /client/collect/del/$collectId<[0-9]+>                                    controllers.OrderCtrl.delCollect(collectId:Long)
 

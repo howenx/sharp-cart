@@ -556,20 +556,32 @@ public class OrderCtrl extends Controller {
      * 收藏
      * @return
      */
+    @Security.Authenticated(UserAuth.class)
     public Result submitCollect(){
-        /*******取用户ID*********/
+
         ObjectNode result = newObject();
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
+        /*******取用户ID*********/
+        Long userId = (Long) ctx().args.get("userId");
         try{
-
             //客户端发过来的收藏数据
             CollectSubmitDTO collectSubmitDTO = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructType(CollectSubmitDTO.class));
-            Logger.info("客户端发过来的收藏数据="+collectSubmitDTO);
-            Long userId = (Long) ctx().args.get("userId");
-            userId=123L;
-
-            Collect collect = createCollect(userId,collectSubmitDTO);
+            //用户收藏信息
+            Collect collect = new Collect();
+            collect.setUserId(userId);
+            collect.setSkuId(collectSubmitDTO.getSkuId());
+            collect.setSkuType(collectSubmitDTO.getSkuType());
+            collect.setSkuTypeId(collectSubmitDTO.getSkuTypeId());
+            //判断是否已经收藏
+            Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
+            if (!(collectList.isPresent()&&collectList.get().size()>0)) { //未收藏
+                collect = createCollect(userId,collectSubmitDTO);
+            }else{
+                Logger.info("========客户端userId="+userId+",发过来的收藏数据="+collectSubmitDTO+",collectId="+collect.getCollectId());
+            }
             if(null!=collect){
+                Logger.info("客户端userId="+userId+",发过来的收藏数据="+collectSubmitDTO+",collectId="+collect.getCollectId());
+                result.putPOJO("collectId",collect.getCollectId());
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
             }
@@ -597,8 +609,10 @@ public class OrderCtrl extends Controller {
         collect.setSkuType(collectSubmitDTO.getSkuType());
         collect.setSkuTypeId(collectSubmitDTO.getSkuTypeId());
         if(cartService.insertCollect(collect)){
+            Logger.info("==============="+collect.getCollectId()+",===="+collect.getSkuId());
             return collect;
         }
+        Logger.info("=====dssgsgsgs=========="+collect.getCollectId()+",===="+collect.getSkuId());
         return null;
     }
 
@@ -607,16 +621,16 @@ public class OrderCtrl extends Controller {
      * @param collectId
      * @return
      */
+    @Security.Authenticated(UserAuth.class)
     public Result delCollect(Long collectId){
-        /*******取用户ID*********/
-
         ObjectNode result = newObject();
         try{
+            /*******取用户ID*********/
             Long userId = (Long) ctx().args.get("userId");
             Collect collect=new Collect();
             collect.setCollectId(collectId);
             collect.setUserId(userId);
-            if(cartService.deleteCollect(collect)){
+            if(collectId>0&&cartService.deleteCollect(collect)){
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
             }
@@ -634,7 +648,7 @@ public class OrderCtrl extends Controller {
      * 获取所有收藏数据
      * @return
      */
-   // @Security.Authenticated(UserAuth.class)
+    @Security.Authenticated(UserAuth.class)
     public Result getCollect(){
 
         ObjectNode result = newObject();
@@ -643,46 +657,70 @@ public class OrderCtrl extends Controller {
             Collect collect=new Collect();
             collect.setUserId(userId);
 
-            List<Collect> collectList=cartService.selectCollect(collect);
             List<CollectDto> collectDtoList=new ArrayList<CollectDto>();
+            Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
+            if (collectList.isPresent()){
+                for (Collect c : collectList.get()) {
+                    CollectDto collectDto = new CollectDto();
+                    collectDto.setCollectId(c.getCollectId());
+                    collectDto.setCreateAt(c.getCreateAt());
+                    collectDto.setSkuType(c.getSkuType());
+                    collectDto.setSkuTypeId(c.getSkuTypeId());
 
-            for(Collect c:collectList){
-                CollectDto collectDto=new CollectDto();
-                collectDto.setCollectId(c.getCollectId());
-                collectDto.setCreateAt(c.getCreateAt());
+                    Sku sku = new Sku();
+                    sku.setId(c.getSkuId());
+                    sku = skuService.getInv(sku);
+                    if (null == sku) {
+                        Logger.warn("collect sku not exist ,skuId=" + c.getSkuId());
+                        continue;
+                    }
 
-                Sku sku = new Sku();
-                sku.setId(c.getSkuId());
-                sku = skuService.getInv(sku);
-                if(null==sku){
-                    Logger.info("collect sku not exist ,skuId="+c.getSkuId()); //TODO del???
-                   continue;
+
+                    CartSkuDto skuDto = new CartSkuDto();
+                    skuDto.setSkuId(c.getSkuId());
+                    skuDto.setSkuTitle(sku.getInvTitle());
+                    skuDto.setAmount(sku.getAmount());
+                    skuDto.setPrice(sku.getItemPrice());
+
+                    //跳转地址
+                    if ("item".equals(c.getSkuType())) {
+                        skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                        skuDto.setInvAndroidUrl(DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId());
+                    } else if ("pin".equals(c.getSkuType())) {
+                        skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                        skuDto.setInvAndroidUrl(Application.DEPLOY_URL + "/comm/pin/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                        PinSku pinSku = promotionService.getPinSkuById(c.getSkuTypeId());
+                        if(null==pinSku){
+                            Logger.warn("collect pin sku not exist ,pinSkuId=" + c.getSkuTypeId());
+                            continue;
+                        }
+                        JsonNode jsonNode=Json.parse(pinSku.getFloorPrice()); //拼购取最低价
+                        skuDto.setPrice(new BigDecimal(jsonNode.get("price").asText()));
+
+                    } else if ("vary".equals(c.getSkuType())) {
+                        skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                        skuDto.setInvAndroidUrl(Application.DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                    } else if ("customize".equals(c.getSkuType())) {
+                        skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/subject/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                        skuDto.setInvAndroidUrl(Application.DEPLOY_URL + "/comm/subject/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                    }
+
+                    if (sku.getInvImg().contains("url")) {
+                        JsonNode jsonNode = Json.parse(sku.getInvImg());
+                        if (jsonNode.has("url")) {
+                            skuDto.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
+                        }
+                    }
+                    else
+                        skuDto.setInvImg(IMAGE_URL + sku.getInvImg());
+
+                    skuDto.setItemColor(sku.getItemColor());
+                    skuDto.setItemSize(sku.getItemSize());
+
+                    collectDto.setCartSkuDto(skuDto);
+                    collectDtoList.add(collectDto);
+
                 }
-
-
-                CartSkuDto skuDto = new CartSkuDto();
-                skuDto.setSkuId(c.getSkuId());
-                skuDto.setSkuTitle(sku.getInvTitle());
-                skuDto.setAmount(sku.getAmount());
-                //TODO ...
-                if("item".equals(c.getSkuType())){
-                    skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
-                    skuDto.setInvAndroidUrl(DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId());
-                }
-                else
-
-
-      //          skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId()+"/"+sku.getId()+"/"+pin.getPinId());
-      //          skuDto.setInvAndroidUrl(Application.DEPLOY_URL + "/comm/pin/detail/web/" + sku.getItemId()+"/"+sku.getId()+"/"+pin.getPinId());
-
-
-                skuDto.setInvImg(sku.getInvImg());
-                skuDto.setItemColor(sku.getItemColor());
-                skuDto.setItemSize(sku.getItemSize());
-                skuDto.setPrice(sku.getItemPrice());
-                collectDto.setCartSkuDto(skuDto);
-                collectDtoList.add(collectDto);
-
             }
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             result.putPOJO("collectList", Json.toJson(collectDtoList));
@@ -690,6 +728,7 @@ public class OrderCtrl extends Controller {
             return ok(result);
         }catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:",ex);
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }

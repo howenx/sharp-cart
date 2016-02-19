@@ -40,7 +40,7 @@ public class CollectSubmitDTO implements Serializable {
     @Override
     public String toString() {
         return "CollectSubmitDTO{" +
-                ", skuId=" + skuId +
+                "skuId=" + skuId +
                 ", skuTypeId="+skuTypeId +
                 ", skuType=" + skuType +
                 "}";
