@@ -28,11 +28,13 @@ public class CartSkuDto implements Serializable{
     private     String          invAndroidUrl;//用于方便前段获取库存跳转链接
     private     String          itemColor;//颜色
     private     String          itemSize;//尺码
+    private String       skuType;//商品类型
+    private Long         skuTypeId;//商品类型ID
 
     public CartSkuDto() {
     }
 
-    public CartSkuDto(Long skuId, Integer amount, BigDecimal price, String skuTitle, String invImg, String invUrl, String invAndroidUrl, String itemColor, String itemSize) {
+    public CartSkuDto(Long skuId, Integer amount, BigDecimal price, String skuTitle, String invImg, String invUrl, String invAndroidUrl, String itemColor, String itemSize, String skuType, Long skuTypeId) {
         this.skuId = skuId;
         this.amount = amount;
         this.price = price;
@@ -42,6 +44,8 @@ public class CartSkuDto implements Serializable{
         this.invAndroidUrl = invAndroidUrl;
         this.itemColor = itemColor;
         this.itemSize = itemSize;
+        this.skuType = skuType;
+        this.skuTypeId = skuTypeId;
     }
 
     public Long getSkuId() {
@@ -116,6 +120,22 @@ public class CartSkuDto implements Serializable{
         this.itemSize = itemSize;
     }
 
+    public String getSkuType() {
+        return skuType;
+    }
+
+    public void setSkuType(String skuType) {
+        this.skuType = skuType;
+    }
+
+    public Long getSkuTypeId() {
+        return skuTypeId;
+    }
+
+    public void setSkuTypeId(Long skuTypeId) {
+        this.skuTypeId = skuTypeId;
+    }
+
     @Override
     public String toString() {
         return "CartSkuDto{" +
@@ -128,6 +148,8 @@ public class CartSkuDto implements Serializable{
                 ", invAndroidUrl='" + invAndroidUrl + '\'' +
                 ", itemColor='" + itemColor + '\'' +
                 ", itemSize='" + itemSize + '\'' +
+                ", skuType='" + skuType + '\'' +
+                ", skuTypeId=" + skuTypeId +
                 '}';
     }
 }

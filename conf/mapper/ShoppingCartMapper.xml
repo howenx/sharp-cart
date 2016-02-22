@@ -22,6 +22,8 @@
         ,${alias}.update_at
         ,${alias}.order_id
         ,${alias}.status
+        ,${alias}.sku_type
+        ,${alias}.sku_type_id
     </sql>
 
     <sql id="orderColumns">
@@ -90,6 +92,12 @@
         <if test="itemId!=null and itemId !=''">
             and t.item_id = #{itemId}
         </if>
+        <if test="skuType!=null and skuType !=''">
+            and t.sku_type = #{skuType}
+        </if>
+        <if test="skuTypeId!=null and skuTypeId !=''">
+            and t.sku_type_id = #{skuTypeId}
+        </if>
         ORDER BY t.create_at DESC,t.sku_id
     </select>
 
@@ -123,6 +131,12 @@
         <if test="skuTitle != null and skuTitle!=''">
             ,sku_title=#{skuTitle}
         </if>
+        <if test="skuType!=null and skuType !=''">
+            ,sku_type = #{skuType}
+        </if>
+        <if test="skuTypeId!=null and skuTypeId !=''">
+            ,sku_type_id = #{skuTypeId}
+        </if>
         where 1=1
         <if test="cartId!=null and cartId !=''">
             and cart_id = #{cartId}
@@ -133,6 +147,12 @@
         <if test="status!=null and status !=''">
             and status in ('I','G')
         </if>
+        <if test="skuType!=null and skuType !=''">
+            and sku_type = #{skuType}
+        </if>
+        <if test="skuTypeId!=null and skuTypeId !=''">
+            and sku_type_id = #{skuTypeId}
+        </if>
     </update>
 
     <insert id="addCart" parameterType="domain.Cart" useGeneratedKeys="true" keyProperty="cartId">
@@ -140,15 +160,28 @@
         ,sku_id
         ,item_id
         ,amount
+        <if test="skuType!=null and skuType !=''">
+            ,sku_type
+        </if>
+        <if test="skuTypeId!=null and skuTypeId !=''">
+            ,sku_type_id
+        </if>
         ,price
         ,status
         ,sku_title
         ,sku_img
         ,create_at)
-        values(#{userId},
+        values(
+        #{userId},
         #{skuId},
         #{itemId},
         #{amount},
+        <if test="skuType!=null and skuType !=''">
+            #{skuType},
+        </if>
+        <if test="skuTypeId!=null and skuTypeId !=''">
+            #{skuTypeId},
+        </if>
         <if test="price != null and price!=''">
             #{price},
         </if>

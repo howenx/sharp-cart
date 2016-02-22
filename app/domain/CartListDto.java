@@ -37,12 +37,15 @@ public class CartListDto implements Serializable{
     private     String          postalTaxRate;//税率
     private     String          postalStandard;//关税收费标准
     private     String          postalLimit;//海关规定的单笔订单金额不能超过的量值
+    @JsonIgnore
     private     String          invUrlAndroid;//安卓端的URL
+    private     String          skuType;//商品类型
+    private     Long            skuTypeId;//商品类型ID
 
     public CartListDto() {
     }
 
-    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, String invAreaNm, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, String invUrlAndroid) {
+    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, String invAreaNm, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, String invUrlAndroid, String skuType, Long skuTypeId) {
         this.cartId = cartId;
         this.skuId = skuId;
         this.amount = amount;
@@ -65,6 +68,8 @@ public class CartListDto implements Serializable{
         this.postalStandard = postalStandard;
         this.postalLimit = postalLimit;
         this.invUrlAndroid = invUrlAndroid;
+        this.skuType = skuType;
+        this.skuTypeId = skuTypeId;
     }
 
     public Long getCartId() {
@@ -243,6 +248,22 @@ public class CartListDto implements Serializable{
         this.invUrlAndroid = invUrlAndroid;
     }
 
+    public String getSkuType() {
+        return skuType;
+    }
+
+    public void setSkuType(String skuType) {
+        this.skuType = skuType;
+    }
+
+    public Long getSkuTypeId() {
+        return skuTypeId;
+    }
+
+    public void setSkuTypeId(Long skuTypeId) {
+        this.skuTypeId = skuTypeId;
+    }
+
     @Override
     public String toString() {
         return "CartListDto{" +
@@ -268,6 +289,8 @@ public class CartListDto implements Serializable{
                 ", postalStandard='" + postalStandard + '\'' +
                 ", postalLimit='" + postalLimit + '\'' +
                 ", invUrlAndroid='" + invUrlAndroid + '\'' +
+                ", skuType='" + skuType + '\'' +
+                ", skuTypeId=" + skuTypeId +
                 '}';
     }
 }
