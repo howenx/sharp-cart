@@ -43,5 +43,8 @@ GET           /assets/*file                                                     
 
 
 GET           /client/msg/list                                                          controllers.MsgCtrl.getAllMsgs()
+GET           /client/msg/delMsg/$id<[0-9]+>                                            controllers.MsgCtrl.delMsg(id:Long)
+
 GET           /client/push/                                                             controllers.PushCtrl.testPush()
+GET           /client/msg/testMsg                                                       controllers.MsgCtrl.testMsg()
 

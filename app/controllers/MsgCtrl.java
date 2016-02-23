@@ -1,5 +1,6 @@
 package controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.Message;
 import domain.MsgRec;
@@ -15,8 +16,10 @@ import service.SkuService;
 
 import javax.inject.Inject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static play.libs.Json.newObject;
 
@@ -39,6 +42,10 @@ public class MsgCtrl extends Controller{
         this.msgService=msgService;
     }
 
+    public Result testMsg(){
+        addMsgRec(123L,1,"title","content","","");
+        return ok("success");
+    }
     /***
      * 指定用户发送消息
      * @param userId
@@ -64,20 +71,35 @@ public class MsgCtrl extends Controller{
         return null;
     }
 
-    @Security.Authenticated(UserAuth.class)
+    //@Security.Authenticated(UserAuth.class)
     public Result getAllMsgs(){
         ObjectNode result = newObject();
         Long userId = (Long) ctx().args.get("userId");
+        userId=123L;
+
         MsgRec msgRec=new MsgRec();
         msgRec.setUserId(userId);
         msgRec.setStatus(0); //未删除的
 
         try{
             Optional<List<MsgRec>> msgRecList= Optional.ofNullable(msgService.getMsgRecBy(msgRec));
+            List<MsgRec> msgList=new ArrayList<MsgRec>();
             if(msgRecList.isPresent()&&msgRecList.get().size()>0){
-                result.putPOJO("msgList",msgRecList);
-            }
+                msgList=msgRecList.get().stream().map(m->{
+                    if (m.getMsgImg().contains("url")) {
+                        JsonNode jsonNode = Json.parse(m.getMsgImg());
+                        if (jsonNode.has("url")) {
+                            m.setMsgImg(OrderCtrl.IMAGE_URL + jsonNode.get("url").asText());
+                        }
+                    }
+                    else
+                        m.setMsgImg(OrderCtrl.IMAGE_URL + m.getMsgImg());
+                    return m;
 
+                }).collect(Collectors.toList());
+            }
+            result.putPOJO("msgList",Json.toJson(msgList));
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             return ok(result);
         }catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
@@ -94,7 +116,8 @@ public class MsgCtrl extends Controller{
      */
     public Result delMsg(Long id){
         ObjectNode result = newObject();
-        Long userId = (Long) ctx().args.get("userId");
+   //     Long userId = (Long) ctx().args.get("userId");
+        Logger.info("======"+id);
         try {
             if (msgService.delMsgRec(id)) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));

@@ -91,7 +91,7 @@
         ORDER BY create_at desc,id
     </select>
     <update id="updateMsgRec" parameterType="domain.MsgRec">
-        upadte sp_msg_rec
+        update sp_msg_rec
         set user_id=#{userId},
         msg_rec_type=#{msgRecType},
         msg_id=#{msgId},
@@ -104,8 +104,8 @@
         where id=#{id}
     </update>
 
-    <update id="delMsgRec" parameterType="java.lang.Integer">
-        upadte sp_msg_rec
+    <update id="delMsgRec" parameterType="java.lang.Long">
+        update sp_msg_rec
         set status=1
         where id=#{value}
     </update>

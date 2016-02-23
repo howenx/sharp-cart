@@ -42,6 +42,6 @@ public class MsgServiceImpl implements MsgService{
 
     @Override
     public Boolean delMsgRec(Long id) {
-        return null;
+        return msgMapper.delMsgRec(id)>0;
     }
 }

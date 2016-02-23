@@ -14,5 +14,5 @@ public interface MsgMapper {
     Integer insertMsgRec(MsgRec msgRec);
     List<MsgRec> getMsgRecBy(MsgRec msgRec);
     Integer updateMsgRec(MsgRec msgRec);
-  //  Integer
+    Integer delMsgRec(Long id);
 }

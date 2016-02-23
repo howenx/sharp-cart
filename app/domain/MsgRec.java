@@ -1,5 +1,7 @@
 package domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.sql.Timestamp;
 
 /**
@@ -9,7 +11,9 @@ import java.sql.Timestamp;
 public class MsgRec {
     private long id;//唯一键
     private long userId;//用户ID
+    @JsonIgnore
     private int msgRecType; //收到的消息类型  1-普通消息  2-系统消息
+    @JsonIgnore
     private long msgId;//收到消息的id,系统消息去取
     private String msgTitle; //消息标题
     private String msgContent;//消息内容
@@ -17,6 +21,7 @@ public class MsgRec {
     private String msgUrl;  //消息跳转的URL
     private int msgType; //消息类型
     private Timestamp createAt; //创建时间
+    @JsonIgnore
     private int status; //0-正常 1-删除
 
     public long getId() {

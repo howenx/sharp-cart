@@ -28,7 +28,7 @@ public class PushActor extends AbstractActor {
         receive(ReceiveBuilder.match(PushPayload.class,pushPayload -> {
             try {
 
-                //TODO ... 异步推送
+
                 PushResult result = jpushClient.sendPush(pushPayload);
                 Logger.info("Got result - " + result);
 
