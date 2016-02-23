@@ -3,6 +3,7 @@ package modules;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
+import mapper.MsgMapper;
 import mapper.ShoppingCartMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
@@ -35,6 +36,7 @@ public class ShoppingDBModule extends PrivateModule{
                 bindDataSourceProviderType(DevDataSourceProvider.class);
                 bindTransactionFactoryType(JdbcTransactionFactory.class);
                 addMapperClass(ShoppingCartMapper.class);
+                addMapperClass(MsgMapper.class);
             }
         });
 

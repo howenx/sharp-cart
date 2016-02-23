@@ -576,11 +576,8 @@ public class OrderCtrl extends Controller {
             Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
             if (!(collectList.isPresent()&&collectList.get().size()>0)) { //未收藏
                 collect = createCollect(userId,collectSubmitDTO);
-            }else{
-                Logger.info("========客户端userId="+userId+",发过来的收藏数据="+collectSubmitDTO+",collectId="+collect.getCollectId());
             }
             if(null!=collect){
-                Logger.info("客户端userId="+userId+",发过来的收藏数据="+collectSubmitDTO+",collectId="+collect.getCollectId());
                 result.putPOJO("collectId",collect.getCollectId());
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
@@ -609,10 +606,8 @@ public class OrderCtrl extends Controller {
         collect.setSkuType(collectSubmitDTO.getSkuType());
         collect.setSkuTypeId(collectSubmitDTO.getSkuTypeId());
         if(cartService.insertCollect(collect)){
-            Logger.info("==============="+collect.getCollectId()+",===="+collect.getSkuId());
             return collect;
         }
-        Logger.info("=====dssgsgsgs=========="+collect.getCollectId()+",===="+collect.getSkuId());
         return null;
     }
 
@@ -648,7 +643,7 @@ public class OrderCtrl extends Controller {
      * 获取所有收藏数据
      * @return
      */
-    @Security.Authenticated(UserAuth.class)
+    //@Security.Authenticated(UserAuth.class)
     public Result getCollect(){
 
         ObjectNode result = newObject();

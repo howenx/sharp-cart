@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.MsgMapper">
+
+    <sql id="MsgColumns">
+        ${alias}.msg_id,
+        ${alias}.msg_title,
+        ${alias}.msg_content,
+        ${alias}.msg_type,
+        ${alias}.msg_target_type,
+        ${alias}.msg_target,
+        ${alias}.msg_img,
+        ${alias}.msg_url,
+        ${alias}.create_at,
+        ${alias}.end_at
+    </sql>
+
+    <!-- 录入一条信息 -->
+    <insert id="insertMsg" parameterType="domain.Msg" useGeneratedKeys="true" keyProperty="id">
+        insert into sp_msg
+        (msg_title,msg_content,msg_type,msg_target_type,msg_target,msg_img,msg_url,create_at,end_at)
+        values
+        (#{msgTitle}, #{msgContent},#{msgType},#{msgTargetType},#{msgTarget},#{msgImg},#{msgUrl},CURRENT_TIMESTAMP(0),#{endAt})
+    </insert>
+
+    <select id="getMsgBy" parameterType="domain.Msg" resultType="domain.Msg">
+        select
+        <include refid="MsgColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from sp_msg t where 1=1
+        <if test="msgId!=null and msgId!=''">
+            and t.msg_id = #{msgId}
+        </if>
+        <if test="msgType!=null and msgType!=''">
+            and t.msg_type = #{msgType}
+        </if>
+        <if test="msgTargetType!=null and msgTargetType!=''">
+            and t.msg_target_type = #{msgTargetType}
+        </if>
+
+        ORDER BY create_at desc,id
+    </select>
+
+
+    <sql id="MsgRecColumns">
+        ${alias}.id,
+        ${alias}.user_id,
+        ${alias}.msg_rec_type,
+        ${alias}.msg_id,
+        ${alias}.msg_title,
+        ${alias}.msg_content,
+        ${alias}.msg_type,
+        ${alias}.msg_img,
+        ${alias}.msg_url,
+        ${alias}.create_at,
+        ${alias}.status
+    </sql>
+    <insert id="insertMsgRec" parameterType="domain.MsgRec" useGeneratedKeys="true" keyProperty="id">
+        insert into sp_msg_rec
+        (user_id,msg_rec_type,msg_id,msg_title,msg_content,msg_type,msg_img,msg_url,create_at,status)
+        values
+        (#{userId},#{msgRecType},#{msgId},#{msgTitle},#{msgContent},#{msgType},#{msgImg},#{msgUrl},CURRENT_TIMESTAMP(0),#{status})
+    </insert>
+
+    <select id="getMsgRecBy" parameterType="domain.MsgRec" resultType="domain.MsgRec">
+        select
+        <include refid="MsgRecColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from sp_msg_rec t where 1=1
+        <if test="id!=null and id!=''">
+            and t.id = #{id}
+        </if>
+        <if test="userId!=null and userId!=''">
+            and t.user_id = #{userId}
+        </if>
+        <if test="msgId!=null and msgId!=''">
+            and t.msg_id = #{msgId}
+        </if>
+        <if test="msgType!=null and msgType!=''">
+            and t.msg_type = #{msgType}
+        </if>
+        <if test="status!=null and status!=''">
+            and t.status = #{status}
+        </if>
+
+        ORDER BY create_at desc,id
+    </select>
+    <update id="updateMsgRec" parameterType="domain.MsgRec">
+        upadte sp_msg_rec
+        set user_id=#{userId},
+        msg_rec_type=#{msgRecType},
+        msg_id=#{msgId},
+        msg_title=#{msgTitle},
+        msg_content=#{msgContent},
+        msg_type=#{msgType},
+        msg_img=#{msgImg},
+        msg_url=#{msgUrl},
+        status=#{status}
+        where id=#{id}
+    </update>
+
+    <update id="delMsgRec" parameterType="java.lang.Integer">
+        upadte sp_msg_rec
+        set status=1
+        where id=#{value}
+    </update>
+</mapper>
