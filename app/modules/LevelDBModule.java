@@ -1,6 +1,7 @@
 package modules;
 
 import com.google.inject.AbstractModule;
+import middle.CartMid;
 import play.Configuration;
 import play.Environment;
 import play.Logger;
@@ -23,6 +24,7 @@ public class LevelDBModule extends AbstractModule {
 
     protected void configure() {
         Logger.error(configuration.getString("id.server.url"));
-        bind(LevelFactory.class).asEagerSingleton();
+//        bind(LevelFactory.class).asEagerSingleton();
+        bind(CartMid.class).asEagerSingleton();
     }
 }

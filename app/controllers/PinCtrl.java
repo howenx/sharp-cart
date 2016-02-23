@@ -3,7 +3,6 @@ package controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
-import modules.LevelFactory;
 import org.apache.commons.beanutils.BeanUtils;
 import play.Logger;
 import play.Play;
@@ -22,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.iq80.leveldb.DB;
 
 import static play.libs.Json.newObject;
 
@@ -42,8 +40,7 @@ public class PinCtrl extends Controller {
 
     public static final String PIN_USER_PHOTO = Play.application().configuration().getString("oss.url");
 
-    @Inject
-    LevelFactory  levelFactory;
+
 
     @Inject
     public PinCtrl(SkuService skuService, CartService cartService, IdService idService, PromotionService promotionService) {

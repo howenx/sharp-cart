@@ -2,6 +2,8 @@ package domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import util.MoneySerializer;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -36,8 +38,11 @@ public class PinTieredPrice implements Serializable {
     @JsonIgnore
     private Long pinId;                         //pin库存ID
     private Integer peopleNum;                  //人数
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal price;                   //价格
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal masterMinPrice;          //团长减价
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal memberMinPrice;          //团员减价
     private Integer masterCoupon;               //团长返券额度
 

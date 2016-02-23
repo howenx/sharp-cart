@@ -184,8 +184,6 @@ public class OrderCtrl extends Controller {
         try {
             Long userId = (Long) ctx().args.get("userId");
 
-            Logger.error(userId + "");
-
             CouponVo couponVo = new CouponVo();
             couponVo.setUserId(userId);
             couponVo.setState("N");
@@ -298,8 +296,22 @@ public class OrderCtrl extends Controller {
                                     skuDto.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
                                 }
                             } else skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
-                            skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
-                            skuDto.setInvAndroidUrl(DEPLOY_URL + "/comm/detail/web/" + orl.getItemId() + "/" + orl.getSkuId());
+
+                            switch (orl.getSkuType()) {
+                                case "item":
+                                    skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                                    break;
+                                case "vary":
+                                    skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                    break;
+                                case "customize":
+                                    skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/subject/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                    break;
+                                case "pin":
+                                    skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/pin/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                    break;
+                            }
+
                             skuDto.setItemColor(orl.getSkuColor());
                             skuDto.setItemSize(orl.getSkuSize());
                             skuDtoList.add(skuDto);
@@ -351,8 +363,22 @@ public class OrderCtrl extends Controller {
                                             skuDto.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
                                         }
                                     } else skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
-                                    skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
-                                    skuDto.setInvAndroidUrl(DEPLOY_URL + "/comm/detail/web/" + orl.getItemId() + "/" + orl.getSkuId());
+
+                                    switch (orl.getSkuType()) {
+                                        case "item":
+                                            skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                                            break;
+                                        case "vary":
+                                            skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                            break;
+                                        case "customize":
+                                            skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/subject/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                            break;
+                                        case "pin":
+                                            skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/pin/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                            break;
+                                    }
+
                                     skuDto.setItemColor(orl.getSkuColor());
                                     skuDto.setItemSize(orl.getSkuSize());
                                     skuDtoList.add(skuDto);
@@ -371,6 +397,7 @@ public class OrderCtrl extends Controller {
 
             return ok(result);
         } catch (Exception ex) {
+            ex.printStackTrace();
             Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
