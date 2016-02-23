@@ -11,6 +11,8 @@ import org.mybatis.guice.session.SqlSessionManagerProvider;
 import play.db.DBApi;
 import service.CartService;
 import service.CartServiceImpl;
+import service.MsgService;
+import service.MsgServiceImpl;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -51,6 +53,9 @@ public class ShoppingDBModule extends PrivateModule{
          */
         bind(CartService.class).to(CartServiceImpl.class);
         expose(CartService.class);
+
+        bind(MsgService.class).to(MsgServiceImpl.class);
+        expose(MsgService.class);
 
 
     }

@@ -95,8 +95,19 @@ public class MsgCtrl extends Controller{
     public Result delMsg(Long id){
         ObjectNode result = newObject();
         Long userId = (Long) ctx().args.get("userId");
+        try {
+            if (msgService.delMsgRec(id)) {
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                return ok(result);
+            }
+        }catch(Exception ex) {
+            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:", ex);
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
         return ok(result);
-
     }
 
 

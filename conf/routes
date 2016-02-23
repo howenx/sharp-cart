@@ -43,5 +43,5 @@ GET           /assets/*file                                                     
 
 
 GET           /client/msg/list                                                          controllers.MsgCtrl.getAllMsgs()
-
+GET           /client/push/                                                             controllers.PushCtrl.testPush()
 
