@@ -44,11 +44,12 @@ public class MsgCtrl extends Controller{
         this.msgService=msgService;
     }
 
-    @Security.Authenticated(UserAuth.class)
+    //@Security.Authenticated(UserAuth.class)
     public Result testMsg(){
-        Long userId = (Long) ctx().args.get("userId");
-        addMsgRec(userId,MsgTypeEnum.Discount,"title","content","","/comm/detail/888301/111324","D");
-        addSysMsg(MsgTypeEnum.Discount.getMsgType(),"titlesys","contentsys","imgurl","/comm/detail/888301/111324","D",new Timestamp(System.currentTimeMillis()+24*60*60*1000));
+        //Long userId = (Long) ctx().args.get("userId");
+        addMsgRec(1000073L,MsgTypeEnum.Discount,"title","content","/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg","/comm/detail/888301/111324","D");
+        addSysMsg(MsgTypeEnum.System.getMsgType(),"titlesys","contentsys","/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg","/comm/detail/888301/111324","D",new Timestamp(System.currentTimeMillis()+24*60*60*1000));
+       // checkRecSysMsgOnline(1000073L);
         return ok("success");
     }
 
@@ -84,16 +85,16 @@ public class MsgCtrl extends Controller{
     public void checkRecSysMsgOnline(Long userId){
         Optional<List<Msg>> msgList= Optional.ofNullable(msgService.getNotRecMsg(userId));
         if(msgList.isPresent()&&msgList.get().size()>0){
-            for(Msg msg:msgList.get()){
+            msgList.get().forEach(msg->{
                 addSysMsgRec(userId,msg);
-            }
+            });
         }
     }
 
     /***
      * 定期清理消息  TODO 调用
      */
-    public void cleanMsg(){
+    public void cleanMsgAtFixedime(){
         msgService.cleanMsg();  //定期清理过期的系统消息
         msgService.cleanMsgRec();//定期清理已经删除的消息
     }
@@ -173,8 +174,10 @@ public class MsgCtrl extends Controller{
         try{
 
             MsgRec msgRec=new MsgRec();
+            msgRec.setUserId(userId);
             for(MsgTypeEnum msgTypeEnum:MsgTypeEnum.values()){
                 msgRec.setMsgType(msgTypeEnum.getMsgType());
+                msgRec.setReadStatus(1);
                 msgTypeMap.put(msgTypeEnum.getMsgType(),msgService.getNotReadMsgNum(msgRec)); //未读条数
             }
             result.putPOJO("msgTypeMap", Json.toJson(msgTypeMap));
@@ -245,6 +248,33 @@ public class MsgCtrl extends Controller{
         Long userId = (Long) ctx().args.get("userId");
         try {
             if (msgService.delMsgRec(id)) {
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                return ok(result);
+            }
+        }catch(Exception ex) {
+            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:", ex);
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+        return ok(result);
+    }
+
+    /***
+     * 按照消息类别清空消息
+     * @param msgType
+     * @return
+     */
+    @Security.Authenticated(UserAuth.class)
+    public Result cleanMsg(String msgType){
+        ObjectNode result = newObject();
+        Long userId = (Long) ctx().args.get("userId");
+        MsgRec msgRec=new MsgRec();
+        msgRec.setUserId(userId);
+        msgRec.setMsgType(msgType);
+        try {
+            if (msgService.cleanMsgRecBy(msgRec)) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
             }
