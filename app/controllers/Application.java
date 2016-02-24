@@ -2,6 +2,7 @@ package controllers;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Cancellable;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -232,13 +233,19 @@ public class Application extends Controller {
      */
     public Result getFirstApp(String cipher){
         if (Codecs.md5("hmm-100901".getBytes()).equals(cipher)){
-            system.scheduler()
+
+            Cancellable cl = system.scheduler()
                     .schedule(Duration.Zero(),
                             Duration.create(2, TimeUnit.SECONDS),
                             schedulerCancelOrderActor,
                             77701021L,
                             system.dispatcher(),
                             null);
+
+            system.scheduler().scheduleOnce(Duration.create(6, TimeUnit.SECONDS), () -> {
+                Logger.error("取消定时任务:----> "+cl.cancel());
+            },system.dispatcher());
+
         }
         return ok("success");
     }
