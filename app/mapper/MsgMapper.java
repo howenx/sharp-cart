@@ -47,4 +47,11 @@ public interface MsgMapper {
      * @return
      */
     Integer cleanMsgRec();
+
+    /**
+     * 清除某人指定类型消息
+     * @param msgRec
+     * @return
+     */
+    Integer cleanMsgRecBy(MsgRec msgRec);
 }

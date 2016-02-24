@@ -69,4 +69,9 @@ public class MsgServiceImpl implements MsgService{
     public Boolean cleanMsgRec() {
         return msgMapper.cleanMsgRec()>0;
     }
+
+    @Override
+    public Boolean cleanMsgRecBy(MsgRec msgRec) {
+        return msgMapper.cleanMsgRecBy(msgRec)>0;
+    }
 }

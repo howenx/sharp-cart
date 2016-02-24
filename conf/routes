@@ -21,7 +21,7 @@ GET           /client/order/del/$orderId<[0-9]+>                                
 POST          /client/order/apply/refund                                                controllers.OrderCtrl.refundApply()
 
 
-POST           /client/collect/submit/                                                  controllers.OrderCtrl.submitCollect()
+POST           /client/collect/submit                                                  controllers.OrderCtrl.submitCollect()
 GET           /client/collect/get/collect/list                                          controllers.OrderCtrl.getCollect()
 GET           /client/collect/del/$collectId<[0-9]+>                                    controllers.OrderCtrl.delCollect(collectId:Long)
 
@@ -49,7 +49,8 @@ GET           /assets/*file                                                     
 GET           /client/msg/get/type                                                      controllers.MsgCtrl.getAllMsgType()
 GET           /client/msg/list/$msgType<[a-zA-Z]+>                                      controllers.MsgCtrl.getAllMsgs(msgType:String)
 GET           /client/msg/delMsg/$id<[0-9]+>                                            controllers.MsgCtrl.delMsg(id:Long)
+GET           /client/msg/clean/$msgType<[a-zA-Z]+>                                     controllers.MsgCtrl.cleanMsg(msgType:String)
 
-GET           /client/push/                                                             controllers.PushCtrl.testPush()
+GET           /client/push                                                             controllers.PushCtrl.testPush()
 GET           /client/msg/testMsg                                                       controllers.MsgCtrl.testMsg()
 

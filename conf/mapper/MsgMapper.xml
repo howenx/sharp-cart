@@ -41,7 +41,7 @@
         ORDER BY t.create_at desc,t.id
     </select>
     <!--获取未接收的未过期的系统消息 -->
-    <select id="getNotRecMsg" parameterType="java.lang.Long">
+    <select id="getNotRecMsg" parameterType="java.lang.Long" resultType="domain.Msg">
         select
         <include refid="MsgColumns">
             <property name="alias" value="t"/>
@@ -49,15 +49,16 @@
         from sp_msg t where 1=1
         and now()&lt;t.end_at
         and not exists(
-            select msg_id from sp_msg_rec r
-            where user_id =#{value}
+            select r.msg_id from sp_msg_rec r
+            where r.user_id =#{value}
             and t.msg_id=r.msg_id
         )
     </select>
+
     <update id="cleanMsg">
-        delete from sp_msg t where 1=1
-        and now()&gt;t.end_at
-        )
+        delete from sp_msg where 1=1
+        and now()&gt;end_at
+
     </update>
 
 
@@ -88,7 +89,7 @@
         <include refid="MsgRecColumns">
             <property name="alias" value="t"/>
         </include>
-        from sp_msg_rec t where 1=1 and del_status=1
+        from sp_msg_rec t where 1=1 and t.del_status=1
         <if test="id!=null and id!=''">
             and t.id = #{id}
         </if>
@@ -134,6 +135,9 @@
 
     <select id="getNotReadMsgNum" parameterType="domain.MsgRec" resultType="java.lang.Integer">
         select count(id) from sp_msg_rec where 1=1 and del_status=1
+        <if test="userId!=null and userId!=''">
+            and user_id = #{userId}
+        </if>
         <if test="readStatus!=null and readStatus!=''">
             and read_status = #{readStatus}
         </if>
@@ -145,6 +149,9 @@
         update sp_msg_rec
         set read_status=#{readStatus}
         where 1=1 and del_status=1
+        <if test="userId!=null and userId!=''">
+            and user_id = #{userId}
+        </if>
         <if test="msgType!=null and msgType!=''">
             and msg_type = #{msgType}
         </if>
@@ -153,6 +160,15 @@
         delete from sp_msg_rec r where 1=1 and del_status=2
         and not exists(select msg_id from sp_msg t
         where t.msg_id=r.msg_id)
+    </update>
+    <!--清除某人指定类型消息 -->
+    <update id="cleanMsgRecBy" parameterType="domain.MsgRec">
+        update sp_msg_rec
+        set del_status=2
+        where user_id=#{userId}
+        <if test="msgType!=null and msgType!=''">
+            and msg_type = #{msgType}
+        </if>
     </update>
 
 </mapper>

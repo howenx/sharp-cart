@@ -47,5 +47,6 @@ public interface MsgService {
      * @return
      */
     Boolean cleanMsgRec();
+    Boolean cleanMsgRecBy(MsgRec msgRec);
 
 }
