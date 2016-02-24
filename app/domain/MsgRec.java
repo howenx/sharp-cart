@@ -10,6 +10,7 @@ import java.sql.Timestamp;
  */
 public class MsgRec {
     private long id;//唯一键
+    @JsonIgnore
     private long userId;//用户ID
     @JsonIgnore
     private int msgRecType; //收到的消息类型  1-普通消息  2-系统消息
@@ -19,10 +20,14 @@ public class MsgRec {
     private String msgContent;//消息内容
     private String msgImg;  //消息商品图片
     private String msgUrl;  //消息跳转的URL
-    private int msgType; //消息类型
+    private String msgType; //消息类型
     private Timestamp createAt; //创建时间
     @JsonIgnore
-    private int status; //0-正常 1-删除
+    private int readStatus; //1-未读 2-已读
+    @JsonIgnore
+    private int delStatus;  //1-未删 2-已删
+
+    private String targetType; //T:主题，D:详细页面，P:拼购商品页，A:拼购活动页面，U:一个促销活动的链接
 
     public long getId() {
         return id;
@@ -88,12 +93,36 @@ public class MsgRec {
         this.msgUrl = msgUrl;
     }
 
-    public int getMsgType() {
+    public String getMsgType() {
         return msgType;
     }
 
-    public void setMsgType(int msgType) {
+    public void setMsgType(String msgType) {
         this.msgType = msgType;
+    }
+
+    public String getTargetType() {
+        return targetType;
+    }
+
+    public void setTargetType(String targetType) {
+        this.targetType = targetType;
+    }
+
+    public int getReadStatus() {
+        return readStatus;
+    }
+
+    public void setReadStatus(int readStatus) {
+        this.readStatus = readStatus;
+    }
+
+    public int getDelStatus() {
+        return delStatus;
+    }
+
+    public void setDelStatus(int delStatus) {
+        this.delStatus = delStatus;
     }
 
     public Timestamp getCreateAt() {
@@ -102,13 +131,5 @@ public class MsgRec {
 
     public void setCreateAt(Timestamp createAt) {
         this.createAt = createAt;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
     }
 }

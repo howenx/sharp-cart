@@ -10,20 +10,19 @@
         ${alias}.msg_title,
         ${alias}.msg_content,
         ${alias}.msg_type,
-        ${alias}.msg_target_type,
-        ${alias}.msg_target,
         ${alias}.msg_img,
         ${alias}.msg_url,
         ${alias}.create_at,
-        ${alias}.end_at
+        ${alias}.end_at,
+        ${alias}.target_type
     </sql>
 
     <!-- 录入一条信息 -->
-    <insert id="insertMsg" parameterType="domain.Msg" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertMsg" parameterType="domain.Msg" useGeneratedKeys="true" keyProperty="msgId">
         insert into sp_msg
-        (msg_title,msg_content,msg_type,msg_target_type,msg_target,msg_img,msg_url,create_at,end_at)
+        (msg_title,msg_content,msg_type,msg_img,msg_url,create_at,end_at,target_type)
         values
-        (#{msgTitle}, #{msgContent},#{msgType},#{msgTargetType},#{msgTarget},#{msgImg},#{msgUrl},CURRENT_TIMESTAMP(0),#{endAt})
+        (#{msgTitle},#{msgContent},#{msgType},#{msgImg},#{msgUrl},CURRENT_TIMESTAMP(0),#{endAt},#{targetType})
     </insert>
 
     <select id="getMsgBy" parameterType="domain.Msg" resultType="domain.Msg">
@@ -38,12 +37,28 @@
         <if test="msgType!=null and msgType!=''">
             and t.msg_type = #{msgType}
         </if>
-        <if test="msgTargetType!=null and msgTargetType!=''">
-            and t.msg_target_type = #{msgTargetType}
-        </if>
 
-        ORDER BY create_at desc,id
+        ORDER BY t.create_at desc,t.id
     </select>
+    <!--获取未接收的未过期的系统消息 -->
+    <select id="getNotRecMsg" parameterType="java.lang.Long">
+        select
+        <include refid="MsgColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from sp_msg t where 1=1
+        and now()&lt;t.end_at
+        and not exists(
+            select msg_id from sp_msg_rec r
+            where user_id =#{value}
+            and t.msg_id=r.msg_id
+        )
+    </select>
+    <update id="cleanMsg">
+        delete from sp_msg t where 1=1
+        and now()&gt;t.end_at
+        )
+    </update>
 
 
     <sql id="MsgRecColumns">
@@ -57,13 +72,15 @@
         ${alias}.msg_img,
         ${alias}.msg_url,
         ${alias}.create_at,
-        ${alias}.status
+        ${alias}.target_type,
+        ${alias}.read_status,
+        ${alias}.del_status
     </sql>
     <insert id="insertMsgRec" parameterType="domain.MsgRec" useGeneratedKeys="true" keyProperty="id">
         insert into sp_msg_rec
-        (user_id,msg_rec_type,msg_id,msg_title,msg_content,msg_type,msg_img,msg_url,create_at,status)
+        (user_id,msg_rec_type,msg_id,msg_title,msg_content,msg_type,msg_img,msg_url,create_at,read_status,target_type,del_status)
         values
-        (#{userId},#{msgRecType},#{msgId},#{msgTitle},#{msgContent},#{msgType},#{msgImg},#{msgUrl},CURRENT_TIMESTAMP(0),#{status})
+        (#{userId},#{msgRecType},#{msgId},#{msgTitle},#{msgContent},#{msgType},#{msgImg},#{msgUrl},#{createAt},#{readStatus},#{targetType},#{delStatus})
     </insert>
 
     <select id="getMsgRecBy" parameterType="domain.MsgRec" resultType="domain.MsgRec">
@@ -71,7 +88,7 @@
         <include refid="MsgRecColumns">
             <property name="alias" value="t"/>
         </include>
-        from sp_msg_rec t where 1=1
+        from sp_msg_rec t where 1=1 and del_status=1
         <if test="id!=null and id!=''">
             and t.id = #{id}
         </if>
@@ -84,11 +101,14 @@
         <if test="msgType!=null and msgType!=''">
             and t.msg_type = #{msgType}
         </if>
-        <if test="status!=null and status!=''">
-            and t.status = #{status}
+        <if test="readStatus!=null and readStatus!=''">
+            and t.read_status = #{readStatus}
+        </if>
+        <if test="targetType!=null and targetType!=''">
+            and t.target_type = #{targetType}
         </if>
 
-        ORDER BY create_at desc,id
+        ORDER BY t.create_at desc,t.id
     </select>
     <update id="updateMsgRec" parameterType="domain.MsgRec">
         update sp_msg_rec
@@ -100,13 +120,39 @@
         msg_type=#{msgType},
         msg_img=#{msgImg},
         msg_url=#{msgUrl},
-        status=#{status}
+        del_status=#{delStatus},
+        read_status=#{readStatus},
+        target_type=#{targetType}
         where id=#{id}
     </update>
 
     <update id="delMsgRec" parameterType="java.lang.Long">
         update sp_msg_rec
-        set status=1
+        set del_status=2
         where id=#{value}
     </update>
+
+    <select id="getNotReadMsgNum" parameterType="domain.MsgRec" resultType="java.lang.Integer">
+        select count(id) from sp_msg_rec where 1=1 and del_status=1
+        <if test="readStatus!=null and readStatus!=''">
+            and read_status = #{readStatus}
+        </if>
+        <if test="msgType!=null and msgType!=''">
+            and msg_type = #{msgType}
+        </if>
+    </select>
+    <update id="updateReadStatus" parameterType="domain.MsgRec">
+        update sp_msg_rec
+        set read_status=#{readStatus}
+        where 1=1 and del_status=1
+        <if test="msgType!=null and msgType!=''">
+            and msg_type = #{msgType}
+        </if>
+    </update>
+    <update id="cleanMsgRec">
+        delete from sp_msg_rec r where 1=1 and del_status=2
+        and not exists(select msg_id from sp_msg t
+        where t.msg_id=r.msg_id)
+    </update>
+
 </mapper>

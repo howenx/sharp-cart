@@ -44,4 +44,29 @@ public class MsgServiceImpl implements MsgService{
     public Boolean delMsgRec(Long id) {
         return msgMapper.delMsgRec(id)>0;
     }
+
+    @Override
+    public int getNotReadMsgNum(MsgRec msgRec) {
+        return msgMapper.getNotReadMsgNum(msgRec);
+    }
+
+    @Override
+    public Boolean updateReadStatus(MsgRec msgRec) {
+        return msgMapper.updateReadStatus(msgRec)>0;
+    }
+
+    @Override
+    public List<Msg> getNotRecMsg(Long userId) {
+        return msgMapper.getNotRecMsg(userId);
+    }
+
+    @Override
+    public Boolean cleanMsg() {
+        return msgMapper.cleanMsg()>0;
+    }
+
+    @Override
+    public Boolean cleanMsgRec() {
+        return msgMapper.cleanMsgRec()>0;
+    }
 }

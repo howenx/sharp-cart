@@ -3,7 +3,7 @@ package domain;
 import java.sql.Timestamp;
 
 /**
- * 消息
+ * 全体系统消息
  * Created by sibyl.sun on 16/2/22.
  */
 public class Msg {
@@ -12,10 +12,10 @@ public class Msg {
     private String msgContent;//消息内容
     private String msgImg;  //消息商品图片
     private String msgUrl;  //消息跳转的URL
-    private int msgType; //消息类型
-    private String msgTargetType; //推送目标类型 1-全体
-    private String msgTarget;//消息目标,可为空
-    private Timestamp createAt; //创建时
+    private String msgType; //消息类型
+    private Timestamp createAt; //创建时间
+    private Timestamp endAt;//失效时间
+    private String targetType; //T:主题，D:详细页面，P:拼购商品页，A:拼购活动页面，U:一个促销活动的链接
 
     public long getMsgId() {
         return msgId;
@@ -57,30 +57,6 @@ public class Msg {
         this.msgUrl = msgUrl;
     }
 
-    public int getMsgType() {
-        return msgType;
-    }
-
-    public void setMsgType(int msgType) {
-        this.msgType = msgType;
-    }
-
-    public String getMsgTargetType() {
-        return msgTargetType;
-    }
-
-    public void setMsgTargetType(String msgTargetType) {
-        this.msgTargetType = msgTargetType;
-    }
-
-    public String getMsgTarget() {
-        return msgTarget;
-    }
-
-    public void setMsgTarget(String msgTarget) {
-        this.msgTarget = msgTarget;
-    }
-
     public Timestamp getCreateAt() {
         return createAt;
     }
@@ -88,4 +64,29 @@ public class Msg {
     public void setCreateAt(Timestamp createAt) {
         this.createAt = createAt;
     }
+
+    public Timestamp getEndAt() {
+        return endAt;
+    }
+
+    public void setEndAt(Timestamp endAt) {
+        this.endAt = endAt;
+    }
+
+    public String getTargetType() {
+        return targetType;
+    }
+
+    public void setTargetType(String targetType) {
+        this.targetType = targetType;
+    }
+
+    public String getMsgType() {
+        return msgType;
+    }
+
+    public void setMsgType(String msgType) {
+        this.msgType = msgType;
+    }
+
 }
