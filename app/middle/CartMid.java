@@ -284,7 +284,7 @@ public class CartMid {
             }else cartList.setInvImg(Application.IMAGE_URL +sku.getInvImg());
 
 
-            switch (cartList.getSkuType()) {
+            switch (cartDto.getSkuType()) {
                 case "item":
                     cartList.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
                     break;

@@ -1,18 +1,24 @@
 package middle;
 
+import akka.actor.ActorRef;
 import controllers.JDPay;
 import domain.*;
 import play.Logger;
 import play.libs.Json;
+import scala.concurrent.duration.FiniteDuration;
 import service.CartService;
 import service.IdService;
 import service.PromotionService;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * 京东支付中间层
@@ -20,23 +26,25 @@ import java.util.Optional;
  */
 public class JDPayMid {
 
+    @Inject
     private CartService cartService;
 
+    @Inject
     private IdService idService;
 
+    @Inject
     private PromotionService promotionService;
 
-    public JDPayMid(CartService cartService, IdService idService, PromotionService promotionService){
-        this.cartService = cartService;
-        this.idService = idService;
-        this.promotionService = promotionService;
-    }
+    @Inject
+    @Named("refundActor")
+    private ActorRef refundActor;
 
     /**
      * 京东支付异步通知结果
+     *
      * @param params 参数
      */
-    public String asynPay(Map<String, String> params){
+    public String asynPay(Map<String, String> params) {
 
         Order order = new Order();
         order.setOrderId(Long.valueOf(params.get("out_trade_no")));
@@ -44,72 +52,16 @@ public class JDPayMid {
         try {
             List<Order> orders = cartService.getOrder(order);
 
-            if (orders.size()>0) order = orders.get(0);
+            if (orders.size() > 0) order = orders.get(0);
 
-            if (order.getOrderStatus().equals("S") || order.getOrderStatus().equals("PS")){
+            if (order.getOrderStatus().equals("S") || order.getOrderStatus().equals("PS") || order.getOrderStatus().equals("PF")|| order.getOrderStatus().equals("F")) {
                 return "success";
-            }else {
+            } else {
                 order.setOrderStatus("S");
                 order.setErrorStr(params.get("trade_status"));
                 order.setPgTradeNo(params.get("trade_no"));
 
-                //如果是拼购,而且是团长发起的拼购活动,那么在支付成功后是需要创建拼购活动
-                if (order.getOrderType()!=null && order.getOrderType()==2){ //1:正常购买订单，2：拼购订单
-                    order.setOrderStatus("PS");
-                    if (order.getPinActiveId()==null){
-
-                        OrderLine orderLine = new OrderLine();
-                        orderLine.setOrderId(order.getOrderId());
-                        orderLine.setSkuType("pin");
-
-                        List<OrderLine> orderLines = cartService.selectOrderLine(orderLine);
-
-                        if (orderLines.size()>0) orderLine = orderLines.get(0);
-
-                        PinTieredPrice pinTieredPrice = new PinTieredPrice();
-                        pinTieredPrice.setId(orderLine.getPinTieredPriceId());
-                        pinTieredPrice = promotionService.getTieredPriceById(pinTieredPrice);
-
-
-                        PinActivity activity  = new PinActivity();
-                        activity.setJoinPersons(1);
-                        activity.setMasterUserId(order.getUserId());
-                        activity.setPersonNum(pinTieredPrice.getPeopleNum());
-                        activity.setPinPrice(pinTieredPrice.getPrice());
-                        activity.setPinId(orderLine.getSkuTypeId());
-                        activity.setStatus("Y");
-                        activity.setEndAt(new Timestamp(new Date().getTime()+ JDPay.PIN_MILLISECONDS));
-                        activity.setPinTieredId(pinTieredPrice.getId());
-
-                        if (promotionService.insertPinActivity(activity)){
-                            order.setPinActiveId(activity.getPinActiveId());
-                            PinUser pinUser = new PinUser();
-                            pinUser.setOrMaster(true);
-                            pinUser.setOrRobot(false);
-                            pinUser.setPinActiveId(activity.getPinActiveId());
-                            pinUser.setUserId(order.getUserId());
-                            pinUser.setUserIp(order.getOrderIp());
-                            pinUser.setUserImg(idService.getID(order.getUserId()).getPhotoUrl());
-                            promotionService.insertPinUser(pinUser);
-                        }
-                    }else{
-                        PinActivity activity = promotionService.selectPinActivityById(order.getPinActiveId());
-                        activity.setJoinPersons(activity.getJoinPersons()+1);
-                        if (promotionService.updatePinActivity(activity)){
-                            order.setPinActiveId(activity.getPinActiveId());
-                            PinUser pinUser = new PinUser();
-                            pinUser.setOrMaster(false);
-                            pinUser.setOrRobot(false);
-                            pinUser.setPinActiveId(activity.getPinActiveId());
-                            pinUser.setUserId(order.getUserId());
-                            pinUser.setUserIp(order.getOrderIp());
-                            pinUser.setUserImg(idService.getID(order.getUserId()).getPhotoUrl());
-                            promotionService.insertPinUser(pinUser);
-                        }
-                    }
-                }
-
-                if (cartService.updateOrder(order)){
+                if (cartService.updateOrder(order)) {
                     Logger.info("京东支付回调订单更新payFrontNotify: " + Json.toJson(order));
                     if (params.containsKey("token")) {
                         Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
@@ -118,18 +70,18 @@ public class JDPayMid {
                         Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
                         idPlus.setPayJdToken(params.get("token"));
                         if (idPlusOptional.isPresent()) {
-                            if (idService.updateIdPlus(idPlus)){
+                            if (idService.updateIdPlus(idPlus)) {
                                 Logger.info("京东支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
                                 return "success";
-                            }else return "error";
+                            } else return "error";
                         } else {
-                            if (idService.insertIdPlus(idPlus)){
+                            if (idService.insertIdPlus(idPlus)) {
                                 Logger.info("京东支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
                                 return "success";
-                            }else return "error";
+                            } else return "error";
                         }
-                    }else return "error";
-                }else return "error";
+                    } else return "error";
+                } else return "error";
             }
         } catch (Exception e) {
             Logger.error("支付回调订单更新出错payFrontNotify: " + e.getMessage());
@@ -138,7 +90,110 @@ public class JDPayMid {
         }
     }
 
-    public String asynRefund(Map<String, String> params){
+    public String pinActivityDeal(Order order) throws Exception {
+        //如果是拼购,而且是团长发起的拼购活动,那么在支付成功后是需要创建拼购活动
+        if (order.getOrderType() != null && order.getOrderType() == 2 && !order.getOrderStatus().equals("PS") && !order.getOrderStatus().equals("PF") && !order.getOrderStatus().equals("F") && !order.getOrderStatus().equals("T")) { //1:正常购买订单，2：拼购订单
+            order.setOrderStatus("PS");
+            if (order.getPinActiveId() == null) {
+
+                OrderLine orderLine = new OrderLine();
+                orderLine.setOrderId(order.getOrderId());
+                orderLine.setSkuType("pin");
+
+                List<OrderLine> orderLines = cartService.selectOrderLine(orderLine);
+
+                if (orderLines.size() > 0) orderLine = orderLines.get(0);
+
+                PinTieredPrice pinTieredPrice = new PinTieredPrice();
+                pinTieredPrice.setId(orderLine.getPinTieredPriceId());
+                pinTieredPrice = promotionService.getTieredPriceById(pinTieredPrice);
+
+
+                PinActivity activity = new PinActivity();
+                activity.setJoinPersons(1);
+                activity.setMasterUserId(order.getUserId());
+                activity.setPersonNum(pinTieredPrice.getPeopleNum());
+                activity.setPinPrice(pinTieredPrice.getPrice());
+                activity.setPinId(orderLine.getSkuTypeId());
+                activity.setStatus("Y");
+                activity.setEndAt(new Timestamp(new Date().getTime() + JDPay.PIN_MILLISECONDS));
+                activity.setPinTieredId(pinTieredPrice.getId());
+
+                if (promotionService.insertPinActivity(activity)) {
+                    order.setPinActiveId(activity.getPinActiveId());
+                    PinUser pinUser = new PinUser();
+                    pinUser.setOrMaster(true);
+                    pinUser.setOrRobot(false);
+                    pinUser.setPinActiveId(activity.getPinActiveId());
+                    pinUser.setUserId(order.getUserId());
+                    pinUser.setUserIp(order.getOrderIp());
+                    pinUser.setUserImg(idService.getID(order.getUserId()).getPhotoUrl());
+                    promotionService.insertPinUser(pinUser);
+                }
+                cartService.updateOrder(order);
+                return "success";
+
+            } else {
+                PinActivity activity = promotionService.selectPinActivityById(order.getPinActiveId());
+                if (!activity.getStatus().equals("Y")) {//如果拼购活动已经失败或者拼购活动已经结束
+                    order.setPinActiveId(activity.getPinActiveId());
+                    order.setOrderStatus("F");
+                    PinUser pinUser = new PinUser();
+                    pinUser.setOrMaster(false);
+                    pinUser.setOrRobot(false);
+                    pinUser.setPinActiveId(activity.getPinActiveId());
+                    pinUser.setUserId(order.getUserId());
+                    pinUser.setUserIp(order.getOrderIp());
+                    pinUser.setUserImg(idService.getID(order.getUserId()).getPhotoUrl());
+                    promotionService.insertPinUser(pinUser);
+
+                    Refund refund = new Refund();
+                    refund.setAmount(order.getOrderAmount());
+                    refund.setOrderId(order.getOrderId());
+                    refund.setPayBackFee(order.getPayTotal());
+                    refund.setReason("拼团支付失败退款");
+                    refund.setRefundType("pin");
+
+                    //自动退款
+                    refundActor.tell(refund,ActorRef.noSender());
+
+                    //更新订单
+                    cartService.updateOrder(order);
+                    return "error";
+
+                }else{
+                    activity.setJoinPersons(activity.getJoinPersons() + 1);
+                    if (activity.getJoinPersons() == activity.getPersonNum()) {
+                        activity.setStatus("C");
+                        order.setOrderStatus("S");
+                        Order order1 = new Order();
+                        order1.setPinActiveId(activity.getPinActiveId());
+                        List<Order> orders1 = cartService.getPinOrder(order1);
+                        for (Order order2 : orders1) {
+                            order2.setOrderStatus("S");
+                            cartService.updateOrder(order2);
+                        }
+                    }
+                    if (promotionService.updatePinActivity(activity)) {
+                        order.setPinActiveId(activity.getPinActiveId());
+                        PinUser pinUser = new PinUser();
+                        pinUser.setOrMaster(false);
+                        pinUser.setOrRobot(false);
+                        pinUser.setPinActiveId(activity.getPinActiveId());
+                        pinUser.setUserId(order.getUserId());
+                        pinUser.setUserIp(order.getOrderIp());
+                        pinUser.setUserImg(idService.getID(order.getUserId()).getPhotoUrl());
+                        promotionService.insertPinUser(pinUser);
+                    }
+                    cartService.updateOrder(order);
+                    return "success";
+                }
+            }
+        } else return "success";
+    }
+
+
+    public String asynRefund(Map<String, String> params) {
         Refund re = new Refund();
         re.setId(Long.valueOf(params.get("return_params")));
         re.setOrderId(Long.valueOf(params.get("out_trade_no")));

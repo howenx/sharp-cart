@@ -54,6 +54,7 @@ public class JDPay extends Controller {
 
     private PromotionService promotionService;
 
+    @Inject
     private JDPayMid jdPayMid;
 
 
@@ -83,7 +84,6 @@ public class JDPay extends Controller {
         this.cancelOrderActor = cancelOrderActor;
         this.promotionService = promotionService;
         this.pinFailActor = pinFailActor;
-        this.jdPayMid = new JDPayMid(cartService, idService, promotionService);
     }
 
     @Security.Authenticated(UserAuth.class)
@@ -292,6 +292,7 @@ public class JDPay extends Controller {
             return ok(views.html.jdpayfailed.render());
         } else {
             if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
+                //需要先判断订单状态,如果是S状态就去调用否则不能2次调用,而且如果订单是被更新为PF状态,那么就需要前段返回到拼购失败页面
                 if (jdPayMid.asynPay(params).equals("success")) {
                     Order order = new Order();
                     order.setOrderId(Long.valueOf(params.get("out_trade_no")));
@@ -301,22 +302,26 @@ public class JDPay extends Controller {
                         if (orders.size()>0){
                             order = orders.get(0);
                             if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
+                                if (jdPayMid.pinActivityDeal(order).equals("success")){
+                                    PinUser pinUser = new PinUser();
+                                    pinUser.setUserId(order.getUserId());
+                                    pinUser.setPinActiveId(order.getPinActiveId());
 
-                                PinUser pinUser = new PinUser();
-                                pinUser.setUserId(order.getUserId());
-                                pinUser.setPinActiveId(order.getPinActiveId());
+                                    List<PinUser> pinUsers = promotionService.selectPinUser(pinUser);
 
-                                List<PinUser> pinUsers = promotionService.selectPinUser(pinUser);
-                                if (pinUsers.size()>0){
-                                    pinUser = pinUsers.get(0);
-                                }
-                                if (pinUser.isOrMaster()) {
-                                    params.put("pinActivity",PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/1");
-                                    //24小时后去检查此团的状态
-                                    system.scheduler().scheduleOnce(FiniteDuration.create(2, MINUTES), pinFailActor, order.getPinActiveId(), system.dispatcher(), ActorRef.noSender());
-                                } else params.put("pinActivity",PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/2");
-                                return ok(views.html.pin.render(params));
-                            }else return ok(views.html.jdpaysuccess.render(params));
+                                    if (pinUsers.size()>0){
+                                        pinUser = pinUsers.get(0);
+                                    }
+                                    if (pinUser.isOrMaster()) {
+                                        params.put("pinActivity",PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/1");
+                                        //24小时后去检查此团的状态
+                                        system.scheduler().scheduleOnce(FiniteDuration.create(2, MINUTES), pinFailActor, order.getPinActiveId(), system.dispatcher(), ActorRef.noSender());
+                                    } else {
+                                        params.put("pinActivity",PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/2");
+                                    }
+                                    return ok(views.html.pin.render(params));
+                                } else return ok(views.html.jdpayfailed.render());
+                            } else return ok(views.html.jdpaysuccess.render(params));
                         }else return ok(views.html.jdpayfailed.render());
                     } catch (Exception e) {
                         e.printStackTrace();

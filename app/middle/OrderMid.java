@@ -4,7 +4,6 @@ import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import controllers.OrderCtrl;
 import domain.*;
-import org.apache.commons.collections.CollectionUtils;
 import play.Logger;
 import play.libs.Json;
 import service.CartService;
@@ -13,7 +12,9 @@ import service.PromotionService;
 import service.SkuService;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -32,7 +33,7 @@ public class OrderMid {
 
     private ActorRef orderSplitActor;
 
-    public OrderMid(SkuService skuService, CartService cartService, IdService idService, PromotionService promotionService ,ActorRef orderSplitActor) {
+    public OrderMid(SkuService skuService, CartService cartService, IdService idService, PromotionService promotionService, ActorRef orderSplitActor) {
         this.cartService = cartService;
         this.idService = idService;
         this.skuService = skuService;
@@ -118,9 +119,9 @@ public class OrderMid {
         for (SettleDTO settleDTO : settleDTOList) {
 
             //计算单个海关费用
-            SettleFeeVo settleFeeVo = calCustomsFee(settleDTO, address);
+            SettleFeeVo settleFeeVo = calCustomsFee(settleDTO, address, userId);
 
-            skuTypeList.addAll(settleFeeVo.getSkuTypeList());
+            if (settleFeeVo.getSkuTypeList() != null) skuTypeList.addAll(settleFeeVo.getSkuTypeList());
 
             if (settleFeeVo.getMessageCode() != null) {
                 settleVo.setMessageCode(settleFeeVo.getMessageCode());
@@ -161,7 +162,7 @@ public class OrderMid {
 
 
     //计算每个报关单位下的所有费用
-    private SettleFeeVo calCustomsFee(SettleDTO settleDTO, Address address) throws Exception {
+    private SettleFeeVo calCustomsFee(SettleDTO settleDTO, Address address, Long userId) throws Exception {
 
         SettleFeeVo settleFeeVo = new SettleFeeVo();
 
@@ -178,6 +179,8 @@ public class OrderMid {
         BigDecimal totalPayFeeSingle;
 
         List<String> skuTypeList = new ArrayList<>();//用于保存该笔订单的所有sku的类型
+
+        Boolean orPinRestrict = false;//用于标识用户购买的拼购商品是否超出限购数量
 
         for (CartDto cartDto : settleDTO.getCartDtos()) {
 
@@ -207,8 +210,6 @@ public class OrderMid {
                 if (address != null && address.getProvinceCode() != null) {
                     shipFeeSingle = shipFeeSingle.add(calculateShipFee(address.getProvinceCode(), sku.getCarriageModelCode(), cartDto.getAmount()));
                 } else shipFeeSingle = BigDecimal.ZERO;
-
-                Logger.info("订单类型:---->\n"+cartDto.getSkuType());
 
                 switch (cartDto.getSkuType()) {
                     case "item":
@@ -246,15 +247,31 @@ public class OrderMid {
                         //单sku产生的行邮税
                         postalFeeSingle = postalFeeSingle.add(calculatePostalTax(sku.getPostalTaxRate(), pinTieredPrice.getPrice(), cartDto.getAmount()));
                         skuTypeList.add("pin");
+
+                        PinSku pinSku = promotionService.getPinSkuById(cartDto.getSkuTypeId());
+
+                        //用户存在,需要验证用户是否符合限购策略
+                        Order order = new Order();
+                        order.setOrderType(2);//拼购订单
+                        order.setUserId(userId);
+                        List<Order> orders = cartService.getPinUserOrder(order);
+                        if (orders.size() > 0) {
+                            Integer userPin = 1;//拼购购买商品计数
+                            for (Order os : orders) {
+                                OrderLine orderLine = new OrderLine();
+                                orderLine.setOrderId(os.getOrderId());
+                                orderLine.setSkuType(cartDto.getSkuType());
+                                orderLine.setSkuTypeId(cartDto.getSkuTypeId());
+                                List<OrderLine> lines = cartService.selectOrderLine(orderLine);
+                                userPin += lines.size();
+                            }
+                            if (userPin > pinSku.getRestrictAmount()) {
+                                orPinRestrict = true;
+                            }
+                        }
                         break;
                 }
             }
-        }
-
-        //如果存在单个海关的金额超过1000,返回
-        if (totalFeeSingle.compareTo(new BigDecimal(OrderCtrl.POSTAL_LIMIT)) > 0) {
-            settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_SUM_PRICE.getIndex());
-            return settleFeeVo;
         }
 
         //每个海关的实际邮费统计
@@ -287,6 +304,18 @@ public class OrderMid {
         settleFeeVo.setCartDtos(settleDTO.getCartDtos());
 
         settleFeeVo.setSkuTypeList(skuTypeList);
+
+        //用户购买拼购商品限购数量超出
+        if (orPinRestrict) {
+            settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_PIN_RESTRICT.getIndex());
+            return settleFeeVo;
+        }
+
+        //如果存在单个海关的金额超过1000,返回
+        if (totalFeeSingle.compareTo(new BigDecimal(OrderCtrl.POSTAL_LIMIT)) > 0) {
+            settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_SUM_PRICE.getIndex());
+            return settleFeeVo;
+        }
 
         return settleFeeVo;
     }
@@ -369,13 +398,13 @@ public class OrderMid {
         order.setClientType(settleOrderDTO.getClientType());
 
 
-        if (settleVo.getSkuTypeList().contains("pin")){
+        if (settleVo.getSkuTypeList().contains("pin")) {
             order.setOrderType(2);//1:正常购买订单，2：拼购订单
             order.setOrderStatus("PI");
-            if (settleOrderDTO.getPinActiveId()!=null){
+            if (settleOrderDTO.getPinActiveId() != null) {
                 order.setPinActiveId(settleOrderDTO.getPinActiveId());
             }
-        }else order.setOrderType(1);
+        } else order.setOrderType(1);
 
         if (cartService.insertOrder(order)) {
             Logger.error("创建订单ID: " + order.getOrderId());
@@ -385,7 +414,8 @@ public class OrderMid {
 
     /**
      * 提交订单
-     * @param userId 用户ID
+     *
+     * @param userId         用户ID
      * @param settleOrderDTO dto
      * @return SettleVo
      * @throws Exception

@@ -104,7 +104,9 @@ public class Message implements Serializable{
 
         SEND_SMS_TOO_MANY ("发送验证码次数过多,请明天再试", 5005),
 
-        FILE_TYPE_NOT_SUPPORTED("文件类型不支持",6001);
+        FILE_TYPE_NOT_SUPPORTED("文件类型不支持",6001),
+
+        PURCHASE_PIN_RESTRICT("购买同一拼购商品数量超出限制",7001);
 
         // 成员变量
         private String name;

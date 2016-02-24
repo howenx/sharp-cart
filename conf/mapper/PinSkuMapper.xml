@@ -7,13 +7,16 @@
         ${alias}.pin_id,
         ${alias}.pin_img,
         ${alias}.share_url,
-        ${alias}.status,
+        case
+            when ${alias}.start_at &gt;CURRENT_TIMESTAMP(0) then 'P'
+            when ${alias}.end_at  &lt;CURRENT_TIMESTAMP(0) then 'D'
+            else ${alias}.status
+        end as status,
         ${alias}.create_at,
         ${alias}.update_at,
         ${alias}.pin_title,
         ${alias}.start_at,
         ${alias}.end_at,
-        <!--${alias}.pin_price_rule,-->
         ${alias}.restrict_amount,
         ${alias}.floor_price,
         ${alias}.inv_id,
@@ -75,7 +78,7 @@
         pin_price        ,
         join_persons     ,
         create_at        ,
-        status           ,
+        status,
         end_at,
         pin_tiered_id
         ) values (

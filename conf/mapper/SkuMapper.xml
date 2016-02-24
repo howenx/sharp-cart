@@ -29,7 +29,11 @@
         ${alias}.update_at ,
         ${alias}.create_at ,
         ${alias}.or_master_inv ,
-        ${alias}.state ,
+        case
+            when ${alias}.start_at &gt;CURRENT_TIMESTAMP(0) then 'P'
+            when ${alias}.end_at  &lt;CURRENT_TIMESTAMP(0) then 'D'
+            else ${alias}.state
+        end as state,
         ${alias}.inv_area ,
         case
             when ${alias}.inv_area='H' then '杭州保税仓备货'

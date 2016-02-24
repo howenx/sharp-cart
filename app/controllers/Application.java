@@ -1,5 +1,7 @@
 package controllers;
 
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -8,17 +10,21 @@ import filters.UserAuth;
 import middle.CartMid;
 import net.spy.memcached.MemcachedClient;
 import play.Logger;
+import play.api.libs.Codecs;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
+import scala.concurrent.duration.Duration;
 import service.CartService;
 import service.IdService;
 import service.SkuService;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class Application extends Controller {
 
@@ -36,6 +42,13 @@ public class Application extends Controller {
 
     @Inject
     private CartMid cartMid;
+
+    @Inject
+    private ActorSystem system;
+
+    @Inject
+    @Named("schedulerCancelOrderActor")
+    private ActorRef schedulerCancelOrderActor;
 
     //图片服务器url
     public static final String IMAGE_URL = play.Play.application().configuration().getString("image.server.url");
@@ -156,6 +169,7 @@ public class Application extends Controller {
         try {
             if (json.isPresent()) {
                 List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
+
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 result.putPOJO("cartList", Json.toJson(cartMid.getCarts(cartDtoList).get()));
                 return ok(result);
@@ -164,6 +178,7 @@ public class Application extends Controller {
                 return ok(result);
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
@@ -203,9 +218,28 @@ public class Application extends Controller {
                 return ok(result);
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
+    }
+
+
+    /**
+     * 处理系统启动时候去做第一次请求,完成对定时任务的执行
+     * @return string
+     */
+    public Result getFirstApp(String cipher){
+        if (Codecs.md5("hmm-100901".getBytes()).equals(cipher)){
+            system.scheduler()
+                    .schedule(Duration.Zero(),
+                            Duration.create(2, TimeUnit.SECONDS),
+                            schedulerCancelOrderActor,
+                            77701021L,
+                            system.dispatcher(),
+                            null);
+        }
+        return ok("success");
     }
 }

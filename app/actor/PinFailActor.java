@@ -45,6 +45,10 @@ public class PinFailActor extends AbstractActor {
                     order.setUserId(p.getUserId());
                     List<Order> orders = cartService.getPinOrder(order);
                     if (orders.size() > 0) {
+                        order = orders.get(0);
+                        order.setOrderStatus("PF");
+                        cartService.updateOrder(order);//更新订单状态为拼团失败状态
+
                         Refund refund = new Refund();
                         refund.setAmount(order.getOrderAmount());
                         refund.setOrderId(order.getOrderId());
@@ -58,6 +62,7 @@ public class PinFailActor extends AbstractActor {
                         refund.setSkuId(pinsku.getInvId());
                         refund.setSplitOrderId(order.getOrderSplitId());
                         refund.setUserId(pinUser.getUserId());
+
                         if (cartService.insertRefund(refund)){
                             Map<String, String> params = JDPay.payBackParams(refund, null, null);
                             StringBuilder sb = new StringBuilder();
@@ -67,7 +72,6 @@ public class PinFailActor extends AbstractActor {
                                 Logger.info("京东退款返回数据JSON: " + response.toString());
                                 Refund re = new Refund();
                                 re.setId(response.get("out_trade_no").asLong());
-                                re.setOrderId(response.get("return_params").asLong());
                                 re.setPgCode(response.get("response_code").asText());
                                 re.setPgMessage(response.get("response_message").asText());
                                 re.setPgTradeNo(response.get("trade_no").asText());
@@ -75,9 +79,13 @@ public class PinFailActor extends AbstractActor {
 
                                 if (cartService.updateRefund(re)) {
                                     if (re.getState().equals("Y")) {
-                                        Logger.info(pinUser.getUserId()+"用户拼购退款成功");
+                                        Order order1 = new Order();
+                                        order1.setOrderId(refund.getOrderId());
+                                        order1.setOrderStatus("T");
+                                        cartService.updateOrder(order1);
+                                        Logger.info(p.getUserId()+"用户拼购退款成功");
                                     } else {
-                                        Logger.error(pinUser.getUserId()+"用户拼购退款失败");
+                                        Logger.error(p.getUserId()+"用户拼购退款失败");
                                     }
                                 }
                                 return  wsResponse.asJson();
