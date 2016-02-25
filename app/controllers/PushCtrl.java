@@ -75,7 +75,7 @@ public class PushCtrl extends Controller {
         extras.put("newsid", "321");
         extras.put("url", "http://172.28.3.78:9001/comm/detail/888301/111324");
         extras.put("targetType", "D");
-        send_push_android_all("test title content url","hmm title",extras);
+        send_push_android_all("test title content url","hmm title",extras,60);
         return ok("success");
     }
 
@@ -93,24 +93,35 @@ public class PushCtrl extends Controller {
      * @param alter  推送内容(必填)
      * @param title  推送标题
      * @param extras 额外字段
+     * @param timeToLive 离线消息保留时长(秒) ,走默认填 -1
+     *                   推送当前用户不在线时，为该用户保留多长时间的离线消息，以便其上线时再次推送。默认 86400 （1 天），最长 10 天。设置为 0 表示不保留离线消息，只有推送当前在线的用户可以收到。
      */
-    public void send_push_android_all(String alter,String title,Map<String, String> extras){
+    public void send_push_android_all(String alter,String title,Map<String, String> extras,long timeToLive){
         PushPayload pushPayload=PushPayload.newBuilder()
                 .setPlatform(Platform.android())
                 .setAudience(Audience.all())
                 .setNotification(Notification.android(alter, title, extras)).build();
+        if(timeToLive>=0){
+            pushPayload.resetOptionsTimeToLive(timeToLive);
+        }
+
         sendPush(pushPayload);
     }
     /***
      * ios  所有人     发送消息
      * @param alter  推送内容(必填)
      * @param extras 额外字段
+     * @param timeToLive 离线消息保留时长(秒) ,走默认填 -1
+     *                   推送当前用户不在线时，为该用户保留多长时间的离线消息，以便其上线时再次推送。默认 86400 （1 天），最长 10 天。设置为 0 表示不保留离线消息，只有推送当前在线的用户可以收到。
      */
-    public void send_push_ios_all(String alter,Map<String, String> extras){
+    public void send_push_ios_all(String alter,Map<String, String> extras,long timeToLive){
         PushPayload pushPayload=PushPayload.newBuilder()
                 .setPlatform(Platform.ios())
                 .setAudience(Audience.all())
                 .setNotification(Notification.ios(alter,extras)).build();
+        if(timeToLive>=0){
+            pushPayload.resetOptionsTimeToLive(timeToLive);
+        }
         sendPush(pushPayload);
     }
 
