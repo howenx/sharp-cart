@@ -48,25 +48,29 @@ public class MsgCtrl extends Controller{
     public Result testMsg(){
         //Long userId = (Long) ctx().args.get("userId");
         addMsgRec(1000073L,MsgTypeEnum.Discount,"title","content","/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg","/comm/detail/888301/111324","D");
-        addSysMsg(MsgTypeEnum.System.getMsgType(),"titlesys","contentsys","/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg","/comm/detail/888301/111324","D",new Timestamp(System.currentTimeMillis()+24*60*60*1000));
+        addSysMsg(MsgTypeEnum.Discount,"titlesys111111","contentsys","/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg","/comm/detail/888301/111324","D",new Timestamp(System.currentTimeMillis()+24*60*60*1000));
        // checkRecSysMsgOnline(1000073L);
-        return ok("success");
+        cleanMsgAtFixedTime();
+        ObjectNode result = newObject();
+
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+        return ok(result);
     }
 
     /**
      * 添加给全体发送的系统消息
-     * @param msgType
-     * @param title
-     * @param msgContent
-     * @param msgImg
-     * @param msgUrl
-     * @param targetType
-     * @param endAt
+     * @param msgTypeEnum 消息类型
+     * @param title   标题
+     * @param msgContent 内容
+     * @param msgImg  图片地址
+     * @param msgUrl  url
+     * @param targetType T:主题，D:详细页面，P:拼购商品页，A:活动页面，U:一个促销活动的链接
+     * @param endAt   失效时间
      * @return
      */
-    public Msg addSysMsg(String msgType,String title,String msgContent,String msgImg,String msgUrl,String targetType,Timestamp endAt){
+    public Msg addSysMsg(MsgTypeEnum msgTypeEnum,String title,String msgContent,String msgImg,String msgUrl,String targetType,Timestamp endAt){
         Msg msg=new Msg();
-        msg.setMsgType(msgType);
+        msg.setMsgType(msgTypeEnum.getMsgType());
         msg.setMsgTitle(title);
         msg.setMsgContent(msgContent);
         msg.setMsgImg(msgImg);
@@ -80,9 +84,9 @@ public class MsgCtrl extends Controller{
     }
 
     /***
-     * 登录时接收未接收的系统消息 TODO 调用
+     * 接收未接收的系统消息
      */
-    public void checkRecSysMsgOnline(Long userId){
+    public void checkNotRecSysMsg(Long userId){
         Optional<List<Msg>> msgList= Optional.ofNullable(msgService.getNotRecMsg(userId));
         if(msgList.isPresent()&&msgList.get().size()>0){
             msgList.get().forEach(msg->{
@@ -94,19 +98,20 @@ public class MsgCtrl extends Controller{
     /***
      * 定期清理消息  TODO 调用
      */
-    public void cleanMsgAtFixedime(){
+    public void cleanMsgAtFixedTime(){
+        //顺序不可换
         msgService.cleanMsg();  //定期清理过期的系统消息
         msgService.cleanMsgRec();//定期清理已经删除的消息
     }
 
     /***
      * 指定用户发送消息
-     * @param userId
-     * @param msgTypeEnum
-     * @param title
-     * @param msgContent
-     * @param msgImg
-     * @param msgUrl
+     * @param userId  用户ID
+     * @param msgTypeEnum  消息类型
+     * @param title   标题
+     * @param msgContent 内容
+     * @param msgImg  图片地址
+     * @param msgUrl  url
      * @return
      */
     public MsgRec addMsgRec(Long userId,MsgTypeEnum msgTypeEnum,String title,String msgContent,String msgImg,String msgUrl,String targetType){
@@ -167,8 +172,7 @@ public class MsgCtrl extends Controller{
     public Result getAllMsgType(){
         ObjectNode result = newObject();
         Long userId = (Long) ctx().args.get("userId");
-        //暂时放这 TODO
-        checkRecSysMsgOnline(userId);
+        checkNotRecSysMsg(userId);
 
         Map<String,Integer> msgTypeMap=new HashMap<String,Integer>();
         try{
@@ -272,7 +276,10 @@ public class MsgCtrl extends Controller{
         Long userId = (Long) ctx().args.get("userId");
         MsgRec msgRec=new MsgRec();
         msgRec.setUserId(userId);
-        msgRec.setMsgType(msgType);
+        if(!"all".equalsIgnoreCase(msgType)){//按照消息类别清空消息
+            msgRec.setMsgType(msgType);
+        }
+
         try {
             if (msgService.cleanMsgRecBy(msgRec)) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));

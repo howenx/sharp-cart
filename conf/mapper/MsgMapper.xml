@@ -58,7 +58,7 @@
     <update id="cleanMsg">
         delete from sp_msg where 1=1
         and now()&gt;end_at
-        )
+
     </update>
 
 
@@ -89,7 +89,7 @@
         <include refid="MsgRecColumns">
             <property name="alias" value="t"/>
         </include>
-        from sp_msg_rec t where 1=1 and del_status=1
+        from sp_msg_rec t where 1=1 and t.del_status=1
         <if test="id!=null and id!=''">
             and t.id = #{id}
         </if>
