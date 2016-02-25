@@ -76,8 +76,8 @@ public class PushCtrl extends Controller {
 
     /***
      * 推送的额外字段
-     * @param url
-     * @param targetType
+     * @param url  跳转的URL
+     * @param targetType T:主题，D:详细页面，P:拼购商品页，A:活动页面，U:一个促销活动的链接
      * @return
      */
     public Map<String, String> getPushExtras(String url,String targetType){
@@ -166,6 +166,7 @@ public class PushCtrl extends Controller {
      * @param alter  推送内容(必填)
      * @param title  推送标题
      * @param extras 额外字段
+     * @param alias  用别名来标识一个用户
      */
     public void send_push_android_alias(String alter,String title,Map<String, String> extras,String...alias){
         PushPayload pushPayload=PushPayload.newBuilder()
@@ -179,6 +180,7 @@ public class PushCtrl extends Controller {
      * ios  alias    发送消息
      * @param alter  推送内容(必填)
      * @param extras 额外字段
+     * @param alias  用别名来标识一个用户
      */
     public void send_push_ios_alias(String alter,Map<String, String> extras,String...alias){
         PushPayload pushPayload=PushPayload.newBuilder()
@@ -200,6 +202,7 @@ public class PushCtrl extends Controller {
                 .setPlatform(Platform.android())
                 .setAudience(Audience.registrationId(registrationId))
                 .setNotification(Notification.android(alter,title,extras)).build();
+        sendPush(pushPayload);
 
     }
     /**
@@ -213,36 +216,10 @@ public class PushCtrl extends Controller {
                 .setPlatform(Platform.ios())
                 .setAudience(Audience.registrationId(registrationId))
                 .setNotification(Notification.ios(alter,extras)).build();
+        sendPush(pushPayload);
 
     }
-//
-//
-//
-//
-//
-//    /***
-//     * 所有平台 指定别名alias 的人发送推送
-//     * @param alter  内容
-//     * @param alias  用别名来标识一个用户
-//     * @return
-//     */
-//    public  PushPayload buildPushObject_all_alias_alert(String alter,String... alias) {
-//        return PushPayload.newBuilder()
-//                .setPlatform(Platform.all())
-//                .setAudience(Audience.alias(alias))
-//                .setNotification(Notification.alert(alter))
-//                .build();
-//    }
 
-    /***
-     *             PushCtrl.sendPush(PushCtrl.buildPushObject_all_all_alert("buildPushObject_all_all_alert"));
-     PushCtrl.sendPush(PushCtrl.buildPushObject_all_alias_alert("buildPushObject_all_alias_alert","song"));
-     Map<String, String> extras=new HashMap<String, String>();
-     extras.put("newsid", "321");
-     extras.put("url", "http://172.28.3.78:9001/comm/detail/888301/111324");
-     extras.put("targetType", "B");
-     PushCtrl.sendPush(PushCtrl.buildPushObject_android_tag_alertWithTitle("buildPushObject_android_tag_alertWithTitle","title",extras,"song"));
-     */
 //    public static void testSendIosAlert() {
 //        JPushClient jpushClient = new JPushClient(masterSecret, appKey);
 //
