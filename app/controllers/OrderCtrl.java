@@ -670,7 +670,7 @@ public class OrderCtrl extends Controller {
      * 获取所有收藏数据
      * @return
      */
-    //@Security.Authenticated(UserAuth.class)
+    @Security.Authenticated(UserAuth.class)
     public Result getCollect(){
 
         ObjectNode result = newObject();
@@ -678,7 +678,6 @@ public class OrderCtrl extends Controller {
             Long userId = (Long) ctx().args.get("userId");
             Collect collect=new Collect();
             collect.setUserId(userId);
-
             List<CollectDto> collectDtoList=new ArrayList<CollectDto>();
             Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
             if (collectList.isPresent()){
