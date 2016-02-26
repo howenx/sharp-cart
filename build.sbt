@@ -63,7 +63,7 @@ libraryDependencies ++= Seq(
   "org.iq80.leveldb" % "leveldb" % "0.7",
   "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
 )
-
+libraryDependencies += "com.linkedin.paldb" % "paldb" % "1.1.0"
 
 resolvers ++= Seq(
   "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",

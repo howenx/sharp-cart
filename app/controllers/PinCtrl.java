@@ -1,7 +1,14 @@
 package controllers;
 
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Cancellable;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.linkedin.paldb.api.NotFoundException;
+import com.linkedin.paldb.api.PalDB;
+import com.linkedin.paldb.api.StoreReader;
+import com.linkedin.paldb.api.StoreWriter;
 import domain.*;
 import org.apache.commons.beanutils.BeanUtils;
 import play.Logger;
@@ -9,17 +16,23 @@ import play.Play;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
+import scala.concurrent.duration.Duration;
 import service.CartService;
 import service.IdService;
 import service.PromotionService;
 import service.SkuService;
 import util.CalCountDown;
 import util.GenCouponCode;
+import util.SerializerJava;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.File;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static play.libs.Json.newObject;
@@ -40,6 +53,16 @@ public class PinCtrl extends Controller {
 
     public static final String PIN_USER_PHOTO = Play.application().configuration().getString("oss.url");
 
+    private final File STORE_FOLDER = new File(Play.application().configuration().getString("paldb.local.dir"));
+
+    private final File STORE_FILE = new File(STORE_FOLDER, "paldb.dat");
+
+    @Inject
+    @Named("schedulerCancelOrderActor")
+    private ActorRef schedulerCancelOrderActor;
+
+    @Inject
+    private ActorSystem system;
 
 
     @Inject
@@ -51,13 +74,54 @@ public class PinCtrl extends Controller {
 
     }
 
-    public Result testpin(){
-        Map<String, String> params = new HashMap<>();
-        params.put("pinActivity", JDPay.SHOPPING_URL+"/client/pin/activity/pay/"+223667);
-        return ok(views.html.pin.render(params));
+    public Result testpin() {
+
+        STORE_FILE.delete();
+        STORE_FOLDER.delete();
+        STORE_FOLDER.mkdir();
+
+        try {
+            StoreWriter writer = PalDB.createWriter(STORE_FILE);
+
+            Cancellable cl = system.scheduler()
+                    .schedule(Duration.Zero(),
+                            Duration.create(2, TimeUnit.SECONDS),
+                            schedulerCancelOrderActor,
+                            77701021L,
+                            system.dispatcher(),
+                            null);
+
+            writer.put(1001, SerializerJava.serializeObject(new Persist(SerializerJava.serializeObject(cl), "schedulerCancelOrderActor", null, 77701021L, new Date(), 100L)));
+
+            writer.close();
+
+            StoreReader reader = PalDB.createReader(STORE_FILE);
+
+            Logger.error("如果不成功我就---->\n" + reader.getString(1001));
+
+            system.scheduler().scheduleOnce(Duration.create(6, TimeUnit.SECONDS), () -> {
+                try {
+                    Persist persist =SerializerJava.deserializeAndCast(reader.getByteArray(1001));
+                    Cancellable clt = SerializerJava.deserializeAndCast(persist.getCancellable());
+                    Logger.error("取消定时任务:----> "+clt.cancel());
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
+                }
+            },system.dispatcher());
+
+            reader.close();
+
+            Map<String, String> params = new HashMap<>();
+            params.put("pinActivity", JDPay.SHOPPING_URL + "/client/pin/activity/pay/" + 223667);
+
+            return ok(views.html.pin.render(params));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ok(ex.getMessage());
+        }
     }
 
-    public Result pinActivity(Long activityId,Integer pay) {
+    public Result pinActivity(Long activityId, Integer pay) {
 
         ObjectNode result = newObject();
 
@@ -66,18 +130,18 @@ public class PinCtrl extends Controller {
 
             PinActivity pinActivity = promotionService.selectPinActivityById(activityId);
 
-            BeanUtils.copyProperties(pinActivityDTO,pinActivity);
+            BeanUtils.copyProperties(pinActivityDTO, pinActivity);
 
             PinUser pinUser = new PinUser();
             pinUser.setPinActiveId(pinActivity.getPinActiveId());
             List<PinUser> pinUserList = promotionService.selectPinUser(pinUser);
 
-            pinUserList=pinUserList.stream().map(p -> {
-                p.setUserImg(PIN_USER_PHOTO+p.getUserImg());
+            pinUserList = pinUserList.stream().map(p -> {
+                p.setUserImg(PIN_USER_PHOTO + p.getUserImg());
                 try {
                     ID userNm = idService.getID(p.getUserId());
-                    if (userNm==null)
-                    p.setUserNm(("HMM-"+ GenCouponCode.GetCode(4)).toLowerCase());
+                    if (userNm == null)
+                        p.setUserNm(("HMM-" + GenCouponCode.GetCode(4)).toLowerCase());
                     else p.setUserNm(idService.getID(p.getUserId()).getNickname());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -87,10 +151,10 @@ public class PinCtrl extends Controller {
 
             pinActivityDTO.setPinUsers(pinUserList);
 
-            if (pay==2) pinActivityDTO.setPay("new");
+            if (pay == 2) pinActivityDTO.setPay("new");
             else pinActivityDTO.setPay("normal");
 
-            pinActivityDTO.setPinUrl(OrderCtrl.SHOPPING_URL+"/client/pin/activity/"+activityId);
+            pinActivityDTO.setPinUrl(OrderCtrl.SHOPPING_URL + "/client/pin/activity/" + activityId);
 
             pinActivityDTO.setEndCountDown(CalCountDown.getEndTimeSubtract(pinActivityDTO.getEndAt()));
 
@@ -99,8 +163,8 @@ public class PinCtrl extends Controller {
 
             Sku sku = new Sku();
             sku.setId(pinSku.getInvId());
-            sku=skuService.getInv(sku);
-            pinActivityDTO.setPinSkuUrl(OrderCtrl.DEPLOY_URL+"/comm/pin/detail/"+sku.getItemId()+"/"+sku.getId()+"/"+pinSku.getPinId());
+            sku = skuService.getInv(sku);
+            pinActivityDTO.setPinSkuUrl(OrderCtrl.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + pinSku.getPinId());
 
             pinActivityDTO.setPinTitle(pinSku.getPinTitle());
 
@@ -114,7 +178,7 @@ public class PinCtrl extends Controller {
             result.putPOJO("activity", Json.toJson(pinActivityDTO));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             return ok(result);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             Logger.error(ex.getMessage());
             ex.printStackTrace();
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));

@@ -7,6 +7,16 @@
     <meta name="format-detection" content="telephone=no">
     <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.ico">
     <link rel="stylesheet" href="/assets/stylesheets/pay.css">
+    <script>
+        function jumpOrder(){
+            window.location="/openOrder";
+            window.handler.openOrder();
+        }
+        function jumpHome(){
+            window.location="/openHome";
+            window.handler.openHome();
+        }
+    </script>
 </head>
 <body style=" background: rgb(240,240,240);" onload="window.handler.clearHistory('')">
     <div class="order-pay">
@@ -19,8 +29,8 @@
                 <h3>订单金额: <span>@params.get("all_fee")</span></h3>
             </div>
             <div class="btn-pay">
-                <button onClick="window.handler.openOrder()">查看订单</button>
-                <button onClick="window.handler.openHome()">回首页</button>
+                <button onclick="jumpOrder()">查看订单</button>
+                <button onclick="jumpHome()">回首页</button>
             </div>
             <h4>感谢您在韩秘美购物,祝您愉快</h4>
         </div>

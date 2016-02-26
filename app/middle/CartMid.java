@@ -204,7 +204,7 @@ public class CartMid {
         cart.setSkuType(cartDto.getSkuType());
         cart.setSkuTypeId(cartDto.getSkuTypeId());
 
-        if (cartDto.getCartId() == 0) {
+        if (cartDto.getCartId()==null || cartDto.getCartId() == 0) {
             if (cart.getStatus().equals("I") || cart.getStatus().equals("G")) {
 
                 List<Cart> carts = cartService.getCartByUserSku(cart);

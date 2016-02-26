@@ -266,7 +266,7 @@ public class OrderCtrl extends Controller {
                         map.put("address", address);
 
                     }
-                    o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
+                    if (o.getOrderStatus().equals("I")) o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
 
                     //未支付订单
                     if (o.getOrderStatus().equals("I") || o.getOrderStatus().equals("C")) {
