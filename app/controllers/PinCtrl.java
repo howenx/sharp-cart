@@ -2,14 +2,11 @@ package controllers;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Cancellable;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.linkedin.paldb.api.NotFoundException;
-import com.linkedin.paldb.api.PalDB;
-import com.linkedin.paldb.api.StoreReader;
-import com.linkedin.paldb.api.StoreWriter;
 import domain.*;
+import modules.LevelFactory;
+import modules.NewScheduler;
 import org.apache.commons.beanutils.BeanUtils;
 import play.Logger;
 import play.Play;
@@ -23,12 +20,9 @@ import service.PromotionService;
 import service.SkuService;
 import util.CalCountDown;
 import util.GenCouponCode;
-import util.SerializerJava;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.File;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,69 +45,37 @@ public class PinCtrl extends Controller {
 
     private PromotionService promotionService;
 
-    public static final String PIN_USER_PHOTO = Play.application().configuration().getString("oss.url");
-
-    private final File STORE_FOLDER = new File(Play.application().configuration().getString("paldb.local.dir"));
-
-    private final File STORE_FILE = new File(STORE_FOLDER, "paldb.dat");
+    public static final String PIN_USER_PHOTO =
+            Play.application().configuration().getString("oss.url");
 
     @Inject
     @Named("schedulerCancelOrderActor")
     private ActorRef schedulerCancelOrderActor;
 
     @Inject
-    private ActorSystem system;
+    private NewScheduler newScheduler;
 
+//    @Inject
+//    private LevelFactory levelFactory;
+
+//    @Inject
+//    private ActorSystem system;
 
     @Inject
-    public PinCtrl(SkuService skuService, CartService cartService, IdService idService, PromotionService promotionService) {
+    public PinCtrl(SkuService skuService, CartService cartService, IdService idService,
+                   PromotionService promotionService) {
         this.cartService = cartService;
         this.idService = idService;
         this.skuService = skuService;
         this.promotionService = promotionService;
-
     }
 
     public Result testpin() {
 
-        STORE_FILE.delete();
-        STORE_FOLDER.delete();
-        STORE_FOLDER.mkdir();
-
         try {
-            StoreWriter writer = PalDB.createWriter(STORE_FILE);
-
-            Cancellable cl = system.scheduler()
-                    .schedule(Duration.Zero(),
-                            Duration.create(2, TimeUnit.SECONDS),
-                            schedulerCancelOrderActor,
-                            77701021L,
-                            system.dispatcher(),
-                            null);
-
-            writer.put(1001, SerializerJava.serializeObject(new Persist(SerializerJava.serializeObject(cl), "schedulerCancelOrderActor", null, 77701021L, new Date(), 100L)));
-
-            writer.close();
-
-            StoreReader reader = PalDB.createReader(STORE_FILE);
-
-            Logger.error("如果不成功我就---->\n" + reader.getString(1001));
-
-            system.scheduler().scheduleOnce(Duration.create(6, TimeUnit.SECONDS), () -> {
-                try {
-                    Persist persist =SerializerJava.deserializeAndCast(reader.getByteArray(1001));
-                    Cancellable clt = SerializerJava.deserializeAndCast(persist.getCancellable());
-                    Logger.error("取消定时任务:----> "+clt.cancel());
-                } catch (NotFoundException e) {
-                    e.printStackTrace();
-                }
-            },system.dispatcher());
-
-            reader.close();
-
+            newScheduler.scheduleOnce(Duration.create(90, TimeUnit.SECONDS),schedulerCancelOrderActor, 77701021L);
             Map<String, String> params = new HashMap<>();
             params.put("pinActivity", JDPay.SHOPPING_URL + "/client/pin/activity/pay/" + 223667);
-
             return ok(views.html.pin.render(params));
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -142,7 +104,8 @@ public class PinCtrl extends Controller {
                     ID userNm = idService.getID(p.getUserId());
                     if (userNm == null)
                         p.setUserNm(("HMM-" + GenCouponCode.GetCode(4)).toLowerCase());
-                    else p.setUserNm(idService.getID(p.getUserId()).getNickname());
+                    else
+                        p.setUserNm(idService.getID(p.getUserId()).getNickname());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -151,12 +114,15 @@ public class PinCtrl extends Controller {
 
             pinActivityDTO.setPinUsers(pinUserList);
 
-            if (pay == 2) pinActivityDTO.setPay("new");
-            else pinActivityDTO.setPay("normal");
+            if (pay == 2)
+                pinActivityDTO.setPay("new");
+            else
+                pinActivityDTO.setPay("normal");
 
             pinActivityDTO.setPinUrl(OrderCtrl.SHOPPING_URL + "/client/pin/activity/" + activityId);
 
-            pinActivityDTO.setEndCountDown(CalCountDown.getEndTimeSubtract(pinActivityDTO.getEndAt()));
+            pinActivityDTO
+                    .setEndCountDown(CalCountDown.getEndTimeSubtract(pinActivityDTO.getEndAt()));
 
             PinSku pinSku = promotionService.getPinSkuById(pinActivityDTO.getPinId());
 
@@ -164,24 +130,31 @@ public class PinCtrl extends Controller {
             Sku sku = new Sku();
             sku.setId(pinSku.getInvId());
             sku = skuService.getInv(sku);
-            pinActivityDTO.setPinSkuUrl(OrderCtrl.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + pinSku.getPinId());
+            pinActivityDTO.setPinSkuUrl(
+                    OrderCtrl.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId()
+                            + "/" + pinSku.getPinId());
 
             pinActivityDTO.setPinTitle(pinSku.getPinTitle());
 
 
             JsonNode js_invImg = Json.parse(pinSku.getPinImg());
             if (js_invImg.has("url")) {
-                ((ObjectNode) js_invImg).put("url", Application.IMAGE_URL + js_invImg.get("url").asText());
+                ((ObjectNode) js_invImg)
+                        .put("url", Application.IMAGE_URL + js_invImg.get("url").asText());
             }
             pinActivityDTO.setPinImg(js_invImg.toString());
 
             result.putPOJO("activity", Json.toJson(pinActivityDTO));
-            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            result.putPOJO("message", Json.toJson(
+                    new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()),
+                            Message.ErrorCode.SUCCESS.getIndex())));
             return ok(result);
         } catch (Exception ex) {
             Logger.error(ex.getMessage());
             ex.printStackTrace();
-            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
+            result.putPOJO("message", Json.toJson(
+                    new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()),
+                            Message.ErrorCode.ERROR.getIndex())));
             return ok(result);
         }
     }

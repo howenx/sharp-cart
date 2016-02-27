@@ -234,7 +234,7 @@ public class OrderCtrl extends Controller {
         try {
             Long userId = (Long) ctx().args.get("userId");
             Order order = new Order();
-            if (orderId != 0) {
+            if (orderId != 0L) {
                 order.setOrderId(orderId);
             }
             order.setUserId(userId);

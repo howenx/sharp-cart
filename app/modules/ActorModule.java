@@ -1,8 +1,8 @@
 package modules;
 
-        import actor.*;
-        import com.google.inject.AbstractModule;
-        import play.libs.akka.AkkaGuiceSupport;
+import actor.*;
+import com.google.inject.AbstractModule;
+import play.libs.akka.AkkaGuiceSupport;
 
 /**
  * Akka Actor Module
@@ -27,5 +27,6 @@ public class ActorModule extends AbstractModule implements AkkaGuiceSupport {
         bindActor(PinFailActor.class, "pinFailActor");
         bindActor(PushActor.class,"pushActor");
         bindActor(RefundActor.class,"refundActor");
+        bindActor(DelScheduleActor.class,"delScheduleActor");
     }
 }

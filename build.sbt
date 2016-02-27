@@ -1,5 +1,6 @@
 import play.routes.compiler.InjectedRoutesGenerator
 import play.sbt.PlayJava
+
 name := """style-shopping"""
 version := "0.1.2"
 
@@ -9,7 +10,7 @@ scalaVersion := "2.11.7"
 
 evictionWarningOptions in evicted := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
 
-updateOptions := updateOptions.value.withConsolidatedResolution(true)
+updateOptions := (updateOptions.value withConsolidatedResolution true)
 
 
 libraryDependencies ++= Seq(
@@ -28,9 +29,6 @@ libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr3
 libraryDependencies += "commons-io" % "commons-io" % "2.4"
 libraryDependencies += "com.squareup.okhttp" % "okhttp" % "2.7.2"
 libraryDependencies += "commons-beanutils" % "commons-beanutils" % "1.9.2"
-
-
-
 
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4" withSources() withJavadoc()
 
@@ -63,10 +61,9 @@ libraryDependencies ++= Seq(
   "org.iq80.leveldb" % "leveldb" % "0.7",
   "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
 )
-libraryDependencies += "com.linkedin.paldb" % "paldb" % "1.1.0"
 
 resolvers ++= Seq(
-  "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
+  "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
   "Apache" at "http://repo1.maven.org/maven2/",
   "jBCrypt Repository" at "http://repo1.maven.org/maven2/org/",
   "Sonatype OSS Snasphots" at "http://oss.sonatype.org/content/repositories/snapshots"
