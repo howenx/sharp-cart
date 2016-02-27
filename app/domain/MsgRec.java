@@ -2,13 +2,15 @@ package domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 /**
  * 消息
  * Created by sibyl.sun on 16/2/22.
  */
-public class MsgRec {
+public class MsgRec implements Serializable {
+    private static final long serialVersionUID = 1L;
     private long id;//唯一键
     @JsonIgnore
     private long userId;//用户ID
@@ -131,5 +133,17 @@ public class MsgRec {
 
     public void setCreateAt(Timestamp createAt) {
         this.createAt = createAt;
+    }
+    @Override
+    public String toString(){
+        return "Msg [userId=" +userId+
+                "msgTitle="+msgTitle+
+                ",msgContent="+msgContent+
+                ",msgImg="+msgImg+
+                ",msgUrl="+msgUrl+
+                ",msgType="+msgType+
+                ",createAt="+createAt+
+                ",msgId="+msgId+
+                ",targetType="+targetType;
     }
 }

@@ -1,12 +1,14 @@
 package domain;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 /**
  * 全体系统消息
  * Created by sibyl.sun on 16/2/22.
  */
-public class Msg {
+public class Msg implements Serializable {
+    private static final long serialVersionUID = 1L;
     private long msgId;//消息id
     private String msgTitle; //消息标题
     private String msgContent;//消息内容
@@ -87,6 +89,17 @@ public class Msg {
 
     public void setMsgType(String msgType) {
         this.msgType = msgType;
+    }
+    @Override
+    public String toString(){
+        return "Msg [msgTitle="+msgTitle+
+                ",msgContent="+msgContent+
+                ",msgImg="+msgImg+
+                ",msgUrl="+msgUrl+
+                ",msgType="+msgType+
+                ",createAt="+createAt+
+                ",endAt="+endAt+
+                ",targetType="+targetType;
     }
 
 }
