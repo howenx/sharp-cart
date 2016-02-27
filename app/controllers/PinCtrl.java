@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
 import modules.LevelFactory;
 import modules.NewScheduler;
+import modules.SysParCom;
 import org.apache.commons.beanutils.BeanUtils;
 import play.Logger;
 import play.Play;
@@ -37,16 +38,14 @@ import static play.libs.Json.newObject;
  */
 public class PinCtrl extends Controller {
 
+    @Inject
     private SkuService skuService;
 
-    private CartService cartService;
-
+    @Inject
     private IdService idService;
 
+    @Inject
     private PromotionService promotionService;
-
-    public static final String PIN_USER_PHOTO =
-            Play.application().configuration().getString("oss.url");
 
     @Inject
     @Named("schedulerCancelOrderActor")
@@ -55,27 +54,13 @@ public class PinCtrl extends Controller {
     @Inject
     private NewScheduler newScheduler;
 
-//    @Inject
-//    private LevelFactory levelFactory;
-
-//    @Inject
-//    private ActorSystem system;
-
-    @Inject
-    public PinCtrl(SkuService skuService, CartService cartService, IdService idService,
-                   PromotionService promotionService) {
-        this.cartService = cartService;
-        this.idService = idService;
-        this.skuService = skuService;
-        this.promotionService = promotionService;
-    }
 
     public Result testpin() {
 
         try {
-            newScheduler.scheduleOnce(Duration.create(90, TimeUnit.SECONDS),schedulerCancelOrderActor, 77701021L);
+            newScheduler.scheduleOnce(Duration.create(90, TimeUnit.SECONDS), schedulerCancelOrderActor, 77701021L);
             Map<String, String> params = new HashMap<>();
-            params.put("pinActivity", JDPay.SHOPPING_URL + "/client/pin/activity/pay/" + 223667);
+            params.put("pinActivity", SysParCom.SHOPPING_URL + "/client/pin/activity/pay/" + 223667);
             return ok(views.html.pin.render(params));
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -99,7 +84,7 @@ public class PinCtrl extends Controller {
             List<PinUser> pinUserList = promotionService.selectPinUser(pinUser);
 
             pinUserList = pinUserList.stream().map(p -> {
-                p.setUserImg(PIN_USER_PHOTO + p.getUserImg());
+                p.setUserImg(SysParCom.PIN_USER_PHOTO + p.getUserImg());
                 try {
                     ID userNm = idService.getID(p.getUserId());
                     if (userNm == null)
@@ -119,7 +104,7 @@ public class PinCtrl extends Controller {
             else
                 pinActivityDTO.setPay("normal");
 
-            pinActivityDTO.setPinUrl(OrderCtrl.SHOPPING_URL + "/client/pin/activity/" + activityId);
+            pinActivityDTO.setPinUrl(SysParCom.SHOPPING_URL + "/client/pin/activity/" + activityId);
 
             pinActivityDTO
                     .setEndCountDown(CalCountDown.getEndTimeSubtract(pinActivityDTO.getEndAt()));
@@ -131,7 +116,7 @@ public class PinCtrl extends Controller {
             sku.setId(pinSku.getInvId());
             sku = skuService.getInv(sku);
             pinActivityDTO.setPinSkuUrl(
-                    OrderCtrl.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId()
+                    SysParCom.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId()
                             + "/" + pinSku.getPinId());
 
             pinActivityDTO.setPinTitle(pinSku.getPinTitle());
@@ -140,7 +125,7 @@ public class PinCtrl extends Controller {
             JsonNode js_invImg = Json.parse(pinSku.getPinImg());
             if (js_invImg.has("url")) {
                 ((ObjectNode) js_invImg)
-                        .put("url", Application.IMAGE_URL + js_invImg.get("url").asText());
+                        .put("url", SysParCom.IMAGE_URL + js_invImg.get("url").asText());
             }
             pinActivityDTO.setPinImg(js_invImg.toString());
 

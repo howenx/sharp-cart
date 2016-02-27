@@ -7,20 +7,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
 import filters.UserAuth;
 import middle.OrderMid;
+import modules.SysParCom;
 import org.apache.commons.io.FileUtils;
 import play.Logger;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.*;
 import service.CartService;
-import service.IdService;
 import service.PromotionService;
 import service.SkuService;
 import util.CalCountDown;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -31,72 +30,29 @@ import static play.libs.Json.newObject;
  * 订单相关,提交订单,优惠券
  * Created by howen on 15/12/1.
  */
-@Singleton
+
 public class OrderCtrl extends Controller {
 
+    @Inject
     private SkuService skuService;
 
+    @Inject
     private CartService cartService;
 
-    private IdService idService;
-
+    @Inject
     private PromotionService promotionService;
 
-    private ActorRef orderSplitActor;
-
+    @Inject
+    @Named("cancelOrderActor")
     private ActorRef cancelOrderActor;
 
+    @Inject
+    @Named("uploadImagesActor")
     private ActorRef uploadImagesActor;
 
-    //行邮税收税标准
-    public static String POSTAL_STANDARD;
-
-    //海关规定购买单笔订单金额限制
-    public static String POSTAL_LIMIT;
-
-    //达到多少免除邮费
-    public static String FREE_SHIP;
-
+    @Inject
     private OrderMid orderMid;
 
-    @Inject
-    public OrderCtrl(SkuService skuService, CartService cartService, IdService idService, PromotionService promotionService, @Named("uploadImagesActor") ActorRef uploadImagesActor, @Named("subOrderActor") ActorRef orderSplitActor, @Named("cancelOrderActor") ActorRef cancelOrderActor) {
-        this.cartService = cartService;
-        this.idService = idService;
-        this.orderSplitActor = orderSplitActor;
-        this.skuService = skuService;
-        this.cancelOrderActor = cancelOrderActor;
-        this.uploadImagesActor = uploadImagesActor;
-        this.promotionService = promotionService;
-
-        //行邮税收税标准
-        POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
-
-        //海关规定购买单笔订单金额限制
-        POSTAL_LIMIT = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_LIMIT")).getParameterVal();
-
-        //达到多少免除邮费
-        FREE_SHIP = skuService.getSysParameter(new SysParameter(null, null, null, "FREE_SHIP")).getParameterVal();
-
-        orderMid = new OrderMid(skuService, cartService, idService, promotionService ,orderSplitActor);
-
-    }
-
-    //图片服务器url
-    static final String IMAGE_URL = play.Play.application().configuration().getString("image.server.url");
-
-    //发布服务器url
-    static final String DEPLOY_URL = play.Play.application().configuration().getString("deploy.server.url");
-
-    //shopping服务器url
-    static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
-
-    //id服务器url
-    static final String ID_URL = play.Play.application().configuration().getString("id.server.url");
-
-    static final String IMG_PROCESS_URL = play.Play.application().configuration().getString("imgprocess.server.url");
-
-    //将Json串转换成List
     private static ObjectMapper mapper = new ObjectMapper();
 
     /**
@@ -293,22 +249,22 @@ public class OrderCtrl extends Controller {
                             if (orl.getSkuImg().contains("url")) {
                                 JsonNode jsonNode = Json.parse(orl.getSkuImg());
                                 if (jsonNode.has("url")) {
-                                    skuDto.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
+                                    skuDto.setInvImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
                                 }
-                            } else skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                            } else skuDto.setInvImg(SysParCom.IMAGE_URL + orl.getSkuImg());
 
                             switch (orl.getSkuType()) {
                                 case "item":
-                                    skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
                                     break;
                                 case "vary":
-                                    skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
                                     break;
                                 case "customize":
-                                    skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/subject/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
                                     break;
                                 case "pin":
-                                    skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/pin/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
                                     break;
                             }
 
@@ -360,22 +316,22 @@ public class OrderCtrl extends Controller {
                                     if (orl.getSkuImg().contains("url")) {
                                         JsonNode jsonNode = Json.parse(orl.getSkuImg());
                                         if (jsonNode.has("url")) {
-                                            skuDto.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
+                                            skuDto.setInvImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
                                         }
-                                    } else skuDto.setInvImg(IMAGE_URL + orl.getSkuImg());
+                                    } else skuDto.setInvImg(SysParCom.IMAGE_URL + orl.getSkuImg());
 
                                     switch (orl.getSkuType()) {
                                         case "item":
-                                            skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
+                                            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
                                             break;
                                         case "vary":
-                                            skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
                                             break;
                                         case "customize":
-                                            skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/subject/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
                                             break;
                                         case "pin":
-                                            skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/pin/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
+                                            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
                                             break;
                                     }
 
@@ -423,7 +379,7 @@ public class OrderCtrl extends Controller {
                 if (listOptional.isPresent() && listOptional.get().size() > 0) {
                     order = cartService.getOrderBy(order).get(0);
                     Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
-                    if (longOptional.isPresent() && longOptional.get().compareTo(JDPay.COUNTDOWN_MILLISECONDS) > 0) {
+                    if (longOptional.isPresent() && longOptional.get().compareTo(SysParCom.COUNTDOWN_MILLISECONDS) > 0) {
                         cancelOrderActor.tell(orderId, null);
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex()), Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex())));
                         return ok(result);
@@ -559,7 +515,7 @@ public class OrderCtrl extends Controller {
                         }
                     }
                     mapActor.put("files", files);
-                    mapActor.put("url", IMG_PROCESS_URL);
+                    mapActor.put("url", SysParCom.IMG_PROCESS_URL);
                     uploadImagesActor.tell(mapActor, ActorRef.noSender());
                 }
 
@@ -706,11 +662,11 @@ public class OrderCtrl extends Controller {
 
                     //跳转地址
                     if ("item".equals(c.getSkuType())) {
-                        skuDto.setInvUrl(DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
-                        skuDto.setInvAndroidUrl(DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId());
+                        skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                        skuDto.setInvAndroidUrl(SysParCom.DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId());
                     } else if ("pin".equals(c.getSkuType())) {
-                        skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
-                        skuDto.setInvAndroidUrl(Application.DEPLOY_URL + "/comm/pin/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                        skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                        skuDto.setInvAndroidUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
                         PinSku pinSku = promotionService.getPinSkuById(c.getSkuTypeId());
                         if(null==pinSku){
                             Logger.warn("collect pin sku not exist ,pinSkuId=" + c.getSkuTypeId());
@@ -720,21 +676,21 @@ public class OrderCtrl extends Controller {
                         skuDto.setPrice(new BigDecimal(jsonNode.get("price").asText()));
 
                     } else if ("vary".equals(c.getSkuType())) {
-                        skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
-                        skuDto.setInvAndroidUrl(Application.DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                        skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                        skuDto.setInvAndroidUrl(SysParCom.DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
                     } else if ("customize".equals(c.getSkuType())) {
-                        skuDto.setInvUrl(Application.DEPLOY_URL + "/comm/subject/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
-                        skuDto.setInvAndroidUrl(Application.DEPLOY_URL + "/comm/subject/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                        skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                        skuDto.setInvAndroidUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
                     }
 
                     if (sku.getInvImg().contains("url")) {
                         JsonNode jsonNode = Json.parse(sku.getInvImg());
                         if (jsonNode.has("url")) {
-                            skuDto.setInvImg(IMAGE_URL + jsonNode.get("url").asText());
+                            skuDto.setInvImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
                         }
                     }
                     else
-                        skuDto.setInvImg(IMAGE_URL + sku.getInvImg());
+                        skuDto.setInvImg(SysParCom.IMAGE_URL + sku.getInvImg());
 
                     skuDto.setItemColor(sku.getItemColor());
                     skuDto.setItemSize(sku.getItemSize());

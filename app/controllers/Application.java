@@ -44,12 +44,6 @@ public class Application extends Controller {
     private CartService cartService;
 
     @Inject
-    private IdService idService;
-
-    @Inject
-    private MemcachedClient cache;
-
-    @Inject
     private CartMid cartMid;
 
     @Inject
@@ -64,18 +58,6 @@ public class Application extends Controller {
 
     @Inject
     private LevelFactory levelFactory;
-
-    //图片服务器url
-    public static final String IMAGE_URL = play.Play.application().configuration().getString("image.server.url");
-
-    //发布服务器url
-    public static final String DEPLOY_URL = play.Play.application().configuration().getString("deploy.server.url");
-
-    //shopping服务器url
-    public static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
-
-    //id服务器url
-    public static final String ID_URL = play.Play.application().configuration().getString("id.server.url");
 
     //将Json串转换成List
     final static ObjectMapper mapper = new ObjectMapper();

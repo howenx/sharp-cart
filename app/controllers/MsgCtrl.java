@@ -7,6 +7,7 @@ import domain.Message;
 import domain.Msg;
 import domain.MsgRec;
 import filters.UserAuth;
+import modules.SysParCom;
 import play.Logger;
 import play.libs.Json;
 import play.mvc.Controller;
@@ -213,12 +214,12 @@ public class MsgCtrl extends Controller{
                     if (m.getMsgImg().contains("url")) {
                         JsonNode jsonNode = Json.parse(m.getMsgImg());
                         if (jsonNode.has("url")) {
-                            m.setMsgImg(OrderCtrl.IMAGE_URL + jsonNode.get("url").asText());
+                            m.setMsgImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
                         }
                     }
                     else
-                        m.setMsgImg(OrderCtrl.IMAGE_URL + m.getMsgImg());
-                    m.setMsgUrl(Application.DEPLOY_URL+m.getMsgUrl());
+                        m.setMsgImg(SysParCom.IMAGE_URL + m.getMsgImg());
+                    m.setMsgUrl(SysParCom.DEPLOY_URL+m.getMsgUrl());
                     if(m.getReadStatus()==1){
                         isHaveNotRead[0] =true;
                     }

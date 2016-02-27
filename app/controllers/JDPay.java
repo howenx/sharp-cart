@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import domain.*;
 import filters.UserAuth;
 import middle.JDPayMid;
+import modules.SysParCom;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -57,22 +58,8 @@ public class JDPay extends Controller {
     @Inject
     private JDPayMid jdPayMid;
 
-
     @Inject
     WSClient ws;
-
-    //shopping服务器url
-    public static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
-
-    public static final String PROMOTION_URL = play.Play.application().configuration().getString("promotion.server.url");
-
-    public static final String JD_SECRET = Play.application().configuration().getString("jd_secret");
-
-    public static final String JD_SELLER = Play.application().configuration().getString("jd_seller");
-
-    public static final Long COUNTDOWN_MILLISECONDS = Long.valueOf(Play.application().configuration().getString("order.countdown.milliseconds"));
-
-    public static final Long PIN_MILLISECONDS = Long.valueOf(Play.application().configuration().getString("pin.activity.milliseconds"));
 
     @Inject
     ActorSystem system;
@@ -98,7 +85,7 @@ public class JDPay extends Controller {
             if (listOptional.isPresent() && listOptional.get().size() > 0) {
                 order = listOptional.get().get(0);
                 Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
-                if (longOptional.isPresent() && longOptional.get().compareTo(COUNTDOWN_MILLISECONDS) > 0) {
+                if (longOptional.isPresent() && longOptional.get().compareTo(SysParCom.COUNTDOWN_MILLISECONDS) > 0) {
                     cancelOrderActor.tell(orderId, null);
                     Logger.error("order timeout:" + order.getOrderId());
                     return ok(views.html.jdpayfailed.render());
@@ -142,7 +129,7 @@ public class JDPay extends Controller {
             optionalOrderInfo.get().forEach(params::put);
             getBasicInfo().forEach(params::put);
             params.put("orderCreateAt", String.valueOf(timeInMillis));
-            params.put("sign_data", Crypto.create_sign(params, JD_SECRET));
+            params.put("sign_data", Crypto.create_sign(params, SysParCom.JD_SECRET));
             return params;
         } else return null;
     }
@@ -222,10 +209,10 @@ public class JDPay extends Controller {
         String trade_currency = "CNY";
         String settle_currency = "USD";
 
-        params.put("customer_no", JD_SELLER);
-        params.put("notify_url", SHOPPING_URL + "/client/pay/jd/back");
+        params.put("customer_no", SysParCom.JD_SELLER);
+        params.put("notify_url", SysParCom.SHOPPING_URL + "/client/pay/jd/back");
         params.put("request_datetime", req_date);
-        params.put("return_url", SHOPPING_URL + "/client/pay/jd/front");
+        params.put("return_url", SysParCom.SHOPPING_URL + "/client/pay/jd/front");
         params.put("settle_currency", settle_currency);
         params.put("trade_currency", trade_currency);
         params.put("sign_type", sign_type);
@@ -313,11 +300,11 @@ public class JDPay extends Controller {
                                         pinUser = pinUsers.get(0);
                                     }
                                     if (pinUser.isOrMaster()) {
-                                        params.put("pinActivity",PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/1");
+                                        params.put("pinActivity",SysParCom.PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/1");
                                         //24小时后去检查此团的状态
                                         system.scheduler().scheduleOnce(FiniteDuration.create(2, MINUTES), pinFailActor, order.getPinActiveId(), system.dispatcher(), ActorRef.noSender());
                                     } else {
-                                        params.put("pinActivity",PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/2");
+                                        params.put("pinActivity",SysParCom.PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/2");
                                     }
                                     return ok(views.html.pin.render(params));
                                 } else return ok(views.html.jdpayfailed.render());
@@ -354,7 +341,7 @@ public class JDPay extends Controller {
         params.put("trade_subject", refund.getReason());
         params.put("return_params", refund.getId().toString());
         getBasicInfo().forEach(params::put);
-        params.put("sign_data", Crypto.create_sign(params, JD_SECRET));
+        params.put("sign_data", Crypto.create_sign(params, SysParCom.JD_SECRET));
         return params;
     }
 

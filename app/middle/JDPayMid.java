@@ -1,11 +1,10 @@
 package middle;
 
 import akka.actor.ActorRef;
-import controllers.JDPay;
 import domain.*;
+import modules.SysParCom;
 import play.Logger;
 import play.libs.Json;
-import scala.concurrent.duration.FiniteDuration;
 import service.CartService;
 import service.IdService;
 import service.PromotionService;
@@ -17,8 +16,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * 京东支付中间层
@@ -116,7 +113,7 @@ public class JDPayMid {
                 activity.setPinPrice(pinTieredPrice.getPrice());
                 activity.setPinId(orderLine.getSkuTypeId());
                 activity.setStatus("Y");
-                activity.setEndAt(new Timestamp(new Date().getTime() + JDPay.PIN_MILLISECONDS));
+                activity.setEndAt(new Timestamp(new Date().getTime() + SysParCom.PIN_MILLISECONDS));
                 activity.setPinTieredId(pinTieredPrice.getId());
 
                 if (promotionService.insertPinActivity(activity)) {

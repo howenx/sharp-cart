@@ -3,6 +3,7 @@ package modules;
 import com.google.inject.AbstractModule;
 import middle.CartMid;
 import middle.JDPayMid;
+import middle.OrderMid;
 import play.Configuration;
 import play.Environment;
 
@@ -27,5 +28,7 @@ public class LevelDBModule extends AbstractModule {
         bind(JDPayMid.class);
         bind(LevelFactory.class).asEagerSingleton();
         bind(NewScheduler.class);
+        bind(OrderMid.class);
+        bind(SysParCom.class).asEagerSingleton();
     }
 }
