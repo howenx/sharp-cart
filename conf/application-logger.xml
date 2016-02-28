@@ -1,6 +1,6 @@
 <configuration>
-    
-  <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
+
+    <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${application.home}/logs/application.log</file>
@@ -38,17 +38,19 @@
     </appender>
 
     <!-- additivity=false ensures access log data only goes to the access log -->
-    <logger name="access" additivity="false">
-        <appender-ref ref="ACCESS_FILE"/>
+    <logger name="access" level="INFO" additivity="false">
+        <appender-ref ref="ACCESS_FILE" />
         <appender-ref ref="STDOUT" />
     </logger>
 
-    <logger name="play" level="INFO" />
-    <logger name="mapper" level="INFO" />
-    <logger name="controllers" level="INFO" />
+
+    <logger name="mapper" level="DEBUG">
+        <appender-ref ref="STDOUT" />
+    </logger>
 
     <root level="INFO">
-        <appender-ref ref="STDOUT" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="ACCESS_FILE" />
+        <appender-ref ref="STDOUT"/>
     </root>
+
 </configuration>

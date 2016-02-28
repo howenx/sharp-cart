@@ -3,12 +3,11 @@ package modules;
 import akka.actor.ActorSystem;
 import akka.actor.Cancellable;
 import domain.Persist;
-import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.*;
 import org.iq80.leveldb.impl.Iq80DBFactory;
 import play.Configuration;
 import play.Logger;
-import play.api.*;
+import play.api.Environment;
 import util.SerializerJava;
 
 import javax.inject.Inject;
