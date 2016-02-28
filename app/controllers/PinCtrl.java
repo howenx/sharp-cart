@@ -84,7 +84,7 @@ public class PinCtrl extends Controller {
             List<PinUser> pinUserList = promotionService.selectPinUser(pinUser);
 
             pinUserList = pinUserList.stream().map(p -> {
-                p.setUserImg(SysParCom.PIN_USER_PHOTO + p.getUserImg());
+                p.setUserImg(SysParCom.IMAGE_URL + p.getUserImg());
                 try {
                     ID userNm = idService.getID(p.getUserId());
                     if (userNm == null)

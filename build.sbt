@@ -20,12 +20,7 @@ libraryDependencies ++= Seq(
   filters
 )
 
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.6.3"
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3"
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-annotations" % "2.6.3"
-libraryDependencies += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.6.3"
-libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jdk8" % "2.6.3"
-libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.6.3"
+
 libraryDependencies += "commons-io" % "commons-io" % "2.4"
 libraryDependencies += "com.squareup.okhttp" % "okhttp" % "2.7.2"
 libraryDependencies += "commons-beanutils" % "commons-beanutils" % "1.9.2"

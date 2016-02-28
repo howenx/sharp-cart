@@ -118,6 +118,7 @@ public class Application extends Controller {
             Long userId = (Long) ctx().args.get("userId");
             Optional<List<CartItemDTO>> dtos = cartMid.getCarts(userId);
             if (dtos.isPresent()) {
+                Logger.error("购物车数据:\n"+Json.toJson(dtos.get()));
                 result.putPOJO("cartList", Json.toJson(dtos.get()));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             } else

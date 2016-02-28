@@ -1,7 +1,7 @@
 package modules;
 
 import domain.SysParameter;
-import play.Play;
+import play.Configuration;
 import service.SkuService;
 
 import javax.inject.Inject;
@@ -15,48 +15,67 @@ import javax.inject.Singleton;
 public class SysParCom {
 
     //行邮税收税标准
-    public static  String POSTAL_STANDARD;
+    public static String POSTAL_STANDARD;
 
     //海关规定购买单笔订单金额限制
-    public static  String POSTAL_LIMIT;
+    public static String POSTAL_LIMIT;
 
     //达到多少免除邮费
     public static String FREE_SHIP;
 
     //图片服务器url
-    public static final String IMAGE_URL = play.Play.application().configuration().getString("image.server.url");
+    public static String IMAGE_URL;
 
     //发布服务器url
-    public static final String DEPLOY_URL = play.Play.application().configuration().getString("deploy.server.url");
+    public static String DEPLOY_URL;
 
     //shopping服务器url
-    public static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
+    public static String SHOPPING_URL;
 
     //id服务器url
-    public static final String ID_URL = play.Play.application().configuration().getString("id.server.url");
+    public static String ID_URL;
 
-    public static final String IMG_PROCESS_URL = play.Play.application().configuration().getString("imgprocess.server.url");
+    public static String PROMOTION_URL;
 
-    public static final String PIN_USER_PHOTO = Play.application().configuration().getString("oss.url");
+    public static String JD_SECRET;
 
-    public static final String PROMOTION_URL = play.Play.application().configuration().getString("promotion.server.url");
+    public static String JD_SELLER;
 
-    public static final String JD_SECRET = Play.application().configuration().getString("jd_secret");
+    public static Long COUNTDOWN_MILLISECONDS;
 
-    public static final String JD_SELLER = Play.application().configuration().getString("jd_seller");
-
-    public static final Long COUNTDOWN_MILLISECONDS = Long.valueOf(Play.application().configuration().getString("order.countdown.milliseconds"));
-
-    public static final Long PIN_MILLISECONDS = Long.valueOf(Play.application().configuration().getString("pin.activity.milliseconds"));
+    public static Long PIN_MILLISECONDS;
 
     @Inject
-    public SysParCom(SkuService skuService) {
+    public SysParCom(SkuService skuService, Configuration configuration) {
 
         POSTAL_STANDARD = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_STANDARD")).getParameterVal();
 
         POSTAL_LIMIT = skuService.getSysParameter(new SysParameter(null, null, null, "POSTAL_LIMIT")).getParameterVal();
 
         FREE_SHIP = skuService.getSysParameter(new SysParameter(null, null, null, "FREE_SHIP")).getParameterVal();
+
+
+        IMAGE_URL = configuration.getString("image.server.url");
+
+
+        DEPLOY_URL = configuration.getString("deploy.server.url");
+
+
+        SHOPPING_URL = configuration.getString("shopping.server.url");
+
+
+        ID_URL = configuration.getString("id.server.url");
+
+        PROMOTION_URL = configuration.getString("promotion.server.url");
+
+        JD_SECRET = configuration.getString("jd_secret");
+
+        JD_SELLER = configuration.getString("jd_seller");
+
+        COUNTDOWN_MILLISECONDS = Long.valueOf(configuration.getString("order.countdown.milliseconds"));
+
+        PIN_MILLISECONDS = Long.valueOf(configuration.getString("pin.activity.milliseconds"));
+
     }
 
 }

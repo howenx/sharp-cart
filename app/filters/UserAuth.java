@@ -29,7 +29,7 @@ public class UserAuth extends Security.Authenticator {
             Optional<String> token = Optional.ofNullable(cache.get(header.get()).toString());
             if (token.isPresent()) {
                 JsonNode userJson = Json.parse(token.get());
-                Logger.error("Cache中的用户信息:"+userJson.toString());
+//                Logger.error("Cache中的用户信息:"+userJson.toString());
                 Long userId = Long.valueOf(userJson.findValue("id").asText());
                 String  username = userJson.findValue("name").toString();
                 ctx.args.put("userId",userId);

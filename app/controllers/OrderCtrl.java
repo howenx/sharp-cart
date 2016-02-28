@@ -515,7 +515,7 @@ public class OrderCtrl extends Controller {
                         }
                     }
                     mapActor.put("files", files);
-                    mapActor.put("url", SysParCom.IMG_PROCESS_URL);
+                    mapActor.put("url", SysParCom.IMAGE_URL);
                     uploadImagesActor.tell(mapActor, ActorRef.noSender());
                 }
 

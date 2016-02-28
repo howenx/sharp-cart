@@ -43,18 +43,12 @@
         <appender-ref ref="STDOUT" />
     </logger>
 
-  <!--
-    The logger name is typically the Java/Scala package name.
-    This configures the log level to log at for a package and its children packages.
-  -->
     <logger name="play" level="INFO" />
-    <logger name="mapper" level="DEBUG" />
+    <logger name="mapper" level="INFO" />
     <logger name="controllers" level="INFO" />
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </root>
-
-
 </configuration>
