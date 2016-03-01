@@ -246,6 +246,8 @@ public class CartMid {
             cartList.setItemSize(sku.getItemSize());
             cartList.setItemPrice(sku.getItemPrice());
 
+            cartList.setSkuType(cartDto.getSkuType());
+            cartList.setSkuTypeId(cartDto.getSkuTypeId());
 
             //先确定商品状态是正常,否则直接存为失效商品
             if (!sku.getState().equals("Y")) {

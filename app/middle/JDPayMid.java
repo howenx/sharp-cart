@@ -1,8 +1,14 @@
 package middle;
 
 import akka.actor.ActorRef;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import common.MsgTypeEnum;
+import controllers.MsgCtrl;
+import controllers.PushCtrl;
 import domain.*;
 import modules.SysParCom;
+import net.spy.memcached.MemcachedClient;
 import play.Logger;
 import play.libs.Json;
 import service.CartService;
@@ -12,10 +18,7 @@ import service.PromotionService;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * 京东支付中间层
@@ -35,6 +38,15 @@ public class JDPayMid {
     @Inject
     @Named("refundActor")
     private ActorRef refundActor;
+
+    @Inject
+    private MsgCtrl msgCtrl;
+
+    @Inject
+    private PushCtrl pushCtrl;
+
+    @Inject
+    private MemcachedClient cache;
 
     /**
      * 京东支付异步通知结果
@@ -160,7 +172,7 @@ public class JDPayMid {
 
                 }else{
                     activity.setJoinPersons(activity.getJoinPersons() + 1);
-                    if (activity.getJoinPersons() == activity.getPersonNum()) {
+                    if (activity.getJoinPersons().equals(activity.getPersonNum())) {//成团
                         activity.setStatus("C");
                         order.setOrderStatus("S");
                         Order order1 = new Order();
@@ -212,6 +224,32 @@ public class JDPayMid {
             e.printStackTrace();
             Logger.error("refundBack update exception " + e.getMessage());
             return "error";
+        }
+    }
+
+
+    /**
+     * 拼团成功消息推送
+     * @param activity activity
+     *
+     */
+    public void pinPushMsg(PinActivity activity){
+        PinSku pinSku = promotionService.getPinSkuById(activity.getPinId());
+
+        JsonNode js_invImg = Json.parse(pinSku.getPinImg());
+        if (js_invImg.has("url")) {
+            PinUser pinUser = new PinUser();
+            pinUser.setPinActiveId(activity.getPinActiveId());
+            List<PinUser> pinUsers = promotionService.selectPinUser(pinUser);
+            for (PinUser p:pinUsers){
+                //发消息
+                msgCtrl.addMsgRec(p.getUserId(), MsgTypeEnum.Goods,"拼团成功啦,快去看看",pinSku.getPinTitle(),js_invImg.get("url").asText(),"/promotion/pin/activity/" + activity.getPinActiveId(),"V");
+                //推送消息
+                Map<String,String> map = new HashMap<>();
+                map.put("targetType","V");
+                map.put("url",SysParCom.PROMOTION_URL+"/promotion/pin/activity/" + activity.getPinActiveId());
+                pushCtrl.send_push_android_and_ios_alias("拼团成功啦,快去看看",null,map,cache.get(p.getUserId().toString()).toString());
+            }
         }
     }
 }

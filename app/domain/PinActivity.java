@@ -17,10 +17,10 @@ public class PinActivity implements Serializable {
     private String pinUrl;      //此团的分享短连接
     private Long pinId;         //拼购ID
     private Long masterUserId;  //团长用户ID
-    private int personNum;      //拼购人数
+    private Integer personNum;      //拼购人数
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal pinPrice;//拼购价格
-    private int joinPersons;    //已参加活动人数
+    private Integer joinPersons;    //已参加活动人数
     @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
     private Timestamp createAt; //发起时间
     private String status;      //状态
@@ -77,7 +77,7 @@ public class PinActivity implements Serializable {
         this.masterUserId = masterUserId;
     }
 
-    public int getPersonNum() {
+    public Integer getPersonNum() {
         return personNum;
     }
 
@@ -93,7 +93,7 @@ public class PinActivity implements Serializable {
         this.pinPrice = pinPrice;
     }
 
-    public int getJoinPersons() {
+    public Integer getJoinPersons() {
         return joinPersons;
     }
 

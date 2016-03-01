@@ -296,13 +296,18 @@ public class JDPay extends Controller {
 
                                     List<PinUser> pinUsers = promotionService.selectPinUser(pinUser);
 
+                                    PinActivity activity =promotionService.selectPinActivityById(order.getPinActiveId());
+                                    if (activity.getJoinPersons().equals(activity.getPersonNum())){
+                                        jdPayMid.pinPushMsg(activity);
+                                    }
+
                                     if (pinUsers.size()>0){
                                         pinUser = pinUsers.get(0);
                                     }
                                     if (pinUser.isOrMaster()) {
                                         params.put("pinActivity",SysParCom.PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/1");
                                         //24小时后去检查此团的状态
-                                        system.scheduler().scheduleOnce(FiniteDuration.create(2, MINUTES), pinFailActor, order.getPinActiveId(), system.dispatcher(), ActorRef.noSender());
+                                        system.scheduler().scheduleOnce(FiniteDuration.create(24, HOURS), pinFailActor, order.getPinActiveId(), system.dispatcher(), ActorRef.noSender());
                                     } else {
                                         params.put("pinActivity",SysParCom.PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/2");
                                     }

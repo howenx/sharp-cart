@@ -10,7 +10,9 @@ import cn.jpush.api.push.model.Platform;
 import cn.jpush.api.push.model.PushPayload;
 import cn.jpush.api.push.model.SMS;
 import cn.jpush.api.push.model.audience.Audience;
+import cn.jpush.api.push.model.notification.AndroidNotification;
 import cn.jpush.api.push.model.notification.IosAlert;
+import cn.jpush.api.push.model.notification.IosNotification;
 import cn.jpush.api.push.model.notification.Notification;
 import play.Logger;
 import play.mvc.Controller;
@@ -256,7 +258,54 @@ public class PushCtrl extends Controller {
 //        }
 //    }
 
-
+    /***
+     *
+     * @param alter
+     * @param title
+     * @param extras
+     * @param tagValue
+     * @return
+     */
+    public  void send_push_android_and_ios_tag(String alter,String title,Map<String, String> extras,String...tagValue) {
+        PushPayload pushPayload=PushPayload.newBuilder()
+                .setPlatform(Platform.android_ios())
+                .setAudience(Audience.tag(tagValue))
+                .setNotification(Notification.newBuilder()
+                        .setAlert(alter)
+                        .addPlatformNotification(AndroidNotification.newBuilder()
+                                .setTitle(title).addExtras(extras).build())
+                        .addPlatformNotification(IosNotification.newBuilder()
+                                // .incrBadge(extras.size())
+                                .incrBadge(1)
+                                .addExtras(extras).build())
+                        .build())
+                .build();
+        sendPush(pushPayload);
+    }
+    /***
+     *
+     * @param alter
+     * @param title
+     * @param extras
+     * @param alias
+     * @return
+     */
+    public  void send_push_android_and_ios_alias(String alter,String title,Map<String, String> extras,String...alias) {
+        PushPayload pushPayload= PushPayload.newBuilder()
+                .setPlatform(Platform.android_ios())
+                .setAudience(Audience.alias(alias))
+                .setNotification(Notification.newBuilder()
+                        .setAlert(alter)
+                        .addPlatformNotification(AndroidNotification.newBuilder()
+                                .setTitle(title).addExtras(extras).build())
+                        .addPlatformNotification(IosNotification.newBuilder()
+                                // .incrBadge(extras.size())
+                                .incrBadge(1)
+                                .addExtras(extras).build())
+                        .build())
+                .build();
+        sendPush(pushPayload);
+    }
 
 
 }
