@@ -55,7 +55,7 @@ public class MsgCtrl extends Controller{
         addMsgRec(1000073L,MsgTypeEnum.Discount,"title","content","/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg","/comm/detail/888301/111324","D");
         addSysMsg(MsgTypeEnum.Discount,"titlesys111111","contentsys","/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg","/comm/detail/888301/111324","D",new Timestamp(System.currentTimeMillis()+24*60*60*1000));
         // checkRecSysMsgOnline(1000073L);
-        cleanMsgAtFixedTime();
+        //cleanMsgAtFixedTime();
         ObjectNode result = newObject();
 
         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
@@ -178,13 +178,12 @@ public class MsgCtrl extends Controller{
         ObjectNode result = newObject();
         Long userId = (Long) ctx().args.get("userId");
         checkNotRecSysMsg(userId);
-
         Map<String,Integer> msgTypeMap=new HashMap<String,Integer>();
         try{
 
-            MsgRec msgRec=new MsgRec();
-            msgRec.setUserId(userId);
             for(MsgTypeEnum msgTypeEnum:MsgTypeEnum.values()){
+                MsgRec msgRec=new MsgRec();
+                msgRec.setUserId(userId);
                 msgRec.setMsgType(msgTypeEnum.getMsgType());
                 msgRec.setDelStatus(1);//未删除的
                 Optional<List<MsgRec>> msgRecList= Optional.ofNullable(msgService.getMsgRecBy(msgRec)); //该类别下有消息
