@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import domain.*;
 import filters.UserAuth;
 import middle.JDPayMid;
+import modules.NewScheduler;
 import modules.SysParCom;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -63,6 +64,9 @@ public class JDPay extends Controller {
 
     @Inject
     ActorSystem system;
+
+    @Inject
+    NewScheduler newScheduler;
 
     @Inject
     public JDPay(CartService cartService, IdService idService, PromotionService promotionService, @Named("cancelOrderActor") ActorRef cancelOrderActor, @Named("pinFailActor") ActorRef pinFailActor) {
@@ -307,7 +311,7 @@ public class JDPay extends Controller {
                                     if (pinUser.isOrMaster()) {
                                         params.put("pinActivity",SysParCom.PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/1");
                                         //24小时后去检查此团的状态
-                                        system.scheduler().scheduleOnce(FiniteDuration.create(24, HOURS), pinFailActor, order.getPinActiveId(), system.dispatcher(), ActorRef.noSender());
+                                        newScheduler.scheduleOnce(FiniteDuration.create(24, HOURS), pinFailActor, order.getPinActiveId());
                                     } else {
                                         params.put("pinActivity",SysParCom.PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/2");
                                     }
