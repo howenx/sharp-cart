@@ -1,5 +1,6 @@
 package controllers;
 
+import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.MsgTypeEnum;
@@ -18,9 +19,9 @@ import service.MsgService;
 import service.SkuService;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,11 +39,14 @@ public class MsgCtrl extends Controller{
 
     private MsgService msgService;
 
+    private ActorRef schedulerCleanMsgActor;
+
     @Inject
-    public MsgCtrl(SkuService skuService, CartService cartService,MsgService msgService){
+    public MsgCtrl(SkuService skuService, CartService cartService,MsgService msgService, @Named("schedulerCleanMsgActor") ActorRef schedulerCleanMsgActor){
         this.cartService = cartService;
         this.skuService = skuService;
         this.msgService=msgService;
+        this.schedulerCleanMsgActor=schedulerCleanMsgActor;
     }
 
     //@Security.Authenticated(UserAuth.class)
@@ -224,6 +228,7 @@ public class MsgCtrl extends Controller{
                     else
                         m.setMsgImg(SysParCom.IMAGE_URL + m.getMsgImg());
                     m.setMsgUrl(SysParCom.DEPLOY_URL+m.getMsgUrl());
+                    if (m.getMsgType().equals("V")) m.setMsgUrl(SysParCom.PROMOTION_URL+m.getMsgUrl());
                     if(m.getReadStatus()==1){
                         isHaveNotRead[0] =true;
                     }

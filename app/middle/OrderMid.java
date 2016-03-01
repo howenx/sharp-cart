@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import controllers.OrderCtrl;
 import domain.*;
+import modules.SysParCom;
 import play.Logger;
 import play.libs.Json;
 import service.CartService;
@@ -11,6 +12,8 @@ import service.IdService;
 import service.PromotionService;
 import service.SkuService;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,23 +26,21 @@ import java.util.stream.Collectors;
  */
 public class OrderMid {
 
+    @Inject
     private SkuService skuService;
 
+    @Inject
     private CartService cartService;
 
+    @Inject
     private IdService idService;
 
+    @Inject
     private PromotionService promotionService;
 
+    @Inject
+    @Named("subOrderActor")
     private ActorRef orderSplitActor;
-
-    public OrderMid(SkuService skuService, CartService cartService, IdService idService, PromotionService promotionService, ActorRef orderSplitActor) {
-        this.cartService = cartService;
-        this.idService = idService;
-        this.skuService = skuService;
-        this.promotionService = promotionService;
-        this.orderSplitActor = orderSplitActor;
-    }
 
     /**
      * 订单结算
@@ -143,17 +144,17 @@ public class OrderMid {
         settleVo.setTotalPayFee(totalPayFee);
         settleVo.setAddress(address);
         settleVo.setUserId(userId);
-        settleVo.setFreeShipLimit(new BigDecimal(OrderCtrl.FREE_SHIP));
-        settleVo.setPostalStandard(OrderCtrl.POSTAL_STANDARD);
+        settleVo.setFreeShipLimit(new BigDecimal(SysParCom.FREE_SHIP));
+        settleVo.setPostalStandard(SysParCom.POSTAL_STANDARD);
         settleVo.setSkuTypeList(skuTypeList);
 
         //此订单的实际邮费统计
-        if (settleVo.getShipFee().compareTo(new BigDecimal(OrderCtrl.FREE_SHIP)) > 0) {
+        if (settleVo.getShipFee().compareTo(new BigDecimal(SysParCom.FREE_SHIP)) > 0) {
             settleVo.setFactShipFee(BigDecimal.ZERO);
         } else settleVo.setFactShipFee(settleVo.getShipFee());
 
         //此订单的产生的实际行邮税
-        if (settleVo.getPortalFee().compareTo(new BigDecimal(OrderCtrl.POSTAL_STANDARD)) <= 0) {
+        if (settleVo.getPortalFee().compareTo(new BigDecimal(SysParCom.POSTAL_STANDARD)) <= 0) {
             settleVo.setFactPortalFee(BigDecimal.ZERO);
         } else settleVo.setFactPortalFee(settleVo.getPortalFee());
 
@@ -275,17 +276,17 @@ public class OrderMid {
         }
 
         //每个海关的实际邮费统计
-        if (shipFeeSingle.compareTo(new BigDecimal(OrderCtrl.FREE_SHIP)) > 0) {
+        if (shipFeeSingle.compareTo(new BigDecimal(SysParCom.FREE_SHIP)) > 0) {
             settleFeeVo.setFactSingleCustomsShipFee(BigDecimal.ZERO);
         } else settleFeeVo.setFactSingleCustomsShipFee(shipFeeSingle);
 
         //统计如果各个海关的实际关税,如果关税小于50元,则免税
-        if (postalFeeSingle.compareTo(new BigDecimal(OrderCtrl.POSTAL_STANDARD)) <= 0) {
+        if (postalFeeSingle.compareTo(new BigDecimal(SysParCom.POSTAL_STANDARD)) <= 0) {
             settleFeeVo.setFactPortalFeeSingleCustoms(BigDecimal.ZERO);
         } else settleFeeVo.setFactPortalFeeSingleCustoms(postalFeeSingle);
 
         //单个海关下是否达到某个消费值时候免邮
-        if (totalFeeSingle.compareTo(new BigDecimal(OrderCtrl.FREE_SHIP)) > 0) {
+        if (totalFeeSingle.compareTo(new BigDecimal(SysParCom.FREE_SHIP)) > 0) {
             settleFeeVo.setFreeShip(true);
         } else settleFeeVo.setFreeShip(false);
 
@@ -312,7 +313,7 @@ public class OrderMid {
         }
 
         //如果存在单个海关的金额超过1000,返回
-        if (totalFeeSingle.compareTo(new BigDecimal(OrderCtrl.POSTAL_LIMIT)) > 0) {
+        if (totalFeeSingle.compareTo(new BigDecimal(SysParCom.POSTAL_LIMIT)) > 0) {
             settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_SUM_PRICE.getIndex());
             return settleFeeVo;
         }

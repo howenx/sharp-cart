@@ -1,28 +1,33 @@
 package controllers;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
-import akka.actor.Cancellable;
+import akka.util.Timeout;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
 import filters.UserAuth;
 import middle.CartMid;
-import net.spy.memcached.MemcachedClient;
+import modules.LevelFactory;
+import modules.NewScheduler;
 import play.Logger;
 import play.api.libs.Codecs;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import service.CartService;
-import service.IdService;
 import service.SkuService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -36,12 +41,6 @@ public class Application extends Controller {
     private CartService cartService;
 
     @Inject
-    private IdService idService;
-
-    @Inject
-    private MemcachedClient cache;
-
-    @Inject
     private CartMid cartMid;
 
     @Inject
@@ -51,20 +50,16 @@ public class Application extends Controller {
     @Named("schedulerCancelOrderActor")
     private ActorRef schedulerCancelOrderActor;
 
-    //图片服务器url
-    public static final String IMAGE_URL = play.Play.application().configuration().getString("image.server.url");
+    @Inject
+    private NewScheduler newScheduler;
 
-    //发布服务器url
-    public static final String DEPLOY_URL = play.Play.application().configuration().getString("deploy.server.url");
-
-    //shopping服务器url
-    public static final String SHOPPING_URL = play.Play.application().configuration().getString("shopping.server.url");
-
-    //id服务器url
-    public static final String ID_URL = play.Play.application().configuration().getString("id.server.url");
+    @Inject
+    private LevelFactory levelFactory;
 
     //将Json串转换成List
     final static ObjectMapper mapper = new ObjectMapper();
+
+    public static final Timeout TIMEOUT = new Timeout(100, TimeUnit.MILLISECONDS);
 
 
     /**
@@ -120,6 +115,7 @@ public class Application extends Controller {
             Long userId = (Long) ctx().args.get("userId");
             Optional<List<CartItemDTO>> dtos = cartMid.getCarts(userId);
             if (dtos.isPresent()) {
+//                Logger.error("购物车数据:\n"+Json.toJson(dtos.get()));
                 result.putPOJO("cartList", Json.toJson(dtos.get()));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             } else
@@ -229,24 +225,40 @@ public class Application extends Controller {
 
     /**
      * 处理系统启动时候去做第一次请求,完成对定时任务的执行
+     *
      * @return string
      */
-    public Result getFirstApp(String cipher){
-        if (Codecs.md5("hmm-100901".getBytes()).equals(cipher)){
+    public Result getFirstApp(String cipher) {
+        if (Codecs.md5("hmm-100901".getBytes()).equals(cipher)) {
+            List<Persist> persists;
+            try {
+                persists = levelFactory.iterator();
+                if (persists != null && persists.size() > 0) {
+                    Logger.info("遍历所有持久化schedule---->\n" + persists);
+                    for (Persist p : persists) {
+                        Long time = p.getDelay() - (new Date().getTime() - p.getCreateAt().getTime());
+                        Logger.info("重启后schedule执行时间---> " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(new Date().getTime()+time)));
+                        if (time > 0) {
+                            ActorSelection sel = system.actorSelection(p.getActorPath());
+                            Future<ActorRef> fut = sel.resolveOne(TIMEOUT);
+                            ActorRef ref = Await.result(fut, TIMEOUT.duration());
+                            newScheduler.scheduleOnce(Duration.create(time, TimeUnit.MILLISECONDS), ref, p.getMessage());
+                        } else {
+                            levelFactory.delete(p.getMessage());
+                            system.actorSelection(p.getActorPath()).tell(p.getMessage(), ActorRef.noSender());
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return notFound("error");
+            }
+            return ok("success");
+        } else throw new NullPointerException(cipher);
+    }
 
-            Cancellable cl = system.scheduler()
-                    .schedule(Duration.Zero(),
-                            Duration.create(2, TimeUnit.SECONDS),
-                            schedulerCancelOrderActor,
-                            77701021L,
-                            system.dispatcher(),
-                            null);
-
-            system.scheduler().scheduleOnce(Duration.create(6, TimeUnit.SECONDS), () -> {
-                Logger.error("取消定时任务:----> "+cl.cancel());
-            },system.dispatcher());
-
-        }
-        return ok("success");
+    public Result hello() {
+        newScheduler.scheduleOnce(Duration.create(180, TimeUnit.SECONDS), schedulerCancelOrderActor, 77701093L);
+        return ok("hello");
     }
 }

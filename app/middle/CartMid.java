@@ -4,11 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import controllers.Application;
 import controllers.OrderCtrl;
 import domain.*;
-import net.spy.memcached.MemcachedClient;
+import modules.SysParCom;
 import play.Logger;
 import play.libs.Json;
 import service.CartService;
-import service.IdService;
 import service.SkuService;
 
 import javax.inject.Inject;
@@ -29,12 +28,6 @@ public class CartMid {
 
     @Inject
     private CartService cartService;
-
-    @Inject
-    private IdService idService;
-
-    @Inject
-    private MemcachedClient cache;
 
 
     //创建用户购物车商品
@@ -93,26 +86,26 @@ public class CartMid {
                     if (sku.getInvImg().contains("url")) {
                         JsonNode jsonNode = Json.parse(sku.getInvImg());
                         if (jsonNode.has("url")) {
-                            cartList.setInvImg(Application.IMAGE_URL + jsonNode.get("url").asText());
+                            cartList.setInvImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
                         }
-                    } else cartList.setInvImg(Application.IMAGE_URL + sku.getInvImg());
+                    } else cartList.setInvImg(SysParCom.IMAGE_URL + sku.getInvImg());
 
                     switch (cart.getSkuType()) {
                         case "item":
-                            cartList.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                            cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
                             break;
                         case "vary":
-                            cartList.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cart.getSkuTypeId());
+                            cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cart.getSkuTypeId());
                             break;
                         case "customize":
-                            cartList.setInvUrl(Application.DEPLOY_URL + "/comm/subject/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cart.getSkuTypeId());
+                            cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cart.getSkuTypeId());
                             break;
                         case "pin":
-                            cartList.setInvUrl(Application.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cart.getSkuTypeId());
+                            cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cart.getSkuTypeId());
                             break;
                     }
 
-                    cartList.setCartDelUrl(Application.SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
+                    cartList.setCartDelUrl(SysParCom.SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
                     cartList.setInvTitle(sku.getInvTitle());
                     cartList.setCreateAt(cart.getCreateAt());
                     cartList.setInvCustoms(sku.getInvCustoms());
@@ -138,9 +131,9 @@ public class CartMid {
                             cartItemDTO.setInvArea(invArea);
                             cartItemDTO.setInvAreaNm(p.get(0).getInvAreaNm());
                             cartItemDTO.setCarts(p);
-                            cartItemDTO.setPostalStandard(OrderCtrl.POSTAL_STANDARD);
-                            cartItemDTO.setPostalLimit(OrderCtrl.POSTAL_LIMIT);
-                            cartItemDTO.setFreeShip(OrderCtrl.FREE_SHIP);
+                            cartItemDTO.setPostalStandard(SysParCom.POSTAL_STANDARD);
+                            cartItemDTO.setPostalLimit(SysParCom.POSTAL_LIMIT);
+                            cartItemDTO.setFreeShip(SysParCom.FREE_SHIP);
                             list.add(cartItemDTO);
                         });
                 return Optional.of(list);
@@ -204,7 +197,7 @@ public class CartMid {
         cart.setSkuType(cartDto.getSkuType());
         cart.setSkuTypeId(cartDto.getSkuTypeId());
 
-        if (cartDto.getCartId() == 0) {
+        if (cartDto.getCartId()==null || cartDto.getCartId() == 0) {
             if (cart.getStatus().equals("I") || cart.getStatus().equals("G")) {
 
                 List<Cart> carts = cartService.getCartByUserSku(cart);
@@ -253,6 +246,8 @@ public class CartMid {
             cartList.setItemSize(sku.getItemSize());
             cartList.setItemPrice(sku.getItemPrice());
 
+            cartList.setSkuType(cartDto.getSkuType());
+            cartList.setSkuTypeId(cartDto.getSkuTypeId());
 
             //先确定商品状态是正常,否则直接存为失效商品
             if (!sku.getState().equals("Y")) {
@@ -279,23 +274,23 @@ public class CartMid {
             if (sku.getInvImg().contains("url")){
                 JsonNode jsonNode  = Json.parse(sku.getInvImg());
                 if (jsonNode.has("url")){
-                    cartList.setInvImg(Application.IMAGE_URL + jsonNode.get("url").asText());
+                    cartList.setInvImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
                 }
-            }else cartList.setInvImg(Application.IMAGE_URL +sku.getInvImg());
+            }else cartList.setInvImg(SysParCom.IMAGE_URL +sku.getInvImg());
 
 
             switch (cartDto.getSkuType()) {
                 case "item":
-                    cartList.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
+                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
                     break;
                 case "vary":
-                    cartList.setInvUrl(Application.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cartList.getSkuTypeId());
+                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cartList.getSkuTypeId());
                     break;
                 case "customize":
-                    cartList.setInvUrl(Application.DEPLOY_URL + "/comm/subject/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cartList.getSkuTypeId());
+                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cartList.getSkuTypeId());
                     break;
                 case "pin":
-                    cartList.setInvUrl(Application.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cartList.getSkuTypeId());
+                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cartList.getSkuTypeId());
                     break;
             }
 
@@ -304,7 +299,7 @@ public class CartMid {
 
             if (cartDto.getCartId() == 0) {
                 cartList.setCartDelUrl("");
-            } else cartList.setCartDelUrl(Application.DEPLOY_URL + "/client/cart/del/" + cartDto.getCartId());
+            } else cartList.setCartDelUrl(SysParCom.DEPLOY_URL + "/client/cart/del/" + cartDto.getCartId());
             cartList.setInvTitle(sku.getInvTitle());
 
             cartList.setSkuType(cartList.getSkuType());
@@ -327,9 +322,9 @@ public class CartMid {
                     cartItemDTO.setInvArea(invArea);
                     cartItemDTO.setInvAreaNm(p.get(0).getInvAreaNm());
                     cartItemDTO.setCarts(p);
-                    cartItemDTO.setPostalStandard(OrderCtrl.POSTAL_STANDARD);
-                    cartItemDTO.setPostalLimit(OrderCtrl.POSTAL_LIMIT);
-                    cartItemDTO.setFreeShip(OrderCtrl.FREE_SHIP);
+                    cartItemDTO.setPostalStandard(SysParCom.POSTAL_STANDARD);
+                    cartItemDTO.setPostalLimit(SysParCom.POSTAL_LIMIT);
+                    cartItemDTO.setFreeShip(SysParCom.FREE_SHIP);
                     list.add(cartItemDTO);
                 });
         return Optional.of(list);

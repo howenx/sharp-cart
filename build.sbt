@@ -1,5 +1,6 @@
 import play.routes.compiler.InjectedRoutesGenerator
 import play.sbt.PlayJava
+
 name := """style-shopping"""
 version := "0.1.2"
 
@@ -9,7 +10,7 @@ scalaVersion := "2.11.7"
 
 evictionWarningOptions in evicted := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
 
-updateOptions := updateOptions.value.withConsolidatedResolution(true)
+updateOptions := (updateOptions.value withConsolidatedResolution true)
 
 
 libraryDependencies ++= Seq(
@@ -19,18 +20,10 @@ libraryDependencies ++= Seq(
   filters
 )
 
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.6.3"
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3"
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-annotations" % "2.6.3"
-libraryDependencies += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.6.3"
-libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jdk8" % "2.6.3"
-libraryDependencies += "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.6.3"
+
 libraryDependencies += "commons-io" % "commons-io" % "2.4"
 libraryDependencies += "com.squareup.okhttp" % "okhttp" % "2.7.2"
 libraryDependencies += "commons-beanutils" % "commons-beanutils" % "1.9.2"
-
-
-
 
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4" withSources() withJavadoc()
 
@@ -64,9 +57,8 @@ libraryDependencies ++= Seq(
   "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
 )
 
-
 resolvers ++= Seq(
-  "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
+  "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
   "Apache" at "http://repo1.maven.org/maven2/",
   "jBCrypt Repository" at "http://repo1.maven.org/maven2/org/",
   "Sonatype OSS Snasphots" at "http://oss.sonatype.org/content/repositories/snapshots"
