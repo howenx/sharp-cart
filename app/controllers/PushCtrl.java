@@ -1,7 +1,11 @@
 package controllers;
 
 
+import actor.MsgRecActor;
+import actor.PushActor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
 import cn.jpush.api.JPushClient;
 import cn.jpush.api.common.resp.APIConnectionException;
 import cn.jpush.api.common.resp.APIRequestException;
@@ -10,11 +14,16 @@ import cn.jpush.api.push.model.Platform;
 import cn.jpush.api.push.model.PushPayload;
 import cn.jpush.api.push.model.SMS;
 import cn.jpush.api.push.model.audience.Audience;
+import cn.jpush.api.push.model.notification.AndroidNotification;
 import cn.jpush.api.push.model.notification.IosAlert;
+import cn.jpush.api.push.model.notification.IosNotification;
 import cn.jpush.api.push.model.notification.Notification;
+import com.typesafe.config.ConfigFactory;
 import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
+import service.MsgService;
+import test.CalculatorActor;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -27,17 +36,15 @@ import java.util.Map;
  */
 public class PushCtrl extends Controller {
 
-//    //appKey:注册应用的应用Key
-//    private static final String appKey = "a81748f2ead4ab0faef89329";
-//    // masterSecret：注册应用的主密码,即API 主密码
-//    private static final String masterSecret = "1bd35ab27b1530d417afb1b9";
-//
-//    private static JPushClient jpushClient=new JPushClient(masterSecret, appKey) ;
+    @Inject
+    private ActorSystem system;
 
     private ActorRef pushActor;
+    private MsgService msgService;
 
     @Inject
-    public PushCtrl(@Named("pushActor") ActorRef pushActor){
+    public PushCtrl(MsgService msgService,@Named("pushActor") ActorRef pushActor){
+        this.msgService=msgService;
         this.pushActor=pushActor;
 
     }
@@ -69,8 +76,20 @@ public class PushCtrl extends Controller {
     }
 
     public Result testPush(){
-        send_push_all("test only content");
-        send_push_android_all("test title content url","hmm title",getPushExtras("http://172.28.3.78:9001/comm/detail/888301/111324",""),60);
+
+
+        ActorRef msgActor=system.actorOf(Props.create(MsgRecActor.class,msgService), "msg");
+        System.out.println("Started MsgRecActor,path="+msgActor.path());
+        system.actorOf(Props.create(CalculatorActor.class), "calculator");
+        System.out.println("Started CalculatorActor");
+        system.actorOf(Props.create(PushActor.class), "push");
+        System.out.println("Started PushActor,path="+pushActor.path());
+
+//        ActorRef pushActor=system.actorOf(Props.create(PushActor.class), "push");
+//        System.out.println("Started PushActor,path="+pushActor.path());
+
+     //   send_push_all("test only content");
+     //   send_push_android_all("test title content url","hmm title",getPushExtras("http://172.28.3.78:9001/comm/detail/888301/111324",""),60);
         return ok("success");
     }
 
@@ -95,6 +114,7 @@ public class PushCtrl extends Controller {
         sendPush(PushPayload.alertAll(alert));
 
     }
+
 
     /***
      * android 所有人 发送消息
@@ -218,6 +238,55 @@ public class PushCtrl extends Controller {
                 .setNotification(Notification.ios(alter,extras)).build();
         sendPush(pushPayload);
 
+    }
+
+    /***
+     *
+     * @param alter
+     * @param title
+     * @param extras
+     * @param tagValue
+     * @return
+     */
+    public  void send_push_android_and_ios_tag(String alter,String title,Map<String, String> extras,String...tagValue) {
+        PushPayload pushPayload=PushPayload.newBuilder()
+                .setPlatform(Platform.android_ios())
+                .setAudience(Audience.tag(tagValue))
+                .setNotification(Notification.newBuilder()
+                        .setAlert(alter)
+                        .addPlatformNotification(AndroidNotification.newBuilder()
+                                .setTitle(title).addExtras(extras).build())
+                        .addPlatformNotification(IosNotification.newBuilder()
+                                // .incrBadge(extras.size())
+                                .incrBadge(1)
+                                .addExtras(extras).build())
+                        .build())
+                .build();
+        sendPush(pushPayload);
+    }
+    /***
+     *
+     * @param alter
+     * @param title
+     * @param extras
+     * @param alias
+     * @return
+     */
+    public  void send_push_android_and_ios_alias(String alter,String title,Map<String, String> extras,String...alias) {
+        PushPayload pushPayload= PushPayload.newBuilder()
+                .setPlatform(Platform.android_ios())
+                .setAudience(Audience.alias(alias))
+                .setNotification(Notification.newBuilder()
+                        .setAlert(alter)
+                        .addPlatformNotification(AndroidNotification.newBuilder()
+                                .setTitle(title).addExtras(extras).build())
+                        .addPlatformNotification(IosNotification.newBuilder()
+                               // .incrBadge(extras.size())
+                                .incrBadge(1)
+                                .addExtras(extras).build())
+                        .build())
+                .build();
+        sendPush(pushPayload);
     }
 
 //    public static void testSendIosAlert() {

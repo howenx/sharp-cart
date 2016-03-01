@@ -1,5 +1,6 @@
 package controllers;
 
+import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.MsgTypeEnum;
@@ -7,7 +8,6 @@ import domain.Message;
 import domain.Msg;
 import domain.MsgRec;
 import filters.UserAuth;
-import modules.SysParCom;
 import play.Logger;
 import play.libs.Json;
 import play.mvc.Controller;
@@ -18,9 +18,8 @@ import service.MsgService;
 import service.SkuService;
 
 import javax.inject.Inject;
-
+import javax.inject.Named;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,19 +29,21 @@ import static play.libs.Json.newObject;
  * 消息
  * Created by sibyl.sun on 16/2/22.
  */
-public class MsgCtrl extends Controller{
+public class MsgCtrl1 extends Controller{
 
     private SkuService skuService;
 
     private CartService cartService;
 
     private MsgService msgService;
+    private ActorRef schedulerCleanMsgActor;
 
     @Inject
-    public MsgCtrl(SkuService skuService, CartService cartService,MsgService msgService){
+    public MsgCtrl1(SkuService skuService, CartService cartService, MsgService msgService, @Named("schedulerCleanMsgActor") ActorRef schedulerCleanMsgActor){
         this.cartService = cartService;
         this.skuService = skuService;
         this.msgService=msgService;
+        this.schedulerCleanMsgActor=schedulerCleanMsgActor;
     }
 
     //@Security.Authenticated(UserAuth.class)
@@ -50,7 +51,7 @@ public class MsgCtrl extends Controller{
         //Long userId = (Long) ctx().args.get("userId");
         addMsgRec(1000073L,MsgTypeEnum.Discount,"title","content","/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg","/comm/detail/888301/111324","D");
         addSysMsg(MsgTypeEnum.Discount,"titlesys111111","contentsys","/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg","/comm/detail/888301/111324","D",new Timestamp(System.currentTimeMillis()+24*60*60*1000));
-        // checkRecSysMsgOnline(1000073L);
+       // checkRecSysMsgOnline(1000073L);
         cleanMsgAtFixedTime();
         ObjectNode result = newObject();
 
@@ -79,6 +80,7 @@ public class MsgCtrl extends Controller{
         msg.setTargetType(targetType);
         msg.setEndAt(endAt);
         if(msgService.insertMsg(msg)){
+         //   schedulerCleanMsgActor.tell(msgService,ActorRef.noSender()); //定期清理过期的全体系统消息以及用户已经删除的消息
             return msg;
         }
         return null;
@@ -183,7 +185,7 @@ public class MsgCtrl extends Controller{
             for(MsgTypeEnum msgTypeEnum:MsgTypeEnum.values()){
                 msgRec.setMsgType(msgTypeEnum.getMsgType());
                 msgRec.setDelStatus(1);//未删除的
-                Optional<List<MsgRec>> msgRecList= Optional.ofNullable(msgService.getMsgRecBy(msgRec)); //该类别下有消息
+                Optional<List<MsgRec>> msgRecList= Optional.ofNullable(msgService.getMsgRecBy(msgRec));
                 if(msgRecList.isPresent()&&msgRecList.get().size()>0){
                     msgRec.setReadStatus(1);
                     msgTypeMap.put(msgTypeEnum.getMsgType(),msgService.getNotReadMsgNum(msgRec)); //未读条数
@@ -218,12 +220,12 @@ public class MsgCtrl extends Controller{
                     if (m.getMsgImg().contains("url")) {
                         JsonNode jsonNode = Json.parse(m.getMsgImg());
                         if (jsonNode.has("url")) {
-                            m.setMsgImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
+                            m.setMsgImg(OrderCtrl.IMAGE_URL + jsonNode.get("url").asText());
                         }
                     }
                     else
-                        m.setMsgImg(SysParCom.IMAGE_URL + m.getMsgImg());
-                    m.setMsgUrl(SysParCom.DEPLOY_URL+m.getMsgUrl());
+                        m.setMsgImg(OrderCtrl.IMAGE_URL + m.getMsgImg());
+                    m.setMsgUrl(Application.DEPLOY_URL+m.getMsgUrl());
                     if(m.getReadStatus()==1){
                         isHaveNotRead[0] =true;
                     }

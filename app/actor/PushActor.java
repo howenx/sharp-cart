@@ -25,25 +25,30 @@ public class PushActor extends AbstractActor {
     private static JPushClient jpushClient=new JPushClient(masterSecret, appKey) ;
     @Inject
     public PushActor(){
-        receive(ReceiveBuilder.match(PushPayload.class,pushPayload -> {
-            try {
 
+        receive(ReceiveBuilder.match(Object.class,p -> {
+            Logger.info("========PushActor======");
+//            try {
+//
+//                //if(null==pushPayload){
+//                //    pushPayload=;
+//                //}
+//
+//                PushResult result = jpushClient.sendPush(PushPayload.alertAll("testPushActor"));
+//                Logger.info("Got result - " + result);
+//
+//            } catch (APIConnectionException e) {
+//                Logger.error("Connection error. Should retry later. ", e);
+//
+//            } catch (APIRequestException e) {
+//                Logger.error("Error response from JPush server. Should review and fix it. ", e);
+//                Logger.info("HTTP Status: " + e.getStatus());
+//                Logger.info("Error Code: " + e.getErrorCode());
+//                Logger.info("Error Message: " + e.getErrorMessage());
+//                Logger.info("Msg ID: " + e.getMsgId());
+//            }
 
-                PushResult result = jpushClient.sendPush(pushPayload);
-                Logger.info("Got result - " + result);
-
-            } catch (APIConnectionException e) {
-                Logger.error("Connection error. Should retry later. ", e);
-
-            } catch (APIRequestException e) {
-                Logger.error("Error response from JPush server. Should review and fix it. ", e);
-                Logger.info("HTTP Status: " + e.getStatus());
-                Logger.info("Error Code: " + e.getErrorCode());
-                Logger.info("Error Message: " + e.getErrorMessage());
-                Logger.info("Msg ID: " + e.getMsgId());
-            }
-
-        }).matchAny(s -> Logger.error("ClearCartActor received messages not matched: {}", s.toString())).build());
+        }).matchAny(s -> Logger.error("PushActor received messages not matched: {}", s.toString())).build());
     }
 
 }
