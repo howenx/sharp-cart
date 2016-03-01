@@ -17,8 +17,12 @@ import javax.inject.Inject;
 public class TestCtrl extends Controller {
     @Inject
     private ActorSystem system;
-    @Inject
+
     private MsgService msgService;
+    @Inject
+    public TestCtrl(MsgService msgService){
+        this.msgService=msgService;
+    }
 
     public Result test(){
 
