@@ -249,8 +249,30 @@ public class PushCtrl extends Controller {
 //        }
 //    }
 
-    /***
+    /**
+     *android_and_ios
      *
+      * @param alter
+     * @param title
+     * @param extras
+     */
+    public  void send_push_android_and_ios_all(String alter,String title,Map<String, String> extras) {
+    PushPayload pushPayload= PushPayload.newBuilder()
+            .setPlatform(Platform.android_ios())
+            .setAudience(Audience.all())
+            .setNotification(Notification.newBuilder()
+                    .setAlert(alter)
+                    .addPlatformNotification(AndroidNotification.newBuilder()
+                            .setTitle(title).addExtras(extras).build())
+                    .addPlatformNotification(IosNotification.newBuilder()
+                            .incrBadge(1)
+                            .addExtras(extras).build())
+                    .build())
+            .build();
+    sendPush(pushPayload);
+}
+    /***
+     *android_and_ios tag
      * @param alter
      * @param title
      * @param extras
@@ -273,7 +295,7 @@ public class PushCtrl extends Controller {
         sendPush(pushPayload);
     }
     /***
-     *
+     *android_and_ios alias
      * @param alter
      * @param title
      * @param extras

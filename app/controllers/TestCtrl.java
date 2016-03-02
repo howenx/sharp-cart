@@ -2,6 +2,7 @@ package controllers;
 
 import actor.MsgRecActor;
 import actor.PushActor;
+import actor.RecPushActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -20,17 +21,19 @@ public class TestCtrl extends Controller {
 
     private MsgService msgService;
     @Inject
+    private PushCtrl pushCtrl;
+    @Inject
     public TestCtrl(MsgService msgService){
         this.msgService=msgService;
     }
 
     public Result test(){
 
-        ActorRef msgActor=system.actorOf(Props.create(MsgRecActor.class,msgService), "msg");
-        System.out.println("Started MsgRecActor,path="+msgActor.path());
-
-        ActorRef pushActor=system.actorOf(Props.create(PushActor.class), "push");
-        System.out.println("Started PushActor,path="+pushActor.path());
+//        ActorRef msgActor=system.actorOf(Props.create(MsgRecActor.class,msgService), "msg");
+//        System.out.println("Started MsgRecActor,path="+msgActor.path());
+//
+//        ActorRef pushRecActor=system.actorOf(Props.create(RecPushActor.class,pushCtrl), "push");
+//        System.out.println("Started PushActor,path="+pushRecActor.path());
 
 
         return ok("success");
