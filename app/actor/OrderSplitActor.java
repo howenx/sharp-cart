@@ -6,6 +6,7 @@ import akka.japi.pf.ReceiveBuilder;
 import domain.OrderSplit;
 import domain.SettleFeeVo;
 import domain.SettleVo;
+import modules.NewScheduler;
 import play.Logger;
 import scala.concurrent.duration.FiniteDuration;
 import service.CartService;
@@ -26,7 +27,7 @@ public class OrderSplitActor extends AbstractActor {
     @Inject
     public OrderSplitActor(CartService cartService, @Named("orderAddressActor") ActorRef orderAddressActor, @Named("orderLineActor") ActorRef orderLineActor, @Named("clearCartActor") ActorRef clearCartActor
             , @Named("publicFreeShipActor") ActorRef publicFreeShipActor, @Named("reduceInvActor") ActorRef reduceInvActor, @Named("cancelOrderActor") ActorRef cancelOrderActor, @Named("schedulerCancelOrderActor") ActorRef schedulerCancelOrderActor
-            , @Named("publicCouponActor") ActorRef publicCouponActor) {
+            , @Named("publicCouponActor") ActorRef publicCouponActor, NewScheduler newScheduler) {
 
         receive(ReceiveBuilder.match(SettleVo.class, settleVo -> {
 
@@ -68,7 +69,7 @@ public class OrderSplitActor extends AbstractActor {
                 //24小时内未结算恢复库存并自动取消订单
 
 
-                context().system().scheduler().scheduleOnce(FiniteDuration.create(24, HOURS), cancelOrderActor, settleVo.getOrderId(), context().dispatcher(), ActorRef.noSender());
+                newScheduler.scheduleOnce(FiniteDuration.create(24, HOURS), cancelOrderActor, settleVo.getOrderId());
 
             } catch (Exception e) {
                 Logger.error("OrderSplitActor Error:" + e.getMessage());
