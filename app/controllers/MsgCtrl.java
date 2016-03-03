@@ -226,8 +226,10 @@ public class MsgCtrl extends Controller{
                     }
                     else
                         m.setMsgImg(SysParCom.IMAGE_URL + m.getMsgImg());
-                    m.setMsgUrl(SysParCom.DEPLOY_URL+m.getMsgUrl());
+
                     if (m.getTargetType().equals("V")) m.setMsgUrl(SysParCom.PROMOTION_URL+m.getMsgUrl());
+                    else m.setMsgUrl(SysParCom.DEPLOY_URL+m.getMsgUrl());
+                    
                     if(m.getReadStatus()==1){
                         isHaveNotRead[0] =true;
                     }
