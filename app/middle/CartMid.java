@@ -177,6 +177,7 @@ public class CartMid {
         }
 
         if (sku.getRestrictAmount() != 0 && sku.getRestrictAmount() < cartDto.getAmount()) {
+
             cart.setAmount(sku.getRestrictAmount());
             cartPar.setRestrictMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex());
         } else {
@@ -207,7 +208,9 @@ public class CartMid {
                     cart.setAmount(cart.getAmount() + carts.get(0).getAmount());//购买数量累加
                     if (cart.getAmount() > sku.getRestrictAmount() && sku.getRestrictAmount() != 0) {
                         cart.setAmount(sku.getRestrictAmount());
+                        cartPar.setRestrictMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex());
                     } else if (cart.getAmount() > sku.getRestAmount()) {
+                        cartPar.setRestMessageCode(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex());
                         cart.setAmount(sku.getRestAmount());
                     }
                     cartService.updateCart(cart);

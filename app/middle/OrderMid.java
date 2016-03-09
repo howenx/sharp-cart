@@ -275,20 +275,21 @@ public class OrderMid {
             }
         }
 
+
         //每个海关的实际邮费统计
-        if (shipFeeSingle.compareTo(new BigDecimal(SysParCom.FREE_SHIP)) > 0) {
+        if (totalFeeSingle.compareTo(new BigDecimal(SysParCom.FREE_SHIP)) > 0) {
             settleFeeVo.setFactSingleCustomsShipFee(BigDecimal.ZERO);
-        } else settleFeeVo.setFactSingleCustomsShipFee(shipFeeSingle);
+            settleFeeVo.setFreeShip(true);
+        } else {
+            settleFeeVo.setFreeShip(false);
+            settleFeeVo.setFactSingleCustomsShipFee(shipFeeSingle);
+        }
 
         //统计如果各个海关的实际关税,如果关税小于50元,则免税
         if (postalFeeSingle.compareTo(new BigDecimal(SysParCom.POSTAL_STANDARD)) <= 0) {
             settleFeeVo.setFactPortalFeeSingleCustoms(BigDecimal.ZERO);
         } else settleFeeVo.setFactPortalFeeSingleCustoms(postalFeeSingle);
 
-        //单个海关下是否达到某个消费值时候免邮
-        if (totalFeeSingle.compareTo(new BigDecimal(SysParCom.FREE_SHIP)) > 0) {
-            settleFeeVo.setFreeShip(true);
-        } else settleFeeVo.setFreeShip(false);
 
         //支付费用
         totalPayFeeSingle = shipFeeSingle.add(settleFeeVo.getFactPortalFeeSingleCustoms()).add(totalFeeSingle);
@@ -438,6 +439,20 @@ public class OrderMid {
             settleVo.setDiscountFee(discount);
             settleVo.setCouponId(settleOrderDTO.getCouponId());
             settleVo.setTotalPayFee(settleVo.getTotalFee().subtract(discount));
+
+            List<SettleFeeVo> settleFeeVoList = settleVo.getSingleCustoms();
+
+            BigDecimal totalDiscountSingle = BigDecimal.ZERO;//用于计数除过最后一笔订单折扣后总计
+
+            for (Integer i=0;i<settleFeeVoList.size();i++) {
+                BigDecimal singleDiscount =settleFeeVoList.get(i).getSingleCustomsSumFee().divide(settleVo.getTotalFee(),BigDecimal.ROUND_DOWN).multiply(discount);
+                if (i==settleFeeVoList.size()-1){
+                    settleFeeVoList.get(i).setDiscountFeeSingleCustoms(discount.subtract(totalDiscountSingle));
+                }else {
+                    settleFeeVoList.get(i).setDiscountFeeSingleCustoms(singleDiscount);
+                    totalDiscountSingle = singleDiscount.add(totalDiscountSingle);
+                }
+            }
         }
 
         //前端是立即购买还是结算页提交订单

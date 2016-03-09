@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class Persist implements Serializable {
 
-    static final long serialVersionUID = 48L;
+    static final long serialVersionUID = 51L;
 
     private String actorPath;//actor path "/user/schedulerCancelOrderActor"
     private Object message;//actor接收消息
@@ -20,15 +20,21 @@ public class Persist implements Serializable {
     private Long delay;//schedule多久后执行
     private transient Cancellable cancellable;//schedule返回对象
 
+    private String type;//类型,schedule,scheduleOnce
+
+    private Long initialDelay;//类型为schedule的初始化延迟
+
     public Persist() {
     }
 
-    public Persist(String actorPath, Object message, Date createAt, Long delay, Cancellable cancellable) {
+    public Persist(String actorPath, Object message, Date createAt, Long delay, Cancellable cancellable, String type, Long initialDelay) {
         this.actorPath = actorPath;
         this.message = message;
         this.createAt = createAt;
         this.delay = delay;
         this.cancellable = cancellable;
+        this.type = type;
+        this.initialDelay = initialDelay;
     }
 
     public static long getSerialVersionUID() {
@@ -75,6 +81,22 @@ public class Persist implements Serializable {
         this.cancellable = cancellable;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Long getInitialDelay() {
+        return initialDelay;
+    }
+
+    public void setInitialDelay(Long initialDelay) {
+        this.initialDelay = initialDelay;
+    }
+
     @Override
     public String toString() {
         return "Persist{" +
@@ -83,6 +105,8 @@ public class Persist implements Serializable {
                 ", createAt=" + createAt +
                 ", delay=" + delay +
                 ", cancellable=" + cancellable +
+                ", type='" + type + '\'' +
+                ", initialDelay=" + initialDelay +
                 '}';
     }
 }

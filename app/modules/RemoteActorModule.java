@@ -31,9 +31,9 @@ public class RemoteActorModule {
     @Inject
     public RemoteActorModule(ActorSystem system,MsgService msgService,PushCtrl pushCtrl) {
         msgRecActor=system.actorOf(Props.create(MsgRecActor.class,msgService), "msg");
-        System.out.println("Started MsgRecActor,path="+msgRecActor.path());
+        Logger.info("Started MsgRecActor,path="+msgRecActor.path());
 
         pushRecActor=system.actorOf(Props.create(RecPushActor.class,pushCtrl), "push");
-        System.out.println("Started PushRecActor,path="+pushRecActor.path());
+        Logger.info("Started PushRecActor,path="+pushRecActor.path());
     }
 }

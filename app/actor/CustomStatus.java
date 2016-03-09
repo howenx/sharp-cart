@@ -1,9 +1,17 @@
 package actor;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 
 import akka.actor.UntypedActor;
+import akka.japi.pf.ReceiveBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
+import domain.Order;
+import domain.OrderSplit;
+import domain.Persist;
+import middle.JDPayMid;
+import modules.LevelFactory;
+import modules.SysParCom;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -11,94 +19,109 @@ import play.Logger;
 import play.Play;
 import play.libs.Akka;
 import play.libs.ws.WS;
+import play.libs.ws.WSClient;
 import scala.concurrent.duration.Duration;
+import service.CartService;
 import util.Crypto;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by handy on 15/12/19.
- * kakao china
+ * 京东支付报关查询报关状态
+ * Created by howen on 16/03/08.
  */
-@SuppressWarnings("unchecked")
-public class CustomStatus extends UntypedActor{
+public class CustomStatus extends AbstractActor {
 
-    /**
-     *
-     * params 里面应该包含如下的参数:
-     * 订单流水号: out_trade_no
-     * 子单流水号: sub_out_trade_no
-     * 子单编号: sub_order_no
-     * @param message m
-     * @throws Exception
-     */
-    @Override
-    public void onReceive(Object message) throws Exception {
+    @Inject
+    public CustomStatus(WSClient ws, JDPayMid jdPayMid, CartService cartService, LevelFactory levelFactory) {
+        receive(ReceiveBuilder.match(Map.class, csmap -> {
+            try {
+                Order order = new Order();
+                order.setOrderId(Long.valueOf(csmap.get("orderId").toString()));
+                List<Order> orderList = cartService.getOrder(order);
+                if (orderList.size() > 0) {
+                    order = orderList.get(0);
+                    OrderSplit orderSplit = new OrderSplit();
+                    orderSplit.setOrderId(Long.valueOf(csmap.get("orderId").toString()));
+                    List<OrderSplit> orderSplits = cartService.selectOrderSplit(orderSplit);
+                    if (orderSplits.size() > 0) {
+                        for (OrderSplit os : orderSplits) {
+                            StringBuilder sb = new StringBuilder();
+                            jdPayMid.getCustomsQueryInfo(os.getSplitId()).forEach((k, v) -> sb.append(k).append("=").append(v).append("&"));
 
-        final Map<String, String> params = (Map<String, String>) message;
-        String query_url = Play.application().configuration().getString("jd_query_url");
+                            ws.url(SysParCom.JD_QUERY_URL).setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
+                                JsonNode response = wsResponse.asJson();
+                                Logger.info("京东海关报送状态查询返回JSON: " + response.toString());
 
-        params.put("customer_no",Play.application().configuration().getString("jd_seller"));
-        //params.put("KEY",Play.application().configuration().getString("jd_secret"));
-        DateTimeFormatter f = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
-        String req_date = f.print(new DateTime());
-        params.put("request_datetime",req_date);
-        params.put("sign_type","MD5");
+                                String sign_data = response.get("sign_data").asText();
 
-        params.put("sign_data", Crypto.create_sign(params,Play.application().configuration().getString("jd_secret")));
+                                Map<String, String> params = controllers.Application.mapper.convertValue(response, controllers.Application.mapper.getTypeFactory().constructMapType(HashMap.class, String.class, String.class));
 
-        StringBuilder sb = new StringBuilder();
-        params.forEach((k,v)->{
-            if(sb.length()> 0) {
-                sb.append("&");
-            }
-            sb.append(String.format("%s=%s",k,v));
-        });
+                                String _sign = Crypto.create_sign(params, SysParCom.JD_SECRET);
+                                if (!sign_data.equalsIgnoreCase(_sign)) {
+                                    Logger.info("京东海关报送状态查询返回签名校验失败");
+                                } else {
+                                    if (params.get("is_success").equals("Y")){
+                                        os.setPayCustomsReturnCode(params.get("custom_push_status"));//海送报送状态
+                                        os.setPayCustomsReturnMsg(params.get("custom_push_status_desc"));//海关报送状态信息描述
+                                        if (params.containsKey("insp_push_status") && params.get("insp_push_status")!=null) os.setPayInspReturnCode(params.get("insp_push_status"));//国检报送状态，对需要单独报送国检的海关有效
+                                        if (params.containsKey("insp_push_status_desc")  && params.get("insp_push_status_desc")!=null) os.setPayInspReturnMsg(params.get("insp_push_status_desc"));//国检报送状态信息描述
 
-        WS.url(query_url).setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
+                                        if (params.get("custom_push_status").equals("SUCCESS") || params.get("custom_push_status").equals("FAIL") || params.get("custom_push_status").equals("EXCEPTION")){
 
-            Logger.debug("" + wsResponse.getStatus() + " : " + wsResponse.asJson());
-            JsonNode ret = wsResponse.asJson();
+                                            if (params.containsKey("insp_push_status") && params.get("insp_push_status")!=null) {
+                                                if (params.get("insp_push_status").equals("SUCCESS") || params.get("insp_push_status").equals("FAIL") || params.get("insp_push_status").equals("EXCEPTION")) {
+                                                    if (levelFactory.map.containsKey(Long.valueOf(csmap.get("orderId").toString()))) {
+                                                        Persist p = levelFactory.map.get(Long.valueOf(csmap.get("orderId").toString()));
+                                                        p.getCancellable().cancel();
+                                                        levelFactory.map.remove(Long.valueOf(csmap.get("orderId").toString()));
+                                                    }
+                                                    if (levelFactory.get(Long.valueOf(csmap.get("orderId").toString())) != null) {
+                                                        levelFactory.delete(Long.valueOf(csmap.get("orderId").toString()));
+                                                    }
+                                                }
+                                            }else {
+                                                if (levelFactory.map.containsKey(Long.valueOf(csmap.get("orderId").toString()))) {
+                                                    Persist p = levelFactory.map.get(Long.valueOf(csmap.get("orderId").toString()));
+                                                    p.getCancellable().cancel();
+                                                    levelFactory.map.remove(Long.valueOf(csmap.get("orderId").toString()));
+                                                }
+                                                if (levelFactory.get(Long.valueOf(csmap.get("orderId").toString())) != null) {
+                                                    levelFactory.delete(Long.valueOf(csmap.get("orderId").toString()));
+                                                }
+                                            }
+                                        }
+                                        cartService.updateOrderSplit(os);
+                                    }else {
+                                        os.setPayResponseCode(params.get("response_code"));
+                                        os.setPayResponseMsg(params.get("response_message"));
+                                        os.setState(params.get("is_success"));
+                                        cartService.updateOrderSplit(os);
+                                        if (levelFactory.map.containsKey(Long.valueOf(csmap.get("orderId").toString()))) {
+                                            Persist p = levelFactory.map.get(Long.valueOf(csmap.get("orderId").toString()));
+                                            p.getCancellable().cancel();
+                                            levelFactory.map.remove(Long.valueOf(csmap.get("orderId").toString()));
+                                        }
+                                        if (levelFactory.get(Long.valueOf(csmap.get("orderId").toString())) != null) {
+                                            levelFactory.delete(Long.valueOf(csmap.get("orderId").toString()));
+                                        }
+                                    }
+                                }
+                                return null;
+                            });
 
-            if(ret.get("is_success").textValue().equalsIgnoreCase("Y")) {
-
-                String custom_push_status = ret.get("custom_push_status").textValue();
-                if(custom_push_status.equalsIgnoreCase("SUCCESS")) {
-                    //报关成功
-                    //TODO 更新报关状态
-
-
+                        }
+                    }
                 }
-                else if (custom_push_status.equalsIgnoreCase("SAVE") || custom_push_status.equalsIgnoreCase("SEND")) {
-                    // 30 分钟调度一次,直到成功
-                    Akka.system().scheduler().scheduleOnce(Duration.create(30, TimeUnit.MINUTES), getSelf(), message, Akka.system().dispatcher(), ActorRef.noSender());
-
-                }
-                else {
-                    //status is FAIL EXCEPTION
-
-                }
-
+            } catch (Exception ex) {
+                Logger.error("Connection error. Should retry later. ", ex);
+                ex.printStackTrace();
             }
-
-            else {
-                //杀掉该actor
-
-            }
-
-            return null;
-
-        });
-
-    }
-
-    public void preStart() {
-        Logger.debug("query customs actor start");
-    }
-
-    public void postStop() {
-        Logger.debug("query customs actor stop");
-
+        }).matchAny(s -> Logger.error("PushActor received messages not matched: {}", s.toString())).build());
     }
 }

@@ -31,10 +31,19 @@ public class OrderSplit implements Serializable{
     private BigDecimal postalFee;
     private String  cbeArea;
 
+    private String payInspReturnCode      ;
+    private String payInspReturnMsg       ;
+    private String payCustomsReturnCode   ;
+    private String payCustomsReturnMsg    ;
+
+    private String subPgTradeNo       ;
+    private String payResponseCode    ;
+    private String payResponseMsg     ;
+
     public OrderSplit() {
     }
 
-    public OrderSplit(Long splitId, Long orderId, String state, String cbeCode, String inspReturnCode, String inspReturnMsg, String customsReturnCode, String customsReturnMsg, BigDecimal totalFee, BigDecimal totalPayFee, Integer totalAmount, BigDecimal shipFee, BigDecimal postalFee, String cbeArea) {
+    public OrderSplit(Long splitId, Long orderId, String state, String cbeCode, String inspReturnCode, String inspReturnMsg, String customsReturnCode, String customsReturnMsg, BigDecimal totalFee, BigDecimal totalPayFee, Integer totalAmount, BigDecimal shipFee, BigDecimal postalFee, String cbeArea, String payInspReturnCode, String payInspReturnMsg, String payCustomsReturnCode, String payCustomsReturnMsg, String subPgTradeNo, String payResponseCode, String payResponseMsg) {
         this.splitId = splitId;
         this.orderId = orderId;
         this.state = state;
@@ -49,6 +58,13 @@ public class OrderSplit implements Serializable{
         this.shipFee = shipFee;
         this.postalFee = postalFee;
         this.cbeArea = cbeArea;
+        this.payInspReturnCode = payInspReturnCode;
+        this.payInspReturnMsg = payInspReturnMsg;
+        this.payCustomsReturnCode = payCustomsReturnCode;
+        this.payCustomsReturnMsg = payCustomsReturnMsg;
+        this.subPgTradeNo = subPgTradeNo;
+        this.payResponseCode = payResponseCode;
+        this.payResponseMsg = payResponseMsg;
     }
 
     public Long getSplitId() {
@@ -163,6 +179,63 @@ public class OrderSplit implements Serializable{
         this.cbeArea = cbeArea;
     }
 
+    public String getPayInspReturnCode() {
+        return payInspReturnCode;
+    }
+
+    public void setPayInspReturnCode(String payInspReturnCode) {
+        this.payInspReturnCode = payInspReturnCode;
+    }
+
+    public String getPayInspReturnMsg() {
+        return payInspReturnMsg;
+    }
+
+    public void setPayInspReturnMsg(String payInspReturnMsg) {
+        this.payInspReturnMsg = payInspReturnMsg;
+    }
+
+    public String getPayCustomsReturnCode() {
+        return payCustomsReturnCode;
+    }
+
+    public void setPayCustomsReturnCode(String payCustomsReturnCode) {
+        this.payCustomsReturnCode = payCustomsReturnCode;
+    }
+
+    public String getPayCustomsReturnMsg() {
+        return payCustomsReturnMsg;
+    }
+
+    public void setPayCustomsReturnMsg(String payCustomsReturnMsg) {
+        this.payCustomsReturnMsg = payCustomsReturnMsg;
+    }
+
+    public String getSubPgTradeNo() {
+        return subPgTradeNo;
+    }
+
+    public void setSubPgTradeNo(String subPgTradeNo) {
+        this.subPgTradeNo = subPgTradeNo;
+    }
+
+    public String getPayResponseCode() {
+        return payResponseCode;
+    }
+
+    public void setPayResponseCode(String payResponseCode) {
+        this.payResponseCode = payResponseCode;
+    }
+
+    public String getPayResponseMsg() {
+        return payResponseMsg;
+    }
+
+    public void setPayResponseMsg(String payResponseMsg) {
+        this.payResponseMsg = payResponseMsg;
+    }
+
+
     @Override
     public String toString() {
         return "OrderSplit{" +
@@ -180,6 +253,13 @@ public class OrderSplit implements Serializable{
                 ", shipFee=" + shipFee +
                 ", postalFee=" + postalFee +
                 ", cbeArea='" + cbeArea + '\'' +
+                ", payInspReturnCode='" + payInspReturnCode + '\'' +
+                ", payInspReturnMsg='" + payInspReturnMsg + '\'' +
+                ", payCustomsReturnCode='" + payCustomsReturnCode + '\'' +
+                ", payCustomsReturnMsg='" + payCustomsReturnMsg + '\'' +
+                ", subPgTradeNo='" + subPgTradeNo + '\'' +
+                ", payResponseCode='" + payResponseCode + '\'' +
+                ", payResponseMsg='" + payResponseMsg + '\'' +
                 '}';
     }
 }

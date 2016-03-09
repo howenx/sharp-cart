@@ -4,19 +4,27 @@ import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.MsgTypeEnum;
+import controllers.Application;
 import controllers.MsgCtrl;
 import controllers.PushCtrl;
 import domain.*;
 import modules.SysParCom;
 import net.spy.memcached.MemcachedClient;
+import org.apache.commons.collections.map.HashedMap;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import play.Configuration;
 import play.Logger;
 import play.libs.Json;
 import service.CartService;
 import service.IdService;
 import service.PromotionService;
+import util.Crypto;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -48,6 +56,9 @@ public class JDPayMid {
     @Inject
     private MemcachedClient cache;
 
+    @Inject
+    private Configuration configuration;
+
     /**
      * 京东支付异步通知结果
      *
@@ -63,7 +74,7 @@ public class JDPayMid {
 
             if (orders.size() > 0) order = orders.get(0);
 
-            if (order.getOrderStatus().equals("S") || order.getOrderStatus().equals("PS") || order.getOrderStatus().equals("PF")|| order.getOrderStatus().equals("F")) {
+            if (order.getOrderStatus().equals("S") || order.getOrderStatus().equals("PS") || order.getOrderStatus().equals("PF") || order.getOrderStatus().equals("F")) {
                 return "success";
             } else {
                 order.setOrderStatus("S");
@@ -164,13 +175,13 @@ public class JDPayMid {
                     refund.setRefundType("pin");
 
                     //自动退款
-                    refundActor.tell(refund,ActorRef.noSender());
+                    refundActor.tell(refund, ActorRef.noSender());
 
                     //更新订单
                     cartService.updateOrder(order);
                     return "error";
 
-                }else{
+                } else {
                     activity.setJoinPersons(activity.getJoinPersons() + 1);
                     if (activity.getJoinPersons().equals(activity.getPersonNum())) {//成团
                         activity.setStatus("C");
@@ -230,10 +241,10 @@ public class JDPayMid {
 
     /**
      * 拼团成功消息推送
-     * @param activity activity
      *
+     * @param activity activity
      */
-    public void pinPushMsg(PinActivity activity){
+    public void pinPushMsg(PinActivity activity) {
         PinSku pinSku = promotionService.getPinSkuById(activity.getPinId());
 
         JsonNode js_invImg = Json.parse(pinSku.getPinImg());
@@ -241,15 +252,99 @@ public class JDPayMid {
             PinUser pinUser = new PinUser();
             pinUser.setPinActiveId(activity.getPinActiveId());
             List<PinUser> pinUsers = promotionService.selectPinUser(pinUser);
-            for (PinUser p:pinUsers){
+            for (PinUser p : pinUsers) {
                 //发消息
-                msgCtrl.addMsgRec(p.getUserId(), MsgTypeEnum.Goods,"拼团成功啦,快去看看",pinSku.getPinTitle(),js_invImg.get("url").asText(),"/promotion/pin/activity/" + activity.getPinActiveId(),"V");
+                msgCtrl.addMsgRec(p.getUserId(), MsgTypeEnum.Goods, "拼团成功啦,快去看看", pinSku.getPinTitle(), js_invImg.get("url").asText(), "/promotion/pin/activity/" + activity.getPinActiveId(), "V");
                 //推送消息
-                Map<String,String> map = new HashMap<>();
-                map.put("targetType","V");
-                map.put("url",SysParCom.PROMOTION_URL+"/promotion/pin/activity/" + activity.getPinActiveId());
-                pushCtrl.send_push_android_and_ios_alias("拼团成功啦,快去看看",null,map,cache.get(p.getUserId().toString()).toString());
+                Map<String, String> map = new HashMap<>();
+                map.put("targetType", "V");
+                map.put("url", SysParCom.PROMOTION_URL + "/promotion/pin/activity/" + activity.getPinActiveId());
+                pushCtrl.send_push_android_and_ios_alias("拼团成功啦,快去看看", null, map, cache.get(p.getUserId().toString()).toString());
             }
         }
+    }
+
+    /**
+     * 获取京东订单的报关参数
+     * @param splitId 子订单ID
+     * @return map
+     */
+
+    public Map<String, String> getCustomsBasicInfo(Long splitId) {
+
+        OrderSplit ordersplit = new OrderSplit();
+        ordersplit.setOrderId(splitId);
+
+        try {
+            List<OrderSplit> orders = cartService.selectOrderSplit(ordersplit);
+            if (orders.size()>0) ordersplit = orders.get(0);
+        }catch (Exception ex){
+            ex.printStackTrace();
+            Logger.error(ex.getMessage());
+        }
+
+        Map<String, String> params = new HashMap<>();
+
+        DateTimeFormatter f = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
+        String req_date = f.print(new DateTime());
+        String sign_type = "MD5";
+
+        params.put("customer_no", SysParCom.JD_SELLER);
+        params.put("request_datetime", req_date);
+        params.put("sign_type", sign_type);
+        params.put("custom",ordersplit.getCbeCode());
+
+        params.put("tax_fee",ordersplit.getPostalFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
+
+        params.put("goods_fee",ordersplit.getTotalPayFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
+
+        params.put("freight",ordersplit.getShipFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
+
+        //tax_fee       //税款金额，单位：分，默认为0分
+        //goods_fee     //货款金额，单位：分，默认与子订单支付时金额相同
+        //freight       //运费金额，单位：分，默认为0分
+        //other_fee     //其它费用金额，单位：分，默认为0分
+        //biz_type      //业务类型，重庆海关报送时必填
+
+        Map<String, String> customs = Application.mapper.convertValue(configuration.getObject(ordersplit.getCbeCode()), Application.mapper.getTypeFactory().constructMapType(Map.class,String.class,String.class));
+        if (customs.size() > 0) params.putAll(customs);
+
+        params.put("sign_data", Crypto.create_sign(params, SysParCom.JD_SECRET));
+
+        return params;
+    }
+
+
+    public Map<String, String> getCustomsQueryInfo(Long splitId) {
+
+        OrderSplit ordersplit = new OrderSplit();
+        ordersplit.setOrderId(splitId);
+
+        try {
+            List<OrderSplit> orders = cartService.selectOrderSplit(ordersplit);
+            if (orders.size()>0) ordersplit = orders.get(0);
+        }catch (Exception ex){
+            ex.printStackTrace();
+            Logger.error(ex.getMessage());
+        }
+
+        Map<String, String> params = new HashMap<>();
+
+        DateTimeFormatter f = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
+        String req_date = f.print(new DateTime());
+        String sign_type = "MD5";
+
+        params.put("customer_no", SysParCom.JD_SELLER);
+        params.put("request_datetime", req_date);
+        params.put("sign_type", sign_type);
+        params.put("out_trade_no",ordersplit.getOrderId().toString());
+
+        params.put("sub_order_no",ordersplit.getSplitId().toString());
+
+        params.put("sub_out_trade_no",ordersplit.getSubPgTradeNo());
+
+        params.put("sign_data", Crypto.create_sign(params, SysParCom.JD_SECRET));
+
+        return params;
     }
 }

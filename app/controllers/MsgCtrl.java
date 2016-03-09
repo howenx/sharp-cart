@@ -229,7 +229,7 @@ public class MsgCtrl extends Controller{
 
                     if (m.getTargetType().equals("V")) m.setMsgUrl(SysParCom.PROMOTION_URL+m.getMsgUrl());
                     else m.setMsgUrl(SysParCom.DEPLOY_URL+m.getMsgUrl());
-                    
+
                     if(m.getReadStatus()==1){
                         isHaveNotRead[0] =true;
                     }

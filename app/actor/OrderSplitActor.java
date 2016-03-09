@@ -42,7 +42,9 @@ public class OrderSplitActor extends AbstractActor {
                     orderSplit.setOrderId(settleVo.getOrderId());
                     orderSplit.setTotalAmount(c.getSingleCustomsSumAmount());
                     orderSplit.setTotalFee(c.getSingleCustomsSumFee());
-                    orderSplit.setTotalPayFee(c.getSingleCustomsSumPayFee());
+                    if (c.getDiscountFeeSingleCustoms() != null)
+                        orderSplit.setTotalPayFee(c.getSingleCustomsSumPayFee().subtract(c.getDiscountFeeSingleCustoms()));
+                    else orderSplit.setTotalPayFee(c.getSingleCustomsSumPayFee());
                     try {
                         if (cartService.insertOrderSplit(orderSplit)) Logger.debug("子订单ID: " + orderSplit.getSplitId());
                     } catch (Exception e) {

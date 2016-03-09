@@ -419,5 +419,4 @@ public class JDPay extends Controller {
         return ok(views.html.payback.render());
     }
 
-
 }

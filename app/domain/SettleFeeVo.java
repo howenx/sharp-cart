@@ -56,10 +56,13 @@ public class SettleFeeVo  implements Serializable {
     @JsonIgnore
     private Long splitId;//
 
+    @JsonIgnore
+    private BigDecimal discountFeeSingleCustoms;
+
     public SettleFeeVo() {
     }
 
-    public SettleFeeVo(String invCustoms, String invArea, String invAreaNm, BigDecimal singleCustomsSumFee, BigDecimal singleCustomsSumPayFee, Integer singleCustomsSumAmount, BigDecimal shipSingleCustomsFee, BigDecimal factSingleCustomsShipFee, BigDecimal portalSingleCustomsFee, BigDecimal factPortalFeeSingleCustoms, Integer messageCode, List<CartDto> cartDtos, Boolean freeShip, List<String> skuTypeList, Long splitId) {
+    public SettleFeeVo(String invCustoms, String invArea, String invAreaNm, BigDecimal singleCustomsSumFee, BigDecimal singleCustomsSumPayFee, Integer singleCustomsSumAmount, BigDecimal shipSingleCustomsFee, BigDecimal factSingleCustomsShipFee, BigDecimal portalSingleCustomsFee, BigDecimal factPortalFeeSingleCustoms, Integer messageCode, List<CartDto> cartDtos, Boolean freeShip, List<String> skuTypeList, Long splitId, BigDecimal discountFeeSingleCustoms) {
         this.invCustoms = invCustoms;
         this.invArea = invArea;
         this.invAreaNm = invAreaNm;
@@ -75,6 +78,7 @@ public class SettleFeeVo  implements Serializable {
         this.freeShip = freeShip;
         this.skuTypeList = skuTypeList;
         this.splitId = splitId;
+        this.discountFeeSingleCustoms = discountFeeSingleCustoms;
     }
 
     public String getInvCustoms() {
@@ -197,6 +201,14 @@ public class SettleFeeVo  implements Serializable {
         this.splitId = splitId;
     }
 
+    public BigDecimal getDiscountFeeSingleCustoms() {
+        return discountFeeSingleCustoms;
+    }
+
+    public void setDiscountFeeSingleCustoms(BigDecimal discountFeeSingleCustoms) {
+        this.discountFeeSingleCustoms = discountFeeSingleCustoms;
+    }
+
     @Override
     public String toString() {
         return "SettleFeeVo{" +
@@ -215,6 +227,7 @@ public class SettleFeeVo  implements Serializable {
                 ", freeShip=" + freeShip +
                 ", skuTypeList=" + skuTypeList +
                 ", splitId=" + splitId +
+                ", discountFeeSingleCustoms=" + discountFeeSingleCustoms +
                 '}';
     }
 }

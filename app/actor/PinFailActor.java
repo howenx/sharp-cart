@@ -27,17 +27,18 @@ public class PinFailActor extends AbstractActor {
 
             PinActivity pinActivity = promotionService.selectPinActivityById(activityId);
 
-            //如果加入人数小于要求成团的人数就拼购失败
-            if (pinActivity.getJoinPersons() < pinActivity.getPersonNum()) {
-                pinActivity.setStatus("F");
-            }
-            promotionService.updatePinActivity(pinActivity);
-
-
             PinUser pinUser = new PinUser();
             pinUser.setOrMaster(false);
             pinUser.setPinActiveId(activityId);
             List<PinUser> pinUsers = promotionService.selectPinUser(pinUser);
+
+
+            //如果加入人数小于要求成团的人数就拼购失败
+            if (pinUsers.size() < pinActivity.getPersonNum()) {
+                pinActivity.setStatus("F");
+            }
+            promotionService.updatePinActivity(pinActivity);
+
             try {
                 for (PinUser p : pinUsers) {
                     Order order = new Order();
