@@ -38,7 +38,6 @@ GET         /client/pin/activity/$pinActivity<[0-9]+>                        con
 GET         /client/pin/activity/pay/$pinActivity<[0-9]+>                    controllers.PinCtrl.pinActivity(pinActivity:Long,pay: Integer ?= 2)
 
 GET         /client/test/pin                                                 controllers.PinCtrl.testpin
-GET         /hello                                                           controllers.Application.hello()
 
 #app启动时定时
 GET         /client/schedule/:cipher                                         controllers.Application.getFirstApp(cipher:String)

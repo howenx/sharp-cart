@@ -259,7 +259,7 @@ public class JDPayMid {
                 Map<String, String> map = new HashMap<>();
                 map.put("targetType", "V");
                 map.put("url", SysParCom.PROMOTION_URL + "/promotion/pin/activity/" + activity.getPinActiveId());
-                pushCtrl.send_push_android_and_ios_alias("拼团成功啦,快去看看", null, map, cache.get(p.getUserId().toString()).toString());
+                pushCtrl.send_push_android_and_ios_alias("拼团成功啦,快去看看", null, map, p.getUserId().toString());
             }
         }
     }

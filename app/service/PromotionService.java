@@ -29,4 +29,6 @@ public interface PromotionService {
     Boolean insertPinUser(PinUser pinUser);
 
     List<PinUser> selectPinUser(PinUser pinUser);
+
+    List<PinActivity> selectPinActivity(PinActivity pinActivity);
 }

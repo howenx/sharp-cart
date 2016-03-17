@@ -27,10 +27,10 @@ import java.util.concurrent.TimeUnit;
  * Created by howen on 16/03/08.
  */
 
-public class PushCustoms extends AbstractActor {
+public class PushCustomsActor extends AbstractActor {
 
     @Inject
-    public PushCustoms(NewScheduler newScheduler,WSClient ws, JDPayMid jdPayMid, CartService cartService,@Named("customStatus") ActorRef customStatus) {
+    public PushCustomsActor(NewScheduler newScheduler, WSClient ws, JDPayMid jdPayMid, CartService cartService, @Named("queryCustomStatusActor") ActorRef queryCustomStatusActor) {
         receive(ReceiveBuilder.match(Long.class, orderId -> {
             try {
                 Order order = new Order();
@@ -66,9 +66,9 @@ public class PushCustoms extends AbstractActor {
                                     if (params.get("is_success").equals("Y")) {
                                         Map<String,String> map = new HashMap<>();
                                         map.put("orderId",orderId.toString());
-                                        map.put("actorPath",customStatus.path().toString());
+                                        map.put("actorPath",queryCustomStatusActor.path().toString());
 
-                                        newScheduler.schedule(Duration.create(5000, TimeUnit.MILLISECONDS),Duration.create(SysParCom.JD_QUERY_DELAY, TimeUnit.MILLISECONDS),customStatus,map);
+                                        newScheduler.schedule(Duration.create(5000, TimeUnit.MILLISECONDS),Duration.create(SysParCom.JD_QUERY_DELAY, TimeUnit.MILLISECONDS),queryCustomStatusActor,map);
                                     }
                                 }
                                 return null;

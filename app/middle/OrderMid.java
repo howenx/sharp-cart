@@ -52,7 +52,7 @@ public class OrderMid {
      */
     public SettleVo OrderSettle(SettleOrderDTO settleOrderDTO, Long userId) throws Exception {
 
-        SettleVo settleVo = new SettleVo();
+        SettleVo  settleVo = new SettleVo();
 
         //取用户地址
         Optional<Address> addressOptional = Optional.ofNullable(selectAddress(settleOrderDTO.getAddressId(), userId));
@@ -240,6 +240,15 @@ public class OrderMid {
                         skuTypeList.add("customize");
                         break;
                     case "pin":
+                        PinActivity pinActivity = new PinActivity();
+                        pinActivity.setMasterUserId(userId);
+                        pinActivity.setPinId(cartDto.getSkuTypeId());
+                        pinActivity.setStatus("Y");
+                        List<PinActivity> pinActivities=promotionService.selectPinActivity(pinActivity);
+                        if (pinActivities.size()>0){
+                            settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_PIN_SINGLE_ONE_TIME.getIndex());
+                        }
+
                         PinTieredPrice pinTieredPrice = new PinTieredPrice();
                         pinTieredPrice.setId(cartDto.getPinTieredPriceId());
                         pinTieredPrice.setPinId(cartDto.getSkuTypeId());

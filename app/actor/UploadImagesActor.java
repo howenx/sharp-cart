@@ -26,6 +26,7 @@ public class UploadImagesActor extends AbstractActor {
     final MediaType MEDIA_TYPE_PNG = MediaType.parse("image/jpeg");
     //图片服务器url
 
+
     @Inject
     public UploadImagesActor(CartService cartService) {
 

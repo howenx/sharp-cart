@@ -47,10 +47,6 @@ public class Application extends Controller {
     private ActorSystem system;
 
     @Inject
-    @Named("schedulerCancelOrderActor")
-    private ActorRef schedulerCancelOrderActor;
-
-    @Inject
     private NewScheduler newScheduler;
 
     @Inject
@@ -115,7 +111,6 @@ public class Application extends Controller {
             Long userId = (Long) ctx().args.get("userId");
             Optional<List<CartItemDTO>> dtos = cartMid.getCarts(userId);
             if (dtos.isPresent()) {
-//                Logger.error("购物车数据:\n"+Json.toJson(dtos.get()));
                 result.putPOJO("cartList", Json.toJson(dtos.get()));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             } else
@@ -241,18 +236,18 @@ public class Application extends Controller {
                         Future<ActorRef> fut = sel.resolveOne(TIMEOUT);
                         ActorRef ref = Await.result(fut, TIMEOUT.duration());
 
-                        if (p.getType().equals("scheduleOnce")){
+                        if (p.getType().equals("scheduleOnce")) {
                             Long time = p.getDelay() - (new Date().getTime() - p.getCreateAt().getTime());
-                            Logger.info("重启后scheduleOnce执行时间---> " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(new Date().getTime()+time)));
+                            Logger.info("重启后scheduleOnce执行时间---> " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(new Date().getTime() + time)));
                             if (time > 0) {
                                 newScheduler.scheduleOnce(Duration.create(time, TimeUnit.MILLISECONDS), ref, p.getMessage());
                             } else {
                                 levelFactory.delete(p.getMessage());
                                 system.actorSelection(p.getActorPath()).tell(p.getMessage(), ActorRef.noSender());
                             }
-                        }else if (p.getType().equals("schedule")){
-                            newScheduler.schedule(Duration.create(p.getInitialDelay(), TimeUnit.MILLISECONDS),Duration.create(p.getDelay(), TimeUnit.MILLISECONDS), ref, p.getMessage());
-                            Logger.info("重启后schedule执行---> 每隔 " + Duration.create(p.getDelay(), TimeUnit.MILLISECONDS).toHours()+" 小时执行一次");
+                        } else if (p.getType().equals("schedule")) {
+                            newScheduler.schedule(Duration.create(p.getInitialDelay(), TimeUnit.MILLISECONDS), Duration.create(p.getDelay(), TimeUnit.MILLISECONDS), ref, p.getMessage());
+                            Logger.info("重启后schedule执行---> 每隔 " + Duration.create(p.getDelay(), TimeUnit.MILLISECONDS).toHours() + " 小时执行一次");
                         }
                     }
                 }
@@ -262,10 +257,5 @@ public class Application extends Controller {
             }
             return ok("success");
         } else throw new NullPointerException(cipher);
-    }
-
-    public Result hello() {
-        newScheduler.scheduleOnce(Duration.create(180, TimeUnit.SECONDS), schedulerCancelOrderActor, 77701093L);
-        return ok("hello");
     }
 }

@@ -35,10 +35,10 @@ import java.util.concurrent.TimeUnit;
  * 京东支付报关查询报关状态
  * Created by howen on 16/03/08.
  */
-public class CustomStatus extends AbstractActor {
+public class QueryCustomStatusActor extends AbstractActor {
 
     @Inject
-    public CustomStatus(WSClient ws, JDPayMid jdPayMid, CartService cartService, LevelFactory levelFactory) {
+    public QueryCustomStatusActor(WSClient ws, JDPayMid jdPayMid, CartService cartService, LevelFactory levelFactory) {
         receive(ReceiveBuilder.match(Map.class, csmap -> {
             try {
                 Order order = new Order();

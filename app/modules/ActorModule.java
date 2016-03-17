@@ -20,8 +20,8 @@ public class ActorModule extends AbstractModule implements AkkaGuiceSupport {
         bindActor(ReduceInvActor.class,"reduceInvActor");
         bindActor(CancelOrderActor.class,"cancelOrderActor");
         bindActor(PublicCouponActor.class,"publicCouponActor");
-        bindActor(CustomStatus.class,"customStatus");
-        bindActor(PushCustoms.class,"pushCustoms");
+        bindActor(QueryCustomStatusActor.class,"queryCustomStatusActor");
+        bindActor(PushCustomsActor.class,"pushCustomsActor");
         bindActor(SchedulerCancelOrderActor.class,"schedulerCancelOrderActor");
         bindActor(UploadImagesActor.class,"uploadImagesActor");
         bindActor(PinFailActor.class, "pinFailActor");

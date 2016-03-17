@@ -745,6 +745,9 @@
         <if test="skuType !=null and skuType!=''">
             and sku_type=#{skuType}
         </if>
+        <if test="skuTypeId !=null and skuTypeId!=''">
+            and sku_type_id=#{skuTypeId}
+        </if>
     </select>
 
     <!--订单用户地址信息-->

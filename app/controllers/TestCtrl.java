@@ -1,16 +1,15 @@
 package controllers;
 
-import actor.MsgRecActor;
-import actor.PushActor;
-import actor.RecPushActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
+import akka.actor.Address;
+import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
 import service.MsgService;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Created by sibyl.sun on 16/3/1.
@@ -22,6 +21,10 @@ public class TestCtrl extends Controller {
     private MsgService msgService;
     @Inject
     private PushCtrl pushCtrl;
+
+    @Inject
+    @Named("pinFailActor")
+    private ActorRef pinFailActor;
     @Inject
     public TestCtrl(MsgService msgService){
         this.msgService=msgService;
@@ -35,7 +38,7 @@ public class TestCtrl extends Controller {
 //        ActorRef pushRecActor=system.actorOf(Props.create(RecPushActor.class,pushCtrl), "push");
 //        System.out.println("Started PushActor,path="+pushRecActor.path());
 
-
+        Logger.error("路径:"+pinFailActor.path());
         return ok("success");
     }
 }

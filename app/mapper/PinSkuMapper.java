@@ -34,4 +34,6 @@ public interface PinSkuMapper {
     Integer insertPinUser(PinUser pinUser);
 
     List<PinUser> selectPinUser(PinUser pinUser);
+
+    List<PinActivity> selectPinActivity(PinActivity pinActivity);
 }

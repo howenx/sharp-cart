@@ -222,7 +222,8 @@ public class OrderCtrl extends Controller {
                         map.put("address", address);
 
                     }
-                    if (o.getOrderStatus().equals("I")) o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
+                    if (o.getOrderStatus().equals("I"))
+                        o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
 
                     //未支付订单
                     if (o.getOrderStatus().equals("I") || o.getOrderStatus().equals("C")) {
@@ -246,27 +247,8 @@ public class OrderCtrl extends Controller {
                             orderAmount += skuDto.getAmount();
                             skuDto.setPrice(orl.getPrice());
                             skuDto.setSkuTitle(orl.getSkuTitle());
-                            if (orl.getSkuImg().contains("url")) {
-                                JsonNode jsonNode = Json.parse(orl.getSkuImg());
-                                if (jsonNode.has("url")) {
-                                    skuDto.setInvImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
-                                }
-                            } else skuDto.setInvImg(SysParCom.IMAGE_URL + orl.getSkuImg());
-
-                            switch (orl.getSkuType()) {
-                                case "item":
-                                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
-                                    break;
-                                case "vary":
-                                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
-                                    break;
-                                case "customize":
-                                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
-                                    break;
-                                case "pin":
-                                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
-                                    break;
-                            }
+                            skuDto.setInvImg(getInvImg(orl.getSkuImg()));
+                            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getSkuType() + "/" + orl.getItemId() + "/" + orl.getSkuTypeId());
 
                             skuDto.setItemColor(orl.getSkuColor());
                             skuDto.setItemSize(orl.getSkuSize());
@@ -313,27 +295,10 @@ public class OrderCtrl extends Controller {
                                     skuDto.setAmount(orl.getAmount());
                                     skuDto.setPrice(orl.getPrice());
                                     skuDto.setSkuTitle(orl.getSkuTitle());
-                                    if (orl.getSkuImg().contains("url")) {
-                                        JsonNode jsonNode = Json.parse(orl.getSkuImg());
-                                        if (jsonNode.has("url")) {
-                                            skuDto.setInvImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
-                                        }
-                                    } else skuDto.setInvImg(SysParCom.IMAGE_URL + orl.getSkuImg());
 
-                                    switch (orl.getSkuType()) {
-                                        case "item":
-                                            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId());
-                                            break;
-                                        case "vary":
-                                            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
-                                            break;
-                                        case "customize":
-                                            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
-                                            break;
-                                        case "pin":
-                                            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/" + orl.getItemId() + "/" + orl.getSkuId() + "/" + orl.getSkuTypeId());
-                                            break;
-                                    }
+                                    skuDto.setInvImg(getInvImg(orl.getSkuImg()));
+                                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getSkuType() + "/" + orl.getItemId() + "/" + orl.getSkuTypeId());
+
 
                                     skuDto.setItemColor(orl.getSkuColor());
                                     skuDto.setItemSize(orl.getSkuSize());
@@ -537,16 +502,17 @@ public class OrderCtrl extends Controller {
 
     /**
      * 收藏
+     *
      * @return
      */
     @Security.Authenticated(UserAuth.class)
-    public Result submitCollect(){
+    public Result submitCollect() {
 
         ObjectNode result = newObject();
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
         /*******取用户ID*********/
         Long userId = (Long) ctx().args.get("userId");
-        try{
+        try {
             //客户端发过来的收藏数据
             CollectSubmitDTO collectSubmitDTO = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructType(CollectSubmitDTO.class));
             //用户收藏信息
@@ -557,16 +523,16 @@ public class OrderCtrl extends Controller {
             collect.setSkuTypeId(collectSubmitDTO.getSkuTypeId());
             //判断是否已经收藏
             Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
-            if (!(collectList.isPresent()&&collectList.get().size()>0)) { //未收藏
-                collect = createCollect(userId,collectSubmitDTO);
+            if (!(collectList.isPresent() && collectList.get().size() > 0)) { //未收藏
+                collect = createCollect(userId, collectSubmitDTO);
             }
-            if(null!=collect){
-                result.putPOJO("collectId",collect.getCollectId());
+            if (null != collect) {
+                result.putPOJO("collectId", collect.getCollectId());
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
             }
 
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
@@ -577,18 +543,19 @@ public class OrderCtrl extends Controller {
 
     /**
      * 创建收藏数据
+     *
      * @param userId
      * @param collectSubmitDTO
      * @return
      * @throws Exception
      */
-    private Collect createCollect(Long userId,CollectSubmitDTO collectSubmitDTO) throws Exception {
-        Collect collect=new Collect();
+    private Collect createCollect(Long userId, CollectSubmitDTO collectSubmitDTO) throws Exception {
+        Collect collect = new Collect();
         collect.setUserId(userId);
         collect.setSkuId(collectSubmitDTO.getSkuId());
         collect.setSkuType(collectSubmitDTO.getSkuType());
         collect.setSkuTypeId(collectSubmitDTO.getSkuTypeId());
-        if(cartService.insertCollect(collect)){
+        if (cartService.insertCollect(collect)) {
             return collect;
         }
         return null;
@@ -596,24 +563,25 @@ public class OrderCtrl extends Controller {
 
     /**
      * 删除收藏
+     *
      * @param collectId
      * @return
      */
     @Security.Authenticated(UserAuth.class)
-    public Result delCollect(Long collectId){
+    public Result delCollect(Long collectId) {
         ObjectNode result = newObject();
-        try{
+        try {
             /*******取用户ID*********/
             Long userId = (Long) ctx().args.get("userId");
-            Collect collect=new Collect();
+            Collect collect = new Collect();
             collect.setCollectId(collectId);
             collect.setUserId(userId);
-            if(collectId>0&&cartService.deleteCollect(collect)){
+            if (collectId > 0 && cartService.deleteCollect(collect)) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
             }
 
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
@@ -624,19 +592,20 @@ public class OrderCtrl extends Controller {
 
     /***
      * 获取所有收藏数据
+     *
      * @return
      */
     @Security.Authenticated(UserAuth.class)
-    public Result getCollect(){
+    public Result getCollect() {
 
         ObjectNode result = newObject();
-        try{
+        try {
             Long userId = (Long) ctx().args.get("userId");
-            Collect collect=new Collect();
+            Collect collect = new Collect();
             collect.setUserId(userId);
-            List<CollectDto> collectDtoList=new ArrayList<CollectDto>();
+            List<CollectDto> collectDtoList = new ArrayList<CollectDto>();
             Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
-            if (collectList.isPresent()){
+            if (collectList.isPresent()) {
                 for (Collect c : collectList.get()) {
                     CollectDto collectDto = new CollectDto();
                     collectDto.setCollectId(c.getCollectId());
@@ -651,45 +620,25 @@ public class OrderCtrl extends Controller {
                         Logger.warn("collect sku not exist ,skuId=" + c.getSkuId());
                         continue;
                     }
-
-
                     CartSkuDto skuDto = new CartSkuDto();
                     skuDto.setSkuId(c.getSkuId());
                     skuDto.setSkuTitle(sku.getInvTitle());
                     skuDto.setAmount(sku.getAmount());
                     skuDto.setPrice(sku.getItemPrice());
+                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + c.getSkuType() + "/" + sku.getItemId() + "/" + c.getSkuTypeId());
 
                     //跳转地址
-                    if ("item".equals(c.getSkuType())) {
-                        skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
-                        skuDto.setInvAndroidUrl(SysParCom.DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId());
-                    } else if ("pin".equals(c.getSkuType())) {
-                        skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
-                        skuDto.setInvAndroidUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
+                    if ("pin".equals(c.getSkuType())) {
                         PinSku pinSku = promotionService.getPinSkuById(c.getSkuTypeId());
-                        if(null==pinSku){
+                        if (null == pinSku) {
                             Logger.warn("collect pin sku not exist ,pinSkuId=" + c.getSkuTypeId());
                             continue;
                         }
-                        JsonNode jsonNode=Json.parse(pinSku.getFloorPrice()); //拼购取最低价
+                        JsonNode jsonNode = Json.parse(pinSku.getFloorPrice()); //拼购取最低价
                         skuDto.setPrice(new BigDecimal(jsonNode.get("price").asText()));
 
-                    } else if ("vary".equals(c.getSkuType())) {
-                        skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
-                        skuDto.setInvAndroidUrl(SysParCom.DEPLOY_URL + "/comm/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
-                    } else if ("customize".equals(c.getSkuType())) {
-                        skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
-                        skuDto.setInvAndroidUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/web/" + sku.getItemId() + "/" + sku.getId() + "/" + c.getSkuTypeId());
                     }
-
-                    if (sku.getInvImg().contains("url")) {
-                        JsonNode jsonNode = Json.parse(sku.getInvImg());
-                        if (jsonNode.has("url")) {
-                            skuDto.setInvImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
-                        }
-                    }
-                    else
-                        skuDto.setInvImg(SysParCom.IMAGE_URL + sku.getInvImg());
+                    skuDto.setInvImg(getInvImg(sku.getInvImg()));
 
                     skuDto.setItemColor(sku.getItemColor());
                     skuDto.setItemSize(sku.getItemSize());
@@ -703,11 +652,29 @@ public class OrderCtrl extends Controller {
             result.putPOJO("collectList", Json.toJson(collectDtoList));
 
             return ok(result);
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
-            Logger.error("server exception:",ex);
+            Logger.error("server exception:", ex);
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
+    }
+
+
+    /**
+     * 转换图片,拼接URL前缀
+     *
+     * @param invImg invImg
+     * @return invImg
+     */
+    public String getInvImg(String invImg) {
+        //SKU图片
+        if (invImg.contains("url")) {
+            JsonNode jsonNode_InvImg = Json.parse(invImg);
+            if (jsonNode_InvImg.has("url")) {
+                ((ObjectNode) jsonNode_InvImg).put("url", SysParCom.IMAGE_URL + jsonNode_InvImg.get("url").asText());
+                return Json.stringify(jsonNode_InvImg);
+            } else return SysParCom.IMAGE_URL + invImg;
+        } else return SysParCom.IMAGE_URL + invImg;
     }
 }

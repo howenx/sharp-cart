@@ -244,7 +244,24 @@ public class JDPay extends Controller {
             if (params.containsKey("trade_class") && params.get("trade_class").equals("SALE")) {
                 if (params.containsKey("out_trade_no") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
                     Logger.info("京东支付异步通知数据: " + params.toString());
-                    return ok(jdPayMid.asynPay(params));
+                    if (jdPayMid.asynPay(params).equals("success")) {
+                        Order order = new Order();
+                        order.setOrderId(Long.valueOf(params.get("out_trade_no")));
+                        try {
+                            List<Order> orders = cartService.getOrder(order);
+                            if (orders.size() > 0) {
+                                order = orders.get(0);
+                                if (order.getOrderType() != null && order.getOrderType() == 2 ) { //1:正常购买订单，2：拼购订单
+                                    if (dealPinActivity(params,order)==null) return ok("error");
+                                    else return ok("success");
+                                } else return ok("success");
+                            } else return ok("error");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            return ok("error");
+                        }
+                    }
+                    return ok("error");
                 } else {
                     Logger.error("支付回调参数校验失败或者支付状态有误: " + params.toString());
                     return ok("error");
@@ -290,40 +307,18 @@ public class JDPay extends Controller {
 
                     try {
                         List<Order> orders = cartService.getOrder(order);
-                        if (orders.size()>0){
+                        if (orders.size() > 0) {
                             order = orders.get(0);
                             if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
-                                if (jdPayMid.pinActivityDeal(order).equals("success")){
-                                    PinUser pinUser = new PinUser();
-                                    pinUser.setUserId(order.getUserId());
-                                    pinUser.setPinActiveId(order.getPinActiveId());
-
-                                    List<PinUser> pinUsers = promotionService.selectPinUser(pinUser);
-
-                                    PinActivity activity =promotionService.selectPinActivityById(order.getPinActiveId());
-                                    if (activity.getJoinPersons().equals(activity.getPersonNum())){
-                                        jdPayMid.pinPushMsg(activity);
-                                    }
-
-                                    if (pinUsers.size()>0){
-                                        pinUser = pinUsers.get(0);
-                                    }
-                                    if (pinUser.isOrMaster()) {
-                                        params.put("pinActivity",SysParCom.PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/1");
-                                        //24小时后去检查此团的状态
-                                        newScheduler.scheduleOnce(FiniteDuration.create(24, HOURS), pinFailActor, order.getPinActiveId());
-                                    } else {
-                                        params.put("pinActivity",SysParCom.PROMOTION_URL+"/promotion/pin/activity/pay/"+order.getPinActiveId()+"/2");
-                                    }
-                                    return ok(views.html.pin.render(params));
-                                } else return ok(views.html.jdpayfailed.render());
+                                if (dealPinActivity(params,order)==null) return ok(views.html.jdpayfailed.render());
+                                else return ok(views.html.pin.render(params));
                             } else return ok(views.html.jdpaysuccess.render(params));
-                        }else return ok(views.html.jdpayfailed.render());
+                        } else return ok(views.html.jdpayfailed.render());
                     } catch (Exception e) {
                         e.printStackTrace();
                         return ok(views.html.jdpayfailed.render());
                     }
-                }else return ok(views.html.jdpayfailed.render());
+                } else return ok(views.html.jdpayfailed.render());
             } else return ok(views.html.jdpayfailed.render());
         }
     }
@@ -417,6 +412,56 @@ public class JDPay extends Controller {
      */
     public Result payRefund() {
         return ok(views.html.payback.render());
+    }
+
+
+    private Map<String, String> dealPinActivity(Map<String, String> params,Order order) throws Exception {
+        Boolean newCreatePin = false;
+        List<PinUser> pinUsers;
+        PinUser pinUser = new PinUser();
+        pinUser.setUserId(order.getUserId());
+
+        if (order.getPinActiveId()!=null){
+            pinUser.setPinActiveId(order.getPinActiveId());
+            pinUsers= promotionService.selectPinUser(pinUser);
+            if (pinUsers.size()==0) {
+                newCreatePin =true;
+                if (!jdPayMid.pinActivityDeal(order).equals("success"))
+                    return null;
+                pinUser.setPinActiveId(order.getPinActiveId());
+                pinUsers = promotionService.selectPinUser(pinUser);
+            }
+        }else{
+            newCreatePin =true;
+            if (!jdPayMid.pinActivityDeal(order).equals("success"))
+                return null;
+            pinUser.setPinActiveId(order.getPinActiveId());
+            pinUsers = promotionService.selectPinUser(pinUser);
+        }
+
+        PinActivity activity = promotionService.selectPinActivityById(order.getPinActiveId());
+
+        if (newCreatePin){
+            if (activity.getJoinPersons().equals(activity.getPersonNum())) {
+                jdPayMid.pinPushMsg(activity);
+            }
+            if (pinUsers.size() > 0) {
+                pinUser = pinUsers.get(0);
+                if (pinUser.isOrMaster()) {
+                    newScheduler.scheduleOnce(FiniteDuration.create(24, HOURS), pinFailActor, order.getPinActiveId());
+                }
+            }
+        }
+
+        if (pinUsers.size() > 0) {
+            pinUser = pinUsers.get(0);
+            if (pinUser.isOrMaster()) {
+                params.put("pinActivity", SysParCom.PROMOTION_URL + "/promotion/pin/activity/pay/" + order.getPinActiveId() + "/1");
+            } else {
+                params.put("pinActivity", SysParCom.PROMOTION_URL + "/promotion/pin/activity/pay/" + order.getPinActiveId() + "/2");
+            }
+        }
+        return params;
     }
 
 }

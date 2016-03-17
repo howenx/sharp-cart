@@ -1,12 +1,9 @@
 package middle;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import controllers.Application;
 import controllers.OrderCtrl;
 import domain.*;
 import modules.SysParCom;
 import play.Logger;
-import play.libs.Json;
 import service.CartService;
 import service.SkuService;
 
@@ -29,6 +26,9 @@ public class CartMid {
     @Inject
     private CartService cartService;
 
+    @Inject
+    private OrderCtrl orderCtrl;
+
 
     //创建用户购物车商品
     public List<CartPar> createCart(Long userId, List<CartDto> cartDtoList) throws Exception {
@@ -42,7 +42,12 @@ public class CartMid {
         return cartPars;
     }
 
-    //获取购物车list
+    /**
+     * 获取登录状态下购物车列表
+     * @param userId userId
+     * @return Optional
+     * @throws Exception
+     */
     public Optional<List<CartItemDTO>> getCarts(Long userId) throws Exception {
 
         List<CartListDto> cartListDto = new ArrayList<>();
@@ -83,27 +88,9 @@ public class CartMid {
                     cartList.setRestrictAmount(sku.getRestrictAmount());
                     cartList.setRestAmount(sku.getRestAmount());
 
-                    if (sku.getInvImg().contains("url")) {
-                        JsonNode jsonNode = Json.parse(sku.getInvImg());
-                        if (jsonNode.has("url")) {
-                            cartList.setInvImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
-                        }
-                    } else cartList.setInvImg(SysParCom.IMAGE_URL + sku.getInvImg());
+                    cartList.setInvImg(orderCtrl.getInvImg(sku.getInvImg()));
 
-                    switch (cart.getSkuType()) {
-                        case "item":
-                            cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
-                            break;
-                        case "vary":
-                            cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cart.getSkuTypeId());
-                            break;
-                        case "customize":
-                            cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cart.getSkuTypeId());
-                            break;
-                        case "pin":
-                            cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cart.getSkuTypeId());
-                            break;
-                    }
+                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + cart.getSkuType() + "/" + sku.getItemId() + "/" + cart.getSkuTypeId());
 
                     cartList.setCartDelUrl(SysParCom.SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
                     cartList.setInvTitle(sku.getInvTitle());
@@ -122,36 +109,10 @@ public class CartMid {
                         .stream()
                         .collect(Collectors.groupingBy(CartListDto::getInvArea));
 
-                List<CartItemDTO> list = new ArrayList<>();
-
-                cartListMap
-                        .forEach((invArea, p) -> {
-                            CartItemDTO cartItemDTO = new CartItemDTO();
-                            cartItemDTO.setInvCustoms(p.get(0).getInvCustoms());
-                            cartItemDTO.setInvArea(invArea);
-                            cartItemDTO.setInvAreaNm(p.get(0).getInvAreaNm());
-                            cartItemDTO.setCarts(p);
-                            cartItemDTO.setPostalStandard(SysParCom.POSTAL_STANDARD);
-                            cartItemDTO.setPostalLimit(SysParCom.POSTAL_LIMIT);
-                            cartItemDTO.setFreeShip(SysParCom.FREE_SHIP);
-                            list.add(cartItemDTO);
-                        });
-                return Optional.of(list);
+                return Optional.of(getCartListMap(cartListMap));
             } else return Optional.empty();
         } else return Optional.empty();
     }
-
-    //更新失效商品
-    private void invalidItem(List<CartPar> cartPars) throws Exception {
-        for (CartPar s : cartPars) {
-            Cart cart = new Cart();
-            cart.setCartId(s.getsCartIds());
-            cart.setStatus("N");
-            cartService.updateCart(cart);
-            Logger.info("失效购物车ID: " + cart.getCartId());
-        }
-    }
-
 
     private CartPar itemAddCart(CartDto cartDto, Long userId) throws Exception {
 
@@ -190,7 +151,7 @@ public class CartMid {
         if (cart.getAmount() > sku.getRestAmount()) {
             cart.setAmount(sku.getRestAmount());
             cartPar.setRestMessageCode(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex());
-        }else {
+        } else {
             cartPar.setRestMessageCode(Message.ErrorCode.SUCCESS.getIndex());
         }
 
@@ -198,7 +159,7 @@ public class CartMid {
         cart.setSkuType(cartDto.getSkuType());
         cart.setSkuTypeId(cartDto.getSkuTypeId());
 
-        if (cartDto.getCartId()==null || cartDto.getCartId() == 0) {
+        if (cartDto.getCartId() == null || cartDto.getCartId() == 0) {
             if (cart.getStatus().equals("I") || cart.getStatus().equals("G")) {
 
                 List<Cart> carts = cartService.getCartByUserSku(cart);
@@ -229,6 +190,12 @@ public class CartMid {
         return cartPar;
     }
 
+    /**
+     * 获取购物车列表数据,未登录
+     * @param cartDtoList cartDtoList
+     * @return Optional
+     * @throws Exception
+     */
     public Optional<List<CartItemDTO>> getCarts(List<CartDto> cartDtoList) throws Exception {
 
         List<CartListDto> cartListDto = new ArrayList<>();
@@ -274,28 +241,10 @@ public class CartMid {
             cartList.setRestrictAmount(sku.getRestrictAmount());
             cartList.setRestAmount(sku.getRestAmount());
 
-            if (sku.getInvImg().contains("url")){
-                JsonNode jsonNode  = Json.parse(sku.getInvImg());
-                if (jsonNode.has("url")){
-                    cartList.setInvImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());
-                }
-            }else cartList.setInvImg(SysParCom.IMAGE_URL +sku.getInvImg());
+            cartList.setInvImg(orderCtrl.getInvImg(sku.getInvImg()));
 
+            cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + cartList.getSkuType() + "/" + sku.getItemId() + "/" + cartList.getSkuTypeId());
 
-            switch (cartDto.getSkuType()) {
-                case "item":
-                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId());
-                    break;
-                case "vary":
-                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cartList.getSkuTypeId());
-                    break;
-                case "customize":
-                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/subject/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cartList.getSkuTypeId());
-                    break;
-                case "pin":
-                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/pin/detail/" + sku.getItemId() + "/" + sku.getId() + "/" + cartList.getSkuTypeId());
-                    break;
-            }
 
             cartList.setInvCustoms(sku.getInvCustoms());
             cartList.setPostalTaxRate(sku.getPostalTaxRate());
@@ -315,11 +264,19 @@ public class CartMid {
         Map<String, List<CartListDto>> cartListMap = cartListDto
                 .stream()
                 .collect(Collectors.groupingBy(CartListDto::getInvArea));
+        return Optional.of(getCartListMap(cartListMap));
+    }
 
+
+    /**
+     * 获取购物车item
+     * @param map map
+     * @return List
+     */
+    private List<CartItemDTO> getCartListMap(Map<String, List<CartListDto>> map) {
         List<CartItemDTO> list = new ArrayList<>();
 
-        cartListMap
-                .forEach((invArea, p) -> {
+        map.forEach((invArea, p) -> {
                     CartItemDTO cartItemDTO = new CartItemDTO();
                     cartItemDTO.setInvCustoms(p.get(0).getInvCustoms());
                     cartItemDTO.setInvArea(invArea);
@@ -330,7 +287,7 @@ public class CartMid {
                     cartItemDTO.setFreeShip(SysParCom.FREE_SHIP);
                     list.add(cartItemDTO);
                 });
-        return Optional.of(list);
+        return list;
     }
 
 }

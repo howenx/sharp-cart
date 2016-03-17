@@ -125,6 +125,33 @@
         from pin_activity where pin_active_id = ${value} order by create_at
     </select>
 
+    <select id="selectPinActivity" parameterType="domain.PinActivity" resultType="domain.PinActivity">
+        select
+        pin_active_id    ,
+        pin_id           ,
+        master_user_id   ,
+        person_num       ,
+        pin_price        ,
+        join_persons     ,
+        create_at        ,
+        status           ,
+        end_at           ,
+        pin_url,
+        pin_tiered_id
+        from pin_activity where 1=1
+         <if test="pinId!=null and pinId!=''">
+             and pin_id = #{pinId}
+         </if>
+        <if test="masterUserId!=null and masterUserId!=''">
+            and master_user_id=#{masterUserId}
+        </if>
+        <if test="status!=null and status!=''">
+            and status = #{status}
+        </if>
+         order by create_at
+    </select>
+
+
     <insert id="insertPinUser" parameterType="domain.PinUser" useGeneratedKeys="true" keyProperty="id">
         insert into pin_user (
         user_id         ,

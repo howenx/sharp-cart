@@ -113,17 +113,7 @@
 
     <!--获取邮费模版-->
     <select id="getCarriage" parameterType="domain.Carriage" resultType="domain.Carriage">
-
-        SELECT COALESCE (cc.id, c.id) id,
-        COALESCE (cc.add_fee,c.add_fee) add_fee,
-        COALESCE (cc.add_num,c.add_num) add_num,
-        COALESCE (cc.city_code,c.city_code) city_code,
-        COALESCE (cc.first_fee,c.first_fee) first_fee,
-        COALESCE (cc.first_num,c.first_num) first_num,
-        COALESCE (cc.model_code,c.model_code) model_code,
-        COALESCE (cc.model_name,c.model_name) model_name
-        FROM carriage c LEFT JOIN
-        (SELECT c1.id,
+        SELECT c1.id,
         c1.add_fee,
         c1.add_num,
         c1.city_code,
@@ -136,12 +126,11 @@
         <if test="cityCode!=null and cityCode!=''">
             and c1.city_code = #{cityCode}
         </if>
-        ) cc
-        on cc.model_code=c.model_code where 1=1
-        <if test="modelCode!=null and modelCode!=''">
-            and c.model_code = #{modelCode}
+        <if test="cityCode==null or cityCode==''">
+            and c1.city_code = 'ALL'
         </if>
-        AND c.city_code = 'ALL'
+        <if test="modelCode!=null and modelCode!=''">
+            and c1.model_code = #{modelCode}
+        </if>
     </select>
-
 </mapper>
