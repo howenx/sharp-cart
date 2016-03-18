@@ -252,6 +252,8 @@ public class OrderCtrl extends Controller {
 
                             skuDto.setItemColor(orl.getSkuColor());
                             skuDto.setItemSize(orl.getSkuSize());
+                            skuDto.setSkuType(orl.getSkuType());
+                            skuDto.setSkuTypeId(orl.getSkuTypeId());
                             skuDtoList.add(skuDto);
                         }
 
@@ -299,7 +301,8 @@ public class OrderCtrl extends Controller {
                                     skuDto.setInvImg(getInvImg(orl.getSkuImg()));
                                     skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getSkuType() + "/" + orl.getItemId() + "/" + orl.getSkuTypeId());
 
-
+                                    skuDto.setSkuType(orl.getSkuType());
+                                    skuDto.setSkuTypeId(orl.getSkuTypeId());
                                     skuDto.setItemColor(orl.getSkuColor());
                                     skuDto.setItemSize(orl.getSkuSize());
                                     skuDtoList.add(skuDto);
