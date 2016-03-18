@@ -1,5 +1,6 @@
 package mapper;
 
+import domain.Feedback;
 import domain.Msg;
 import domain.MsgRec;
 
@@ -54,4 +55,10 @@ public interface MsgMapper {
      * @return
      */
     Integer cleanMsgRecBy(MsgRec msgRec);
+    /**
+     * 意见反馈
+     * @param feedback
+     * @return
+     */
+    Integer insertFeedBack(Feedback feedback);
 }

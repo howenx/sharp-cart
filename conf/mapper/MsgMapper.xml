@@ -170,5 +170,12 @@
             and msg_type = #{msgType}
         </if>
     </update>
+    <!--意见反馈-->
+    <insert id="insertFeedBack" parameterType="domain.Feedback" useGeneratedKeys="true" keyProperty="id">
+        insert into sp_feedback
+        (user_id,content,create_at)
+        values
+        (#{userId},#{content},CURRENT_TIMESTAMP(0))
+    </insert>
 
 </mapper>

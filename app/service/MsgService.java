@@ -1,5 +1,6 @@
 package service;
 
+import domain.Feedback;
 import domain.Msg;
 import domain.MsgRec;
 
@@ -48,5 +49,12 @@ public interface MsgService {
      */
     Boolean cleanMsgRec();
     Boolean cleanMsgRecBy(MsgRec msgRec);
+
+    /**
+     * 意见反馈
+     * @param feedback
+     * @return
+     */
+    Boolean insertFeedBack(Feedback feedback);
 
 }

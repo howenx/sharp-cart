@@ -1,5 +1,6 @@
 package service;
 
+import domain.Feedback;
 import domain.Msg;
 import domain.MsgRec;
 import mapper.MsgMapper;
@@ -73,5 +74,10 @@ public class MsgServiceImpl implements MsgService{
     @Override
     public Boolean cleanMsgRecBy(MsgRec msgRec) {
         return msgMapper.cleanMsgRecBy(msgRec)>0;
+    }
+
+    @Override
+    public Boolean insertFeedBack(Feedback feedback) {
+        return msgMapper.insertFeedBack(feedback)>0;
     }
 }

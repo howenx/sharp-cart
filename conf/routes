@@ -50,6 +50,7 @@ GET         /client/msg/get/type                                             con
 GET         /client/msg/list/$msgType<[a-zA-Z]+>                             controllers.MsgCtrl.getAllMsgs(msgType:String)
 GET         /client/msg/delMsg/$id<[0-9]+>                                   controllers.MsgCtrl.delMsg(id:Long)
 GET         /client/msg/clean/$msgType<[a-zA-Z]+>                            controllers.MsgCtrl.cleanMsg(msgType:String)
+POST        /client/feedback                                                 controllers.MsgCtrl.feedback()
 
 #test
 GET         /client/push                                                     controllers.PushCtrl.testPush()

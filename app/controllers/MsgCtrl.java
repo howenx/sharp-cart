@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.MsgTypeEnum;
+import domain.Feedback;
 import domain.Message;
 import domain.Msg;
 import domain.MsgRec;
@@ -296,6 +297,40 @@ public class MsgCtrl extends Controller{
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
             }
+        }catch(Exception ex) {
+            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:", ex);
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+        return ok(result);
+    }
+
+    /**
+     * 意见反馈
+     * @return
+     */
+    @Security.Authenticated(UserAuth.class)
+    public Result feedback(){
+        JsonNode json = request().body().asJson();
+        String content="";
+        if(json.has("content")){
+            content=json.findValue("content").asText().trim();
+        }
+        ObjectNode result = newObject();
+        Long userId = (Long) ctx().args.get("userId");
+        try {
+            if (content.length() > 0 && content.length() < 140) {
+                Feedback feedback = new Feedback();
+                feedback.setUserId(userId);
+                feedback.setContent(content);
+                if (msgService.insertFeedBack(feedback)) {
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                    return ok(result);
+                }
+            }
+
         }catch(Exception ex) {
             Logger.error("server exception:" + ex.getMessage());
             Logger.error("server exception:", ex);
