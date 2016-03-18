@@ -62,7 +62,7 @@ public class PushCtrl extends Controller {
 
     public Result testPush(){
         send_push_all("test only content");
-        send_push_android_all("test title content url","hmm title",getPushExtras("http://172.28.3.78:9001/comm/detail/888301/111324",""),60);
+        send_push_android_and_ios_all("test title content url","hmm title",getPushExtras("http://172.28.3.78:9001/comm/detail/888301/111324","D"));
         return ok("success");
     }
 
