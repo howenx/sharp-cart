@@ -347,7 +347,7 @@ public class OrderCtrl extends Controller {
                 if (listOptional.isPresent() && listOptional.get().size() > 0) {
                     order = cartService.getOrderBy(order).get(0);
                     Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
-                    if (longOptional.isPresent() && longOptional.get().compareTo(SysParCom.COUNTDOWN_MILLISECONDS) > 0) {
+                    if (longOptional.isPresent() && longOptional.get()< 0) {
                         cancelOrderActor.tell(orderId, null);
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex()), Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex())));
                         return ok(result);

@@ -38,7 +38,7 @@ import java.util.*;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static play.libs.F.Promise.promise;
-
+import static modules.SysParCom.*;
 /**
  * Created by handy on 15/12/16.
  * kakao china
@@ -89,7 +89,7 @@ public class JDPay extends Controller {
             if (listOptional.isPresent() && listOptional.get().size() > 0) {
                 order = listOptional.get().get(0);
                 Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
-                if (longOptional.isPresent() && longOptional.get().compareTo(SysParCom.COUNTDOWN_MILLISECONDS) > 0) {
+                if (longOptional.isPresent() && longOptional.get()< 0) {
                     cancelOrderActor.tell(orderId, null);
                     Logger.error("order timeout:" + order.getOrderId());
                     return ok(views.html.jdpayfailed.render());

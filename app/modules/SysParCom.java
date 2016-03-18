@@ -41,13 +41,13 @@ public class SysParCom {
 
     public static String JD_SELLER;
 
-    public static Long COUNTDOWN_MILLISECONDS;
 
     public static Long PIN_MILLISECONDS;
 
     public static String JD_PUSH_URL;
     public static String JD_QUERY_URL;
     public static Long JD_QUERY_DELAY;
+    public static Long ORDER_OVER_TIME;
 
 
     @Inject
@@ -77,9 +77,8 @@ public class SysParCom {
 
         JD_SELLER = configuration.getString("jd_seller");
 
-        COUNTDOWN_MILLISECONDS =configuration.getLong("order.countdown.milliseconds");
 
-        PIN_MILLISECONDS = configuration.getLong("pin.activity.milliseconds");
+        PIN_MILLISECONDS = configuration.getLong("pin.over.time");
 
 
         JD_PUSH_URL = configuration.getString("jd_push_url");
@@ -87,6 +86,8 @@ public class SysParCom {
         JD_QUERY_URL = configuration.getString("jd_query_url");
 
         JD_QUERY_DELAY = configuration.getLong("jd.query.customs.status");
+
+        ORDER_OVER_TIME = configuration.getLong("order.over.time");
     }
 
 }

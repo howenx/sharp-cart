@@ -16,7 +16,8 @@ import javax.inject.Named;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static modules.SysParCom.ORDER_OVER_TIME;
 
 /**
  * 创建子订单Actor
@@ -71,7 +72,7 @@ public class OrderSplitActor extends AbstractActor {
                 //24小时内未结算恢复库存并自动取消订单
 
 
-                newScheduler.scheduleOnce(FiniteDuration.create(24, HOURS), cancelOrderActor, settleVo.getOrderId());
+                newScheduler.scheduleOnce(FiniteDuration.create(ORDER_OVER_TIME, MILLISECONDS), cancelOrderActor, settleVo.getOrderId());
 
             } catch (Exception e) {
                 Logger.error("OrderSplitActor Error:" + e.getMessage());

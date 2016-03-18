@@ -3,7 +3,7 @@ package util;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-
+import static modules.SysParCom.ORDER_OVER_TIME;
 /**
  * 计算倒计时
  * Created by howen on 15/12/22.
@@ -16,9 +16,9 @@ public class CalCountDown {
 
             SimpleDateFormat d = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// 格式化时间
             Calendar calendar=Calendar.getInstance();
-            calendar.setTime(d.parse(createAt));
+            calendar.setTimeInMillis(d.parse(createAt).getTime()+ORDER_OVER_TIME);
 
-            return  cal.getTimeInMillis()-calendar.getTimeInMillis();
+            return  calendar.getTimeInMillis()-cal.getTimeInMillis();
 
         }catch (Exception ex){
             ex.printStackTrace();
