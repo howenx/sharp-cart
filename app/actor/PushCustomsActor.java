@@ -8,7 +8,6 @@ import domain.Order;
 import domain.OrderSplit;
 import middle.JDPayMid;
 import modules.NewScheduler;
-import modules.SysParCom;
 import play.Logger;
 import play.libs.ws.WSClient;
 import scala.concurrent.duration.Duration;
@@ -21,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static modules.SysParCom.*;
 
 /**
  * 京东支付报关
@@ -46,7 +47,7 @@ public class PushCustomsActor extends AbstractActor {
                             StringBuilder sb = new StringBuilder();
                             jdPayMid.getCustomsBasicInfo(os.getSplitId()).forEach((k, v) -> sb.append(k).append("=").append(v).append("&"));
 
-                            ws.url(SysParCom.JD_PUSH_URL).setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
+                            ws.url(JD_PUSH_URL).setContentType("application/x-www-form-urlencoded").post(sb.toString()).thenApply(wsResponse -> {
                                 JsonNode response = wsResponse.asJson();
                                 Logger.info("京东海关报送返回JSON: " + response.toString());
 
@@ -54,7 +55,7 @@ public class PushCustomsActor extends AbstractActor {
 
                                 Map<String, String> params = controllers.Application.mapper.convertValue(response, controllers.Application.mapper.getTypeFactory().constructMapType(HashMap.class, String.class, String.class));
 
-                                String _sign = Crypto.create_sign(params, SysParCom.JD_SECRET);
+                                String _sign = Crypto.create_sign(params, JD_SECRET);
                                 if (!sign_data.equalsIgnoreCase(_sign)) {
                                     Logger.info("京东海关报送返回签名校验失败");
                                 } else {
@@ -62,13 +63,18 @@ public class PushCustomsActor extends AbstractActor {
                                     os.setPayResponseMsg(params.get("response_message"));
                                     os.setSubPgTradeNo(params.get("sub_out_trade_no"));
                                     os.setState(params.get("is_success"));
-                                    cartService.updateOrderSplit(os);
-                                    if (params.get("is_success").equals("Y")) {
-                                        Map<String,String> map = new HashMap<>();
-                                        map.put("orderId",orderId.toString());
-                                        map.put("actorPath",queryCustomStatusActor.path().toString());
+                                    try {
+                                        cartService.updateOrderSplit(os);
+                                    } catch (Exception ex) {
+                                        ex.printStackTrace();
+                                    }
 
-                                        newScheduler.schedule(Duration.create(5000, TimeUnit.MILLISECONDS),Duration.create(SysParCom.JD_QUERY_DELAY, TimeUnit.MILLISECONDS),queryCustomStatusActor,map);
+                                    if (params.get("is_success").equals("Y")) {
+                                        Map<String, String> map = new HashMap<>();
+                                        map.put("orderId", orderId.toString());
+                                        map.put("actorPath", queryCustomStatusActor.path().toString());
+
+                                        newScheduler.schedule(Duration.create(5000, TimeUnit.MILLISECONDS), Duration.create(JD_QUERY_DELAY, TimeUnit.MILLISECONDS), queryCustomStatusActor, map);
                                     }
                                 }
                                 return null;

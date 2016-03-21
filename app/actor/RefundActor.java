@@ -30,7 +30,7 @@ public class RefundActor extends AbstractActor {
             Order order = new Order();
             order.setOrderId(refund.getOrderId());
             List<Order> orderList = cartService.getOrder(order);
-            if (orderList.size()>0){
+            if (orderList.size() > 0) {
                 order = orderList.get(0);
 
                 refund.setAmount(order.getOrderAmount());
@@ -38,11 +38,11 @@ public class RefundActor extends AbstractActor {
                 refund.setSplitOrderId(order.getOrderSplitId());
                 refund.setUserId(order.getUserId());
 
-                if (cartService.insertRefund(refund)){
+                if (cartService.insertRefund(refund)) {
                     Map<String, String> params = JDPay.payBackParams(refund, null, null);
                     StringBuilder sb = new StringBuilder();
                     params.forEach((k, v) -> sb.append(k).append("=").append(v).append("&"));
-                    ws.url("https://cbe.wangyin.com/cashier/refund").setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
+                    ws.url("https://cbe.wangyin.com/cashier/refund").setContentType("application/x-www-form-urlencoded").post(sb.toString()).thenApply(wsResponse -> {
                         JsonNode response = wsResponse.asJson();
                         Logger.info("京东退款返回数据JSON: " + response.toString());
                         Refund re = new Refund();
@@ -51,19 +51,23 @@ public class RefundActor extends AbstractActor {
                         re.setPgMessage(response.get("response_message").asText());
                         re.setPgTradeNo(response.get("trade_no").asText());
                         re.setState(response.get("is_success").asText());
-
-                        if (cartService.updateRefund(re)) {
-                            if (re.getState().equals("Y")) {
-                                Order order1 = new Order();
-                                order1.setOrderId(refund.getOrderId());
-                                order1.setOrderStatus("T");
-                                cartService.updateOrder(order1);
-                                Logger.info(refund.getUserId()+"退款成功");
-                            } else {
-                                Logger.error(refund.getUserId()+"退款失败");
+                        try {
+                            if (cartService.updateRefund(re)) {
+                                if (re.getState().equals("Y")) {
+                                    Order order1 = new Order();
+                                    order1.setOrderId(refund.getOrderId());
+                                    order1.setOrderStatus("T");
+                                    cartService.updateOrder(order1);
+                                    Logger.info(refund.getUserId() + "退款成功");
+                                } else {
+                                    Logger.error(refund.getUserId() + "退款失败");
+                                }
                             }
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
                         }
-                        return  wsResponse.asJson();
+
+                        return wsResponse.asJson();
                     });
                 }
 

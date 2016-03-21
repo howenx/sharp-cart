@@ -1,6 +1,7 @@
 package controllers;
 
 import akka.actor.ActorRef;
+import akka.util.ByteString;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -10,9 +11,12 @@ import middle.OrderMid;
 import modules.SysParCom;
 import org.apache.commons.io.FileUtils;
 import play.Logger;
+import play.http.HttpErrorHandler;
 import play.libs.F;
 import play.libs.Json;
+import play.libs.streams.Accumulator;
 import play.mvc.*;
+import scala.compat.java8.FutureConverters;
 import service.CartService;
 import service.PromotionService;
 import service.SkuService;
@@ -20,11 +24,15 @@ import util.CalCountDown;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CompletionStage;
 
 import static akka.pattern.Patterns.ask;
 import static play.libs.Json.newObject;
+import static play.mvc.BodyParser.MultipartFormData;
+import static play.mvc.BodyParser.Of;
 
 /**
  * 订单相关,提交订单,优惠券
@@ -164,10 +172,10 @@ public class OrderCtrl extends Controller {
      * @param orderId 订单ID
      * @return promise
      */
-    public F.Promise<Result> cancelOrder(Long orderId) {
+    public CompletionStage<Result> cancelOrder(Long orderId) {
         ObjectNode result = newObject();
-        return F.Promise.wrap(ask(cancelOrderActor, orderId, 3000)
-        ).map(response -> {
+        return FutureConverters.toJava(ask(cancelOrderActor, orderId, 3000)
+        ).thenApply(response -> {
             Logger.info("取消订单:" + orderId);
             if (((Integer) response) == 200) {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
@@ -347,7 +355,7 @@ public class OrderCtrl extends Controller {
                 if (listOptional.isPresent() && listOptional.get().size() > 0) {
                     order = cartService.getOrderBy(order).get(0);
                     Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
-                    if (longOptional.isPresent() && longOptional.get()< 0) {
+                    if (longOptional.isPresent() && longOptional.get() < 0) {
                         cancelOrderActor.tell(orderId, null);
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex()), Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex())));
                         return ok(result);
@@ -432,18 +440,32 @@ public class OrderCtrl extends Controller {
         }
     }
 
+    private static class Text10Kb extends BodyParser.MaxLengthBodyParser<MultipartFormData> {
+
+
+        protected Text10Kb(long maxLength, HttpErrorHandler errorHandler) {
+            super(maxLength, errorHandler);
+        }
+
+        @Override
+        protected Accumulator<ByteString, F.Either<Result, MultipartFormData>> apply1(Http.RequestHeader request) {
+            return super.apply(request);
+        }
+    }
+
+
     /**
      * 退货申请
      *
      * @return result
      */
     @Security.Authenticated(UserAuth.class)
-    @BodyParser.Of(value = BodyParser.MultipartFormData.class, maxLength = 50 * 1024 * 1024)
+    @Of(value = Text10Kb.class)
     public Result refundApply() {
 
         ObjectNode result = newObject();
 
-        Http.MultipartFormData body = request().body().asMultipartFormData();
+        play.mvc.Http.MultipartFormData<File> body = request().body().asMultipartFormData();
 
         Map<String, String[]> stringMap = body.asFormUrlEncoded();
         Map<String, String> map = new HashMap<>();
@@ -466,7 +488,7 @@ public class OrderCtrl extends Controller {
                     refund.setPayBackFee(orderLine.getPrice().multiply(new BigDecimal(refund.getAmount())).setScale(2, BigDecimal.ROUND_HALF_UP));
                 }
                 refund.setUserId(userId);
-                List<Http.MultipartFormData.FilePart> fileParts = body.getFiles();
+                List<Http.MultipartFormData.FilePart<File>> fileParts = body.getFiles();
 
                 Boolean flag = cartService.insertRefund(refund);
 
@@ -474,7 +496,7 @@ public class OrderCtrl extends Controller {
                     Map<String, Object> mapActor = new HashMap<>();
                     List<byte[]> files = new ArrayList<>();
                     mapActor.put("refundId", refund.getId());
-                    for (Http.MultipartFormData.FilePart filePart : fileParts) {
+                    for (Http.MultipartFormData.FilePart<File> filePart : fileParts) {
                         if (!"image/jpeg".equalsIgnoreCase(filePart.getContentType()) && !"image/png".equalsIgnoreCase(filePart.getContentType())) {
                             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FILE_TYPE_NOT_SUPPORTED.getIndex()), Message.ErrorCode.FILE_TYPE_NOT_SUPPORTED.getIndex())));
                             return badRequest(result);
