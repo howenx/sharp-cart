@@ -74,6 +74,7 @@ public class OrderCtrl extends Controller {
         ObjectNode result = newObject();
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
+        Logger.info("=settle=="+json);
 
         try {
             Long userId = (Long) ctx().args.get("userId");
@@ -86,6 +87,7 @@ public class OrderCtrl extends Controller {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(settleVo.getMessageCode()), settleVo.getMessageCode())));
                     return ok(result);
                 }
+                Logger.info("====return ==="+Json.toJson(settleVo));
                 result.putPOJO("settle", Json.toJson(settleVo));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
@@ -473,7 +475,7 @@ public class OrderCtrl extends Controller {
         stringMap.forEach((k, v) -> map.put(k, v[0]));
 
         Optional<JsonNode> json = Optional.ofNullable(Json.toJson(map));
-
+        Logger.info("==json=="+json);
         Long userId = (Long) ctx().args.get("userId");
         try {
             if (json.isPresent() && json.get().size() > 0) {
@@ -538,23 +540,25 @@ public class OrderCtrl extends Controller {
         /*******取用户ID*********/
         Long userId = (Long) ctx().args.get("userId");
         try {
-            //客户端发过来的收藏数据
-            CollectSubmitDTO collectSubmitDTO = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructType(CollectSubmitDTO.class));
-            //用户收藏信息
-            Collect collect = new Collect();
-            collect.setUserId(userId);
-            collect.setSkuId(collectSubmitDTO.getSkuId());
-            collect.setSkuType(collectSubmitDTO.getSkuType());
-            collect.setSkuTypeId(collectSubmitDTO.getSkuTypeId());
-            //判断是否已经收藏
-            Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
-            if (!(collectList.isPresent() && collectList.get().size() > 0)) { //未收藏
-                collect = createCollect(userId, collectSubmitDTO);
-            }
-            if (null != collect) {
-                result.putPOJO("collectId", collect.getCollectId());
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-                return ok(result);
+            if (json.isPresent() && json.get().size() > 0) {
+                //客户端发过来的收藏数据
+                CollectSubmitDTO collectSubmitDTO = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructType(CollectSubmitDTO.class));
+                //用户收藏信息
+                Collect collect = new Collect();
+                collect.setUserId(userId);
+                collect.setSkuId(collectSubmitDTO.getSkuId());
+                collect.setSkuType(collectSubmitDTO.getSkuType());
+                collect.setSkuTypeId(collectSubmitDTO.getSkuTypeId());
+                //判断是否已经收藏
+                Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
+                if (!(collectList.isPresent() && collectList.get().size() > 0)) { //未收藏
+                    collect = createCollect(userId, collectSubmitDTO);
+                }
+                if (null != collect) {
+                    result.putPOJO("collectId", collect.getCollectId());
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                    return ok(result);
+                }
             }
 
         } catch (Exception ex) {
