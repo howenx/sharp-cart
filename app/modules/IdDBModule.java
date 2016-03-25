@@ -56,7 +56,7 @@ public class IdDBModule extends PrivateModule{
     }
 
     @Singleton
-    public static class DevDataSourceProvider implements Provider<DataSource> {
+    private static class DevDataSourceProvider implements Provider<DataSource> {
 
         private final DBApi db;
 

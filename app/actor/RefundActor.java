@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import controllers.JDPay;
 import domain.Order;
 import domain.Refund;
+import modules.SysParCom;
 import play.Logger;
 import play.libs.ws.WSClient;
 import service.CartService;
@@ -42,7 +43,7 @@ public class RefundActor extends AbstractActor {
                     Map<String, String> params = JDPay.payBackParams(refund, null, null);
                     StringBuilder sb = new StringBuilder();
                     params.forEach((k, v) -> sb.append(k).append("=").append(v).append("&"));
-                    ws.url("https://cbe.wangyin.com/cashier/refund").setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
+                    ws.url(SysParCom.JD_REFUND_URL).setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
                         JsonNode response = wsResponse.asJson();
                         Logger.info("京东退款返回数据JSON: " + response.toString());
                         Refund re = new Refund();

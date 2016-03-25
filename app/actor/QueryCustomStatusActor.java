@@ -1,9 +1,6 @@
 package actor;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-
-import akka.actor.UntypedActor;
 import akka.japi.pf.ReceiveBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
 import domain.Order;
@@ -12,24 +9,15 @@ import domain.Persist;
 import middle.JDPayMid;
 import modules.LevelFactory;
 import modules.SysParCom;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import play.Logger;
-import play.Play;
-import play.libs.Akka;
-import play.libs.ws.WS;
 import play.libs.ws.WSClient;
-import scala.concurrent.duration.Duration;
 import service.CartService;
 import util.Crypto;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 京东支付报关查询报关状态
