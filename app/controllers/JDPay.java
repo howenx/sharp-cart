@@ -36,9 +36,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static play.libs.F.Promise.promise;
 import static modules.SysParCom.*;
+import static play.libs.F.Promise.promise;
+
 /**
  * Created by handy on 15/12/16.
  * kakao china
@@ -68,6 +68,7 @@ public class JDPay extends Controller {
     @Inject
     NewScheduler newScheduler;
 
+
     @Inject
     public JDPay(CartService cartService, IdService idService, PromotionService promotionService, @Named("cancelOrderActor") ActorRef cancelOrderActor, @Named("pinFailActor") ActorRef pinFailActor) {
         this.cartService = cartService;
@@ -79,7 +80,10 @@ public class JDPay extends Controller {
 
     @Security.Authenticated(UserAuth.class)
     public Result cashDesk(Long orderId) {
-        ObjectNode result = Json.newObject();
+
+        Map<String, String> params_failed = new HashMap<>();
+        params_failed.put("m_index", M_INDEX);
+
         try {
             Long userId = (Long) ctx().args.get("userId");
             Order order = new Order();
@@ -89,10 +93,10 @@ public class JDPay extends Controller {
             if (listOptional.isPresent() && listOptional.get().size() > 0) {
                 order = listOptional.get().get(0);
                 Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
-                if (longOptional.isPresent() && longOptional.get()< 0) {
+                if (longOptional.isPresent() && longOptional.get() < 0) {
                     cancelOrderActor.tell(orderId, null);
                     Logger.error("order timeout:" + order.getOrderId());
-                    return ok(views.html.jdpayfailed.render());
+                    return ok(views.html.jdpayfailed.render(params_failed));
                 } else {
                     SimpleDateFormat d = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// 格式化时间
                     Calendar calendar = Calendar.getInstance();
@@ -100,12 +104,11 @@ public class JDPay extends Controller {
                     Map<String, String> params = getParams(calendar.getTimeInMillis(), request().queryString(), request().body().asFormUrlEncoded(), userId, orderId);
                     return ok(views.html.cashdesk.render(params));
                 }
-            } else return ok(views.html.jdpayfailed.render());
+            } else return ok(views.html.jdpayfailed.render(params_failed));
         } catch (Exception ex) {
             Logger.error("settle: " + ex.getMessage());
             ex.printStackTrace();
-            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
-            return ok(result);
+            return ok(views.html.jdpayfailed.render(params_failed));
         }
     }
 
@@ -133,6 +136,9 @@ public class JDPay extends Controller {
             optionalOrderInfo.get().forEach(params::put);
             getBasicInfo().forEach(params::put);
             params.put("orderCreateAt", String.valueOf(timeInMillis));
+            params.put("url", JD_PAY_URL);
+            params.put("m_index", M_INDEX);
+            params.put("m_orders", M_ORDERS);
             params.put("sign_data", Crypto.create_sign(params, SysParCom.JD_SECRET));
             return params;
         } else return null;
@@ -251,8 +257,8 @@ public class JDPay extends Controller {
                             List<Order> orders = cartService.getOrder(order);
                             if (orders.size() > 0) {
                                 order = orders.get(0);
-                                if (order.getOrderType() != null && order.getOrderType() == 2 ) { //1:正常购买订单，2：拼购订单
-                                    if (dealPinActivity(params,order)==null) return ok("error");
+                                if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
+                                    if (dealPinActivity(params, order) == null) return ok("error");
                                     else return ok("success");
                                 } else return ok("success");
                             } else return ok("error");
@@ -296,8 +302,11 @@ public class JDPay extends Controller {
         String secret = Play.application().configuration().getString("jd_secret");
         String _sign = Crypto.create_sign(params, secret);
         Logger.info("支付成功返回数据: " + Json.toJson(params));
+        params.put("m_index", M_INDEX);
+        params.put("m_orders", M_ORDERS);
+
         if (!sign.equalsIgnoreCase(_sign)) {
-            return ok(views.html.jdpayfailed.render());
+            return ok(views.html.jdpayfailed.render(params));
         } else {
             if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
                 //需要先判断订单状态,如果是S状态就去调用否则不能2次调用,而且如果订单是被更新为PF状态,那么就需要前段返回到拼购失败页面
@@ -310,16 +319,17 @@ public class JDPay extends Controller {
                         if (orders.size() > 0) {
                             order = orders.get(0);
                             if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
-                                if (dealPinActivity(params,order)==null) return ok(views.html.jdpayfailed.render());
+                                if (dealPinActivity(params, order) == null)
+                                    return ok(views.html.jdpayfailed.render(params));
                                 else return ok(views.html.pin.render(params));
                             } else return ok(views.html.jdpaysuccess.render(params));
-                        } else return ok(views.html.jdpayfailed.render());
+                        } else return ok(views.html.jdpayfailed.render(params));
                     } catch (Exception e) {
                         e.printStackTrace();
-                        return ok(views.html.jdpayfailed.render());
+                        return ok(views.html.jdpayfailed.render(params));
                     }
-                } else return ok(views.html.jdpayfailed.render());
-            } else return ok(views.html.jdpayfailed.render());
+                } else return ok(views.html.jdpayfailed.render(params));
+            } else return ok(views.html.jdpayfailed.render(params));
         }
     }
 
@@ -372,7 +382,7 @@ public class JDPay extends Controller {
                     sb.append(k).append("=").append(v).append("&");
                 });
 
-                return ws.url("https://cbe.wangyin.com/cashier/refund").setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
+                return ws.url(JD_REFUND_URL).setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
                     JsonNode response = wsResponse.asJson();
                     Logger.info("京东退款返回数据JSON: " + response.toString());
                     Refund re = new Refund();
@@ -415,24 +425,24 @@ public class JDPay extends Controller {
     }
 
 
-    private Map<String, String> dealPinActivity(Map<String, String> params,Order order) throws Exception {
+    private Map<String, String> dealPinActivity(Map<String, String> params, Order order) throws Exception {
         Boolean newCreatePin = false;
         List<PinUser> pinUsers;
         PinUser pinUser = new PinUser();
         pinUser.setUserId(order.getUserId());
 
-        if (order.getPinActiveId()!=null){
+        if (order.getPinActiveId() != null) {
             pinUser.setPinActiveId(order.getPinActiveId());
-            pinUsers= promotionService.selectPinUser(pinUser);
-            if (pinUsers.size()==0) {
-                newCreatePin =true;
+            pinUsers = promotionService.selectPinUser(pinUser);
+            if (pinUsers.size() == 0) {
+                newCreatePin = true;
                 if (!jdPayMid.pinActivityDeal(order).equals("success"))
                     return null;
                 pinUser.setPinActiveId(order.getPinActiveId());
                 pinUsers = promotionService.selectPinUser(pinUser);
             }
-        }else{
-            newCreatePin =true;
+        } else {
+            newCreatePin = true;
             if (!jdPayMid.pinActivityDeal(order).equals("success"))
                 return null;
             pinUser.setPinActiveId(order.getPinActiveId());
@@ -441,7 +451,7 @@ public class JDPay extends Controller {
 
         PinActivity activity = promotionService.selectPinActivityById(order.getPinActiveId());
 
-        if (newCreatePin){
+        if (newCreatePin) {
             if (activity.getJoinPersons().equals(activity.getPersonNum())) {
                 jdPayMid.pinPushMsg(activity);
             }
@@ -462,6 +472,19 @@ public class JDPay extends Controller {
             }
         }
         return params;
+    }
+
+    public Result redirectCash() {
+        Form<RedirectCash> redirectCashForm = Form.form(RedirectCash.class).bindFromRequest();
+        Map<String, String> params_failed = new HashMap<>();
+        params_failed.put("m_index", M_INDEX);
+        if (redirectCashForm.hasErrors()) {
+            return ok(views.html.jdpayfailed.render(params_failed));
+        } else {
+            RedirectCash redirectCash = redirectCashForm.get();
+            flash().put("id-token", redirectCash.getToken());
+            return redirect(routes.JDPay.cashDesk(redirectCash.getOrderId()));
+        }
     }
 
 }

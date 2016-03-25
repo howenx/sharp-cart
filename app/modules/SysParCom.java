@@ -49,6 +49,14 @@ public class SysParCom {
     public static Long JD_QUERY_DELAY;
     public static Long ORDER_OVER_TIME;
 
+    public static String JD_PAY_URL;
+
+    public static String JD_REFUND_URL;
+
+    public static String M_INDEX;
+
+    public static String M_ORDERS;
+
 
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
@@ -88,6 +96,12 @@ public class SysParCom {
         JD_QUERY_DELAY = configuration.getLong("jd.query.customs.status");
 
         ORDER_OVER_TIME = configuration.getLong("order.over.time");
+
+        JD_PAY_URL = configuration.getString("jd_pay_url");
+        JD_REFUND_URL = configuration.getString("jd_refund_url");
+
+        M_INDEX = configuration.getString("m.jump.home");
+        M_ORDERS  = configuration.getString("m.jump.orders");
     }
 
 }

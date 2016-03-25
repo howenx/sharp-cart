@@ -44,7 +44,7 @@ GET         /client/schedule/:cipher                                         con
 
 
 GET         /assets/*file                                                    controllers.Assets.versioned(path="/public", file: Asset)
-
+POST        /client/redirect/cash                                            controllers.JDPay.redirectCash()
 
 GET         /client/msg/get/type                                             controllers.MsgCtrl.getAllMsgType()
 GET         /client/msg/list/$msgType<[a-zA-Z]+>                             controllers.MsgCtrl.getAllMsgs(msgType:String)
@@ -55,4 +55,3 @@ POST        /client/feedback                                                 con
 #test
 GET         /client/push                                                     controllers.PushCtrl.testPush()
 GET         /client/msg/testMsg                                              controllers.MsgCtrl.testMsg()
-GET         /test                                                            controllers.TestCtrl.test()

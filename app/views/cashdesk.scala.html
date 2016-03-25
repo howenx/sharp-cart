@@ -30,7 +30,7 @@
     <div class="right-icon"></div>
 </div>
 <div style="display:none">
-    <form id="jdsubmit" name="jdsubmit" action="https://cbe.wangyin.com/cashier/mobile/payment" method="POST">
+    <form id="jdsubmit" name="jdsubmit" action="@params.get("""url""")" method="POST">
         @for((k,v) <- params) {
             <input type="hidden" name="@k" value="@v"/>
         }
@@ -38,7 +38,8 @@
     <script>
     	$(function(){
 			$('.jingdong').click(function(){
-		        var createAt = @params.get("orderCreateAt")/1;//毫秒数
+		        @*/***毫秒数**/*@
+                var createAt = @params.get("""orderCreateAt""")/1;
 		        var d = new Date();
 		        var n = d.getTime();
 		        if(n-createAt>=86400000){

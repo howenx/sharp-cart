@@ -9,16 +9,16 @@
     <link rel="stylesheet" href="/assets/stylesheets/pay.css">
     <script>
         function jumpOrder(){
-            window.location="/openOrder";
+            window.location=@params.get("""m_orders""");
             window.handler.openOrder();
         }
         function jumpHome(){
-            window.location="/openHome";
+            window.location=@params.get("""m_index""");
             window.handler.openHome();
         }
     </script>
 </head>
-<body style=" background: rgb(240,240,240);" onload="window.handler.clearHistory('')">
+<body style="background: rgb(240,240,240);" onload="window.handler.clearHistory('')">
     <div class="order-pay">
         <h2>订单支付成功 <span>完成</span></h2>
         <hr>

@@ -1,31 +1,32 @@
+@(params: java.util.Map[String, String])
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="format-detection" content="telephone=no">
-    <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.ico">
-    <link rel="stylesheet" href="/assets/stylesheets/pay.css">
-    <script>
-        function jumpHome(){
-            window.location="/openHome";
-            window.handler.openHome();
-        }
-    </script>
-</head>
-<body style=" background: rgb(240,240,240);" onload="window.handler.clearHistory('')">
-<div class="order-pay">
-    <h2>订单支付</h2>
-    <hr>
-    <div class="order-fni">
-        <div class="pay-suc">
-            <div class="icon-order-fail"></div>
-            <h1>订单支付失败</h1>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="format-detection" content="telephone=no">
+        <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.ico">
+        <link rel="stylesheet" href="/assets/stylesheets/pay.css">
+        <script>
+                function jumpHome() {
+                    window.location =@params.get("""m_index""");
+                    window.handler.openHome();
+                }
+        </script>
+    </head>
+    <body style=" background : rgb(240,240,240) ;" onload="window.handler.clearHistory('')">
+        <div class="order-pay">
+            <h2>订单支付</h2>
+            <hr>
+            <div class="order-fni">
+                <div class="pay-suc">
+                    <div class="icon-order-fail"></div>
+                    <h1>订单支付失败</h1>
+                </div>
+                <div class="btn-pay">
+                    <button onClick="jumpHome()">回首页</button>
+                </div>
+            </div>
         </div>
-        <div class="btn-pay">
-            <button onClick="jumpHome()">回首页</button>
-        </div>
-    </div>
-</div>
-</body>
+    </body>
 </html>
