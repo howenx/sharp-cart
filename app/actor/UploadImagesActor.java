@@ -31,7 +31,6 @@ public class UploadImagesActor extends AbstractActor {
     public UploadImagesActor(CartService cartService) {
 
         receive(ReceiveBuilder.match(HashMap.class, s -> {
-            Logger.error(111+"\n");
 
             Refund refund = new Refund();
             refund.setId((Long) s.get("refundId"));

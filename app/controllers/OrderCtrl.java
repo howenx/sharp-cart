@@ -11,7 +11,10 @@ import middle.OrderMid;
 import modules.SysParCom;
 import org.apache.commons.io.FileUtils;
 import play.Logger;
-import play.http.HttpErrorHandler;
+import play.api.libs.Files;
+import play.api.mvc.MultipartFormData;
+import play.core.j.JavaParsers;
+import play.core.parsers.Multipart;
 import play.libs.F;
 import play.libs.Json;
 import play.libs.streams.Accumulator;
@@ -31,8 +34,8 @@ import java.util.concurrent.CompletionStage;
 
 import static akka.pattern.Patterns.ask;
 import static play.libs.Json.newObject;
-import static play.mvc.BodyParser.MultipartFormData;
-import static play.mvc.BodyParser.Of;
+import static play.mvc.Controller.ctx;
+import static play.mvc.Controller.request;
 
 /**
  * 订单相关,提交订单,优惠券
@@ -442,19 +445,12 @@ public class OrderCtrl extends Controller {
         }
     }
 
-    private static class Text10Kb extends BodyParser.MaxLengthBodyParser<MultipartFormData> {
-
-
-        protected Text10Kb(long maxLength, HttpErrorHandler errorHandler) {
-            super(maxLength, errorHandler);
-        }
-
-        @Override
-        protected Accumulator<ByteString, F.Either<Result, MultipartFormData>> apply1(Http.RequestHeader request) {
-            return super.apply(request);
+    class MultipartFormDataTe extends BodyParser.DelegatingBodyParser<Http.MultipartFormData<File>, MultipartFormData<Files.TemporaryFile>> {
+        @Inject
+        public MultipartFormDataTe() {
+            super(JavaParsers.parse().multipartFormData(Multipart.handleFilePartAsTemporaryFile(),1024L), JavaParsers::toJavaMultipartFormData);
         }
     }
-
 
     /**
      * 退货申请
@@ -462,7 +458,6 @@ public class OrderCtrl extends Controller {
      * @return result
      */
     @Security.Authenticated(UserAuth.class)
-    @Of(value = Text10Kb.class)
     public Result refundApply() {
 
         ObjectNode result = newObject();

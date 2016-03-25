@@ -1,13 +1,8 @@
 package filters;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 import domain.Message;
-import play.Application;
 import play.Logger;
-import play.api.libs.Codecs;
 import play.http.HttpErrorHandler;
 import play.libs.Json;
 import play.mvc.Http.RequestHeader;

@@ -52,6 +52,8 @@ GET         /client/msg/delMsg/$id<[0-9]+>                                   con
 GET         /client/msg/clean/$msgType<[a-zA-Z]+>                            controllers.MsgCtrl.cleanMsg(msgType:String)
 POST        /client/feedback                                                 controllers.MsgCtrl.feedback()
 
+POST        /client/redirect/cash                                            controllers.JDPay.redirectCash()
+
 #test
 GET         /client/push                                                     controllers.PushCtrl.testPush()
 GET         /client/msg/testMsg                                              controllers.MsgCtrl.testMsg()

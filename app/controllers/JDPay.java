@@ -31,6 +31,9 @@ import util.Crypto;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -79,6 +82,7 @@ public class JDPay extends Controller {
         this.promotionService = promotionService;
         this.pinFailActor = pinFailActor;
     }
+
 
     @Security.Authenticated(UserAuth.class)
     public Result cashDesk(Long orderId) {
@@ -233,12 +237,17 @@ public class JDPay extends Controller {
      * @return success
      */
     public Result payBackendNotify() {
+        String result = request().body().asBytes().utf8String();
+
+        Logger.error("测试------------->\n"+result);
+
         Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
         body_map.forEach((k, v) -> params.put(k, v[0]));
         String sign = params.get("sign_data");
 
         String _sign = Crypto.create_sign(params, JD_SELLER);
+        Logger.info("支付成功后台返回数据: " + Json.toJson(params));
         if (!sign.equalsIgnoreCase(_sign)) {
             Logger.info("支付回调签名失败");
             return ok("error");
@@ -291,15 +300,27 @@ public class JDPay extends Controller {
      *
      * @return success page
      */
-    public Result payFrontNotify() {
+    public Result payFrontNotify() throws Exception {
+
+        String result2 = new String(request().body().asBytes().toArray(), StandardCharsets.ISO_8859_1);
+        String result1 = new String(request().body().asBytes().toArray(), StandardCharsets.US_ASCII);
+        String result4 = new String(request().body().asBytes().toArray(), StandardCharsets.UTF_16);
+        String result3 = new String(request().body().asBytes().toArray(), Charset.forName("UTF-8"));
+//        String result5 = new String(request().body().asRaw().asBytes().toArray(), Charset.forName("UTF-8"));
+
+        Logger.error("测试------------->\n"+URLDecoder.decode(result1,StandardCharsets.UTF_8.displayName())+"\n"+result2+"\n"+result3+"\n"+result4);
+        Form<Test1> test1Form =formFactory.form(Test1.class).bindFromRequest();
+        Logger.error("尼玛的表单----->\n"+test1Form.get());
+
         Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
         body_map.forEach((k, v) -> params.put(k, v[0]));
         String sign = params.get("sign_data");
         String secret = JD_SELLER;
         String _sign = Crypto.create_sign(params, secret);
-        Logger.info("支付成功返回数据: " + Json.toJson(params));
+        Logger.info("支付成功前台返回数据: " + Json.toJson(params));
         if (!sign.equalsIgnoreCase(_sign)) {
+            Logger.info("支付前台签名失败");
             return ok(views.html.jdpayfailed.render());
         } else {
             if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
@@ -471,6 +492,17 @@ public class JDPay extends Controller {
             }
         }
         return params;
+    }
+    public Result redirectCash() {
+        Form<RedirectCash> redirectCashForm = formFactory.form(RedirectCash.class).bindFromRequest();
+        if (redirectCashForm.hasErrors()) {
+            return ok(views.html.jdpayfailed.render());
+        } else {
+            RedirectCash redirectCash = redirectCashForm.get();
+            flash().put("id-token", redirectCash.getToken());
+            session().put("id-token", redirectCash.getToken());
+            return redirect(routes.JDPay.cashDesk(redirectCash.getOrderId())).withHeader("id-token", redirectCash.getToken());
+        }
     }
 
 }
