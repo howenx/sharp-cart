@@ -453,18 +453,21 @@ public class JDPay extends Controller {
 
         if (newCreatePin) {
             if (activity.getJoinPersons().equals(activity.getPersonNum())) {
-                jdPayMid.pinPushMsg(activity);
+                jdPayMid.pinPushMsg(activity,PIN_SUCCESS_MSG,null);
             }
             if (pinUsers.size() > 0) {
                 pinUser = pinUsers.get(0);
                 if (pinUser.isOrMaster()) {
                     newScheduler.scheduleOnce(FiniteDuration.create(24, HOURS), pinFailActor, order.getPinActiveId());
+                }else if (activity.getJoinPersons()< activity.getPersonNum()){
+                    jdPayMid.pinPushMsg(activity,PIN_ADD_MSG,pinUser.getId());
                 }
             }
         }
 
         if (pinUsers.size() > 0) {
             pinUser = pinUsers.get(0);
+
             if (pinUser.isOrMaster()) {
                 params.put("pinActivity", SysParCom.PROMOTION_URL + "/promotion/pin/activity/pay/" + order.getPinActiveId() + "/1");
             } else {

@@ -1,4 +1,4 @@
-@(params: java.util.Map[String, String])
+@(params:java.util.Map[String,String])
 
 <!DOCTYPE html>
 <html lang="en">
@@ -14,75 +14,42 @@
     <body>
         <div class="pay-change">
             <span>请选择支付方式</span>
-            <em>@params.get("""all_fee""")元</em>
+            <em>@params.get("all_fee")元</em>
         </div>
         <hr>
         <div class="jingdong pay">
             <span>京东支付</span>
             <em>京东旗下 安全极速支付</em>
 
-<<<<<<< HEAD
-    <div class="right-icon"></div>
-</div>
-<hr>
-<div class="weixin pay" style="display:none;">
-    <span>微信支付</span>
-    <em>仅安装微信6.0.2及以上版本客户端使用</em>
-    <div class="right-icon"></div>
-</div>
-<div style="display:none">
-    <form id="jdsubmit" name="jdsubmit" action="@params.get("""url""")" method="POST">
-        @for((k,v) <- params) {
-            <input type="hidden" name="@k" value="@v"/>
-        }
-    </form>
-    <script>
-    	$(function(){
-			$('.jingdong').click(function(){
-		        @*/***毫秒数**/*@
-                var createAt = @params.get("""orderCreateAt""")/1;
-		        var d = new Date();
-		        var n = d.getTime();
-		        if(n-createAt>=86400000){
-    	    		alert("您的订单已经超时自动取消");
-		        }else{
-		        	$('#jdsubmit').submit();
-		        }
-			})
-    	})
-    </script>
-</div>
-</body>
-=======
             <div class="right-icon"></div>
         </div>
         <hr>
-        <div class="weixin pay" style="display : none ;">
+        <div class="weixin pay" style="display:none;">
             <span>微信支付</span>
             <em>仅安装微信6.0.2及以上版本客户端使用</em>
             <div class="right-icon"></div>
         </div>
-        <div style="display : none">
+        <div style="display:none">
             <form id="jdsubmit" name="jdsubmit" action="@params.get("""url""")" method="POST">
-            @for((k, v) <- params) {
+            @for((k,v) <- params) {
                 <input type="hidden" name="@k" value="@v"/>
             }
             </form>
             <script>
-                    $(function () {
-                        $('.jingdong').click(function () {
-                            var createAt = @params.get("""orderCreateAt""")/1;
-                            var d = new Date();
-                            var n = d.getTime();
-                            if (n - createAt >= 86400000) {
-                                alert("您的订单已经超时自动取消");
-                            } else {
-                                $('#jdsubmit').submit();
-                            }
-                        })
-                    })
-            </script>
+    	$(function(){
+            $('.jingdong').click(function(){
+                @*/***毫秒数**/*@
+                var createAt = @params.get("""orderCreateAt""")/1;
+                var d = new Date();
+                var n = d.getTime();
+                if(n-createAt>=86400000){
+                    alert("您的订单已经超时自动取消");
+                }else{
+                    $('#jdsubmit').submit();
+                }
+            })
+        })
+    </script>
         </div>
     </body>
->>>>>>> 41c01bf159d0d55def4f6d116eba4b15f77d45d9
 </html>

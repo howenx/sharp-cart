@@ -195,6 +195,7 @@ public class JDPayMid {
                         }
                     }
                     if (promotionService.updatePinActivity(activity)) {
+
                         order.setPinActiveId(activity.getPinActiveId());
                         PinUser pinUser = new PinUser();
                         pinUser.setOrMaster(false);
@@ -244,7 +245,7 @@ public class JDPayMid {
      *
      * @param activity activity
      */
-    public void pinPushMsg(PinActivity activity) {
+    public void pinPushMsg(PinActivity activity,String message,Long pinUserId) {
         PinSku pinSku = promotionService.getPinSkuById(activity.getPinId());
 
         JsonNode js_invImg = Json.parse(pinSku.getPinImg());
@@ -253,13 +254,15 @@ public class JDPayMid {
             pinUser.setPinActiveId(activity.getPinActiveId());
             List<PinUser> pinUsers = promotionService.selectPinUser(pinUser);
             for (PinUser p : pinUsers) {
-                //发消息
-                msgCtrl.addMsgRec(p.getUserId(), MsgTypeEnum.Goods, "拼团成功啦,快去看看", pinSku.getPinTitle(), js_invImg.get("url").asText(), "/promotion/pin/activity/" + activity.getPinActiveId(), "V");
-                //推送消息
-                Map<String, String> map = new HashMap<>();
-                map.put("targetType", "V");
-                map.put("url", SysParCom.PROMOTION_URL + "/promotion/pin/activity/" + activity.getPinActiveId());
-                pushCtrl.send_push_android_and_ios_alias("拼团成功啦,快去看看", null, map, p.getUserId().toString());
+                if (pinUserId == null || !pinUserId.equals(p.getId())){
+                    //发消息
+                    msgCtrl.addMsgRec(p.getUserId(), MsgTypeEnum.Goods, message, pinSku.getPinTitle(), js_invImg.get("url").asText(), "/promotion/pin/activity/" + activity.getPinActiveId(), "V");
+                    //推送消息
+                    Map<String, String> map = new HashMap<>();
+                    map.put("targetType", "V");
+                    map.put("url", SysParCom.PROMOTION_URL + "/promotion/pin/activity/" + activity.getPinActiveId());
+                    pushCtrl.send_push_android_and_ios_alias(message, null, map, p.getUserId().toString());
+                }
             }
         }
     }

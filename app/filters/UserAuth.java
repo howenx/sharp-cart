@@ -24,12 +24,13 @@ public class UserAuth extends Security.Authenticator {
 
     @Override
     public String getUsername(Http.Context ctx) {
-        Optional<String> header = Optional.ofNullable(ctx.request().getHeader("id-token"));
-        if (header.isPresent()) {
-            Optional<String> token = Optional.ofNullable(cache.get(header.get()).toString());
+        Optional<String> requestHeader = Optional.ofNullable(ctx.request().getHeader("id-token"));
+        Optional<String> flashHeader = Optional.ofNullable(ctx.flash().get("id-token"));
+        if (requestHeader.isPresent() || flashHeader.isPresent()) {
+            String header = requestHeader.isPresent()?requestHeader.get():(flashHeader.isPresent()?flashHeader.get():null);
+            Optional<String> token = Optional.ofNullable(cache.get(header).toString());
             if (token.isPresent()) {
                 JsonNode userJson = Json.parse(token.get());
-//                Logger.error("Cache中的用户信息:"+userJson.toString());
                 Long userId = Long.valueOf(userJson.findValue("id").asText());
                 String  username = userJson.findValue("name").toString();
                 ctx.args.put("userId",userId);

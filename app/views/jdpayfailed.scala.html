@@ -8,9 +8,9 @@
         <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.ico">
         <link rel="stylesheet" href="/assets/stylesheets/pay.css">
         <script>
-                function jumpHome() {
+                window.handler={};
+                window.handler.openHome = function () {
                     window.location =@params.get("""m_index""");
-                    window.handler.openHome();
                 }
         </script>
     </head>
@@ -24,7 +24,7 @@
                     <h1>订单支付失败</h1>
                 </div>
                 <div class="btn-pay">
-                    <button onClick="jumpHome()">回首页</button>
+                    <button onClick="window.handler.openHome();">回首页</button>
                 </div>
             </div>
         </div>

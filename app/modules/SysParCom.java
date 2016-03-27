@@ -53,13 +53,14 @@ public class SysParCom {
 
     public static String JD_REFUND_URL;
 
-<<<<<<< HEAD
     public static String M_INDEX;
 
     public static String M_ORDERS;
 
-=======
->>>>>>> 41c01bf159d0d55def4f6d116eba4b15f77d45d9
+    public static String PIN_SUCCESS_MSG;
+    public static String PIN_ADD_MSG;
+    public static String M_PIN;
+
 
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
@@ -99,17 +100,19 @@ public class SysParCom {
         JD_QUERY_DELAY = configuration.getLong("jd.query.customs.status");
 
         ORDER_OVER_TIME = configuration.getLong("order.over.time");
-<<<<<<< HEAD
 
         JD_PAY_URL = configuration.getString("jd_pay_url");
         JD_REFUND_URL = configuration.getString("jd_refund_url");
 
         M_INDEX = configuration.getString("m.jump.home");
-        M_ORDERS  = configuration.getString("m.jump.orders");
-=======
+        M_ORDERS = configuration.getString("m.jump.orders");
         JD_PAY_URL = configuration.getString("jd_pay_url");
         JD_REFUND_URL = configuration.getString("jd_refund_url");
->>>>>>> 41c01bf159d0d55def4f6d116eba4b15f77d45d9
+
+        PIN_SUCCESS_MSG = configuration.getString("pin_success_msg");
+        PIN_ADD_MSG  = configuration.getString("pin_add_msg");
+        M_PIN = configuration.getString("m.jump.pin");
+
     }
 
 }
