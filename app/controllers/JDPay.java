@@ -470,8 +470,10 @@ public class JDPay extends Controller {
 
             if (pinUser.isOrMaster()) {
                 params.put("pinActivity", SysParCom.PROMOTION_URL + "/promotion/pin/activity/pay/" + order.getPinActiveId() + "/1");
+                params.put("m_pinActivity",M_PIN+order.getPinActiveId()+"/1");
             } else {
                 params.put("pinActivity", SysParCom.PROMOTION_URL + "/promotion/pin/activity/pay/" + order.getPinActiveId() + "/2");
+                params.put("m_pinActivity",M_PIN+order.getPinActiveId()+"/2");
             }
         }
         return params;

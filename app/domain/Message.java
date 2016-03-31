@@ -106,6 +106,8 @@ public class Message implements Serializable{
 
         FILE_TYPE_NOT_SUPPORTED("文件类型不支持",6001),
 
+        PIN_ACTIVITY_NOT_EXISTS("活动已经不存在",6002),
+
         PURCHASE_PIN_RESTRICT("购买同一拼购商品数量超出限制",7001),
 
         PURCHASE_PIN_SINGLE_ONE_TIME("您尚有未结束的拼团,不能再次发起拼团",7002);

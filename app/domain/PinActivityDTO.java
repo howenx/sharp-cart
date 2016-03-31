@@ -25,11 +25,11 @@ public class PinActivityDTO implements Serializable {
     private BigDecimal      pinPrice;       //拼购价格
     private Integer         joinPersons;    //已参加活动人数
     @JsonIgnore
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp       createAt;       //发起时间
     private String          status;         //状态    状态 Y-正常 N－取消 C－完成
     @JsonIgnore
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp       endAt;          //截止时间
     private String          pay;//是否新开团,normal,new
     private Long            endCountDown;//结束倒计时

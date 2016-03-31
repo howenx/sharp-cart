@@ -21,10 +21,10 @@ public class PinActivity implements Serializable {
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal pinPrice;//拼购价格
     private Integer joinPersons;    //已参加活动人数
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp createAt; //发起时间
     private String status;      //状态
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp endAt;    //截止时间
     private Long    pinTieredId;//拼购阶梯价格ID
 

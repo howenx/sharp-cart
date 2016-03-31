@@ -67,7 +67,7 @@
     </update>
 
     <sql id="idColumns">
-        ${alias}.user_id,
+       ${alias}.user_id,
         ${alias}.nickname,
         ${alias}.passwd,
         ${alias}.email,
@@ -81,13 +81,11 @@
         ${alias}.card_img ::text,
         ${alias}.reg_ip ::text,
         ${alias}.reg_dt,
-        ${alias}."active_YN",
-        ${alias}."real_YN",
+        ${alias}.or_active,
+        ${alias}.or_real,
         ${alias}.alter_dt,
         ${alias}.lastlogin_dt,
         ${alias}.lastlogin_ip ::text,
-        ${alias}.lastpwdchg_dt,
-        ${alias}.desc,
         ${alias}.status
     </sql>
 

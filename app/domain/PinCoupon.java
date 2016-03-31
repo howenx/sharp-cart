@@ -12,19 +12,19 @@ import java.sql.Timestamp;
 public class PinCoupon implements Serializable {
 
     private Long id;                        // 主键ID
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp memberCouponEndAt;    //团员优惠券结束时间
     private int memberCouponQuota;          //团员优惠券限额
     private int masterCoupon;               //团长返券额度
     private String masterCouponClass;       //团长返券类别
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp masterCouponStartAt;  //团长优惠券开始时间
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp masterCouponEndAt;    //团长优惠券结束时间
     private int masterCouponQuota;          //团长优惠券限额
     private int memberCoupon;               //团员返券额度
     private String memberCouponClass;       //团员返券类别
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp memberCouponStartAt;  //团员优惠券开始时间
     private Long pinId;                     //拼购活动ID
 

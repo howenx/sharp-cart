@@ -19,9 +19,9 @@ public class PinInvDetail {
     private String shareUrl;    //分享短连接
     private String status;      //状态
     private String pinTitle;    //拼购商品标题
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp startAt;  //开始时间
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp endAt;        //结束时间
     @JsonIgnore
     private String pinPriceRule;    //价格阶梯

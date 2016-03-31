@@ -23,7 +23,7 @@ public class PinUser implements Serializable {
     @JsonIgnore
     private boolean orRobot;    //是否机器人
     private String userImg;     //用户头像
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp joinAt;   //参团时间
 
     private String userNm;//用户名称
