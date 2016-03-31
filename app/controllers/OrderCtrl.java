@@ -532,6 +532,8 @@ public class OrderCtrl extends Controller {
                 Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
                 if (!(collectList.isPresent() && collectList.get().size() > 0)) { //未收藏
                     collect = createCollect(userId, collectSubmitDTO);
+                }else{
+                    collect=collectList.get().get(0);
                 }
                 if (null != collect) {
                     result.putPOJO("collectId", collect.getCollectId());
