@@ -73,7 +73,7 @@ public class OrderCtrl extends Controller {
             if (json.isPresent() && json.get().size() > 0) {
 
                 SettleOrderDTO settleOrderDTO = mapper.convertValue(json.get(), SettleOrderDTO.class);
-
+                Logger.info("=settle=settleOrderDTO="+settleOrderDTO);
                 SettleVo settleVo = orderMid.OrderSettle(settleOrderDTO, userId);
                 if (settleVo.getMessageCode() != null) {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(settleVo.getMessageCode()), settleVo.getMessageCode())));

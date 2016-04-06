@@ -6,6 +6,7 @@ import modules.SysParCom;
 import play.Logger;
 import service.CartService;
 import service.SkuService;
+import util.ComUtil;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -28,6 +29,9 @@ public class CartMid {
 
     @Inject
     private OrderCtrl orderCtrl;
+
+    @Inject
+    private ComUtil comUtil;
 
 
     //创建用户购物车商品
@@ -136,9 +140,9 @@ public class CartMid {
         } else {
             cart.setStatus(cartDto.getState());
         }
+        Logger.info(cart+"===\n===="+sku);
 
-        if (sku.getRestrictAmount() != 0 && sku.getRestrictAmount() < cartDto.getAmount()) {
-
+        if (comUtil.isOutOfRestrictAmount(cartDto.getAmount(),sku)) {
             cart.setAmount(sku.getRestrictAmount());
             cartPar.setRestrictMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex());
         } else {
@@ -167,7 +171,7 @@ public class CartMid {
                 if (carts.size() > 0) {
                     cart.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
                     cart.setAmount(cart.getAmount() + carts.get(0).getAmount());//购买数量累加
-                    if (cart.getAmount() > sku.getRestrictAmount() && sku.getRestrictAmount() != 0) {
+                    if (comUtil.isOutOfRestrictAmount(cart.getAmount(),sku)) {
                         cart.setAmount(sku.getRestrictAmount());
                         cartPar.setRestrictMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex());
                     } else if (cart.getAmount() > sku.getRestAmount()) {
@@ -182,6 +186,8 @@ public class CartMid {
                     cartService.addCart(cart);
                     if (cart.getStatus().equals("S")) cartPar.setsCartIds(cartDto.getCartId());
                 }
+            }else{
+                cartPar.setRestMessageCode(Message.ErrorCode.SKU_STATUS_ERROR.getIndex());
             }
         } else {
             cart.setCartId(cartDto.getCartId());

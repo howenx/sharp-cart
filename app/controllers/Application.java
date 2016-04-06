@@ -23,6 +23,7 @@ import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import service.CartService;
 import service.SkuService;
+import util.ComUtil;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -52,6 +53,9 @@ public class Application extends Controller {
     @Inject
     private LevelFactory levelFactory;
 
+    @Inject
+    private ComUtil comUtil;
+
     //将Json串转换成List
     public final static ObjectMapper mapper = new ObjectMapper();
 
@@ -70,12 +74,13 @@ public class Application extends Controller {
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
 
+        Logger.info("==cart=="+json);
+
         try {
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
                 List<CartDto> cartDtoList = mapper.convertValue(json.get(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
                 List<CartPar> cartPars = cartMid.createCart(userId, cartDtoList);
-                result.putPOJO("cartList", Json.toJson(cartMid.getCarts(userId).get()));
                 for (CartPar cp : cartPars) {
                     if (cp.getRestrictMessageCode() != null && cp.getRestrictMessageCode() == Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex()) {
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(cp.getRestrictMessageCode()), cp.getRestrictMessageCode())));
@@ -83,8 +88,14 @@ public class Application extends Controller {
                     } else if (cp.getRestMessageCode() != null && cp.getRestrictMessageCode() == Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()) {
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(cp.getRestMessageCode()), cp.getRestMessageCode())));
                         return ok(result);
+                    }else if (cp.getRestMessageCode() != null) {//加入购物车商品有错误
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(cp.getRestMessageCode()), cp.getRestMessageCode())));
+                        return ok(result);
                     }
                 }
+                Optional<List<CartItemDTO>> cartItemDTOList=cartMid.getCarts(userId);
+                Logger.info("==cartItemDTOList====="+cartItemDTOList);
+                result.putPOJO("cartList", Json.toJson(cartItemDTOList.get()));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
             } else {
@@ -195,7 +206,7 @@ public class Application extends Controller {
                 if (sku.getState().equals("S")) {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
                     return ok(result);
-                } else if (sku.getRestrictAmount() != 0 && amount > sku.getRestrictAmount()) {
+                } else if (comUtil.isOutOfRestrictAmount(amount,sku)) {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex()), Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex())));
                     return ok(result);
                 } else if (amount > sku.getRestAmount()) {

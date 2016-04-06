@@ -71,7 +71,7 @@ public class Message implements Serializable{
 
         SKU_AMOUNT_SHORTAGE("亲,此件商品库存不足了", 2001),
         SKU_INVALID("亲,您已经长时间未操作,此商品已经失效,建议您刷新购物车", 2002),
-
+        SKU_STATUS_ERROR("亲,此商品已经失效,请选择其他商品", 2003),
 
 
         PURCHASE_QUANTITY_LIMIT("亲,您购买数量超过我们的限制了", 3001),

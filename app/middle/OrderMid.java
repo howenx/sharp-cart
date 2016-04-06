@@ -11,6 +11,7 @@ import service.CartService;
 import service.IdService;
 import service.PromotionService;
 import service.SkuService;
+import util.ComUtil;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -41,6 +42,9 @@ public class OrderMid {
     @Inject
     @Named("subOrderActor")
     private ActorRef orderSplitActor;
+
+    @Inject
+    private ComUtil comUtil;
 
     /**
      * 订单结算
@@ -200,7 +204,7 @@ public class OrderMid {
             if (!sku.getState().equals("Y")) {
                 settleFeeVo.setMessageCode(Message.ErrorCode.SKU_INVALID.getIndex());
                 return settleFeeVo;
-            } else if (cartDto.getAmount() > sku.getRestrictAmount() && sku.getRestrictAmount() != 0) {
+            } else if (comUtil.isOutOfRestrictAmount(cartDto.getAmount(),sku)) {
                 settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex());
                 return settleFeeVo;
             } else if (cartDto.getAmount() > sku.getRestAmount()) {
@@ -322,8 +326,8 @@ public class OrderMid {
             return settleFeeVo;
         }
 
-        //如果存在单个海关的金额超过1000,返回
-        if (totalFeeSingle.compareTo(new BigDecimal(SysParCom.POSTAL_LIMIT)) > 0) {
+        //如果存在单个海关的金额超过1000,返回   直邮不限制
+        if (comUtil.isOutOfPostalLimit(settleDTO.getInvArea(),totalFeeSingle)) {
             settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_SUM_PRICE.getIndex());
             return settleFeeVo;
         }
@@ -356,6 +360,7 @@ public class OrderMid {
     private BigDecimal calculatePostalTax(String postalTaxRate, BigDecimal price, Integer amount) {
         BigDecimal postalFee = BigDecimal.ZERO;
         //计算行邮税,行邮税加和
+        Logger.info(postalTaxRate+"=postalTaxRate==="+price+"==="+amount);
         postalFee = postalFee.add(new BigDecimal(postalTaxRate).multiply(price).multiply(new BigDecimal(amount)).multiply(new BigDecimal(0.01)));
         return postalFee;
     }
