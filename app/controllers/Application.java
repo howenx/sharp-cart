@@ -59,7 +59,7 @@ public class Application extends Controller {
     //将Json串转换成List
     public final static ObjectMapper mapper = new ObjectMapper();
 
-    public static final Timeout TIMEOUT = new Timeout(100, TimeUnit.MILLISECONDS);
+    public static final Timeout TIMEOUT = new Timeout(1000, TimeUnit.MILLISECONDS);
 
 
     /**

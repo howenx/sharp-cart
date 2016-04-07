@@ -14,19 +14,21 @@
     </body>
 
     <script>
-        $(function () {
-            $(window).load(function () {
-                try {
-                    pin("\@params.get("""pinActivity""")");
-                } catch (err) {
-                    window.handler.pin("\@params.get("""pinActivity""")")
-                } finally {
-                    setTimeout(function () {
-                        window.location = "@params.get("""m_pinActivity""")";
-                    }, 500);
-                }
+            $(function () {
+                $(window).load(function () {
+                    try {
+                        setTimeout(function () {
+                            pin("\@params.get("""pinActivity""")");
+                        }, 1000);
+                    } catch (err) {
+                        window.handler.pin("\@params.get("""pinActivity""")");
+                    } finally {
+                        setTimeout(function () {
+                            window.location = "@params.get("""m_pinActivity""")";
+                        }, 500);
+                    }
+                });
             });
-        });
     </script>
 
 </html>
