@@ -12,23 +12,22 @@
     </head>
     <body>
     </body>
-
     <script>
             $(function () {
                 $(window).load(function () {
-                    try {
-                        setTimeout(function () {
+                    setTimeout(function () {
+                        try {
                             pin("\@params.get("""pinActivity""")");
-                        }, 1000);
-                    } catch (err) {
-                        window.handler.pin("\@params.get("""pinActivity""")");
-                    } finally {
-                        setTimeout(function () {
-                            window.location = "@params.get("""m_pinActivity""")";
-                        }, 500);
-                    }
+
+                        } catch (err) {
+                            window.handler.pin("\@params.get("""pinActivity""")");
+                        } finally {
+                            setTimeout(function () {
+                                window.location = "@params.get("""m_pinActivity""")";
+                            }, 500);
+                        }
+                    }, 1000);
                 });
             });
     </script>
-
 </html>

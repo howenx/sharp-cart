@@ -2,7 +2,10 @@ package mapper;
 
 import domain.Carriage;
 import domain.Sku;
+import domain.SkuVo;
 import domain.SysParameter;
+
+import java.util.List;
 
 /**
  * 商品库查询,更新
@@ -17,5 +20,7 @@ public interface SkuMapper {
     Carriage getCarriage(Carriage carriage) throws Exception;
 
     SysParameter getSysParameter(SysParameter sysParameter) throws Exception;
+
+    List<SkuVo> getAllSkus(SkuVo skuVo);
 
 }

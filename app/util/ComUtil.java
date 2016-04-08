@@ -1,6 +1,7 @@
 package util;
 
 import domain.Sku;
+import domain.SkuVo;
 import modules.SysParCom;
 
 import java.math.BigDecimal;
@@ -11,7 +12,20 @@ import java.math.BigDecimal;
 public class ComUtil {
 
     //是否超出限购次数
-    public boolean isOutOfRestrictAmount(Integer curAmount,Sku sku){
+    public boolean isOutOfRestrictAmount(Integer curAmount, SkuVo sku){
+//        //直邮不限个数
+//        if("K".equals(sku.getInvArea())){
+//            return false;
+//        }
+        if(sku.getRestrictAmount() != 0 && sku.getSkuTypeRestrictAmount() < curAmount){
+            return true;
+        }
+        return false;
+
+    }
+
+    //是否超出限购次数
+    public boolean isOutOfRestrictAmount(Integer curAmount, Sku sku){
 //        //直邮不限个数
 //        if("K".equals(sku.getInvArea())){
 //            return false;

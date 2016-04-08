@@ -67,7 +67,8 @@ public class Message implements Serializable{
         SKU_DETAIL_NULL_EXCEPTION("获取产品详情数据空", 1014),
         CART_LIST_NULL_EXCEPTION("获取购物车数据空", 1015),
         NOT_FOUND_SHIP_FEE_INFO("未找到邮费信息", 1016),
-
+        NOT_FOUND_SKU("未找到此商品",1017),
+        VARY_OVER_LIMIT("您购买的商品数量已经超过总卖出数量限制",1018),
 
         SKU_AMOUNT_SHORTAGE("亲,此件商品库存不足了", 2001),
         SKU_INVALID("亲,您已经长时间未操作,此商品已经失效,建议您刷新购物车", 2002),

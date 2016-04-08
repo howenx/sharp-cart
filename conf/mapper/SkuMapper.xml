@@ -56,6 +56,98 @@
         (select parameter_val from sys_parameter where parameter_code='POSTAL_LIMIT') as postalLimit
     </sql>
 
+    <sql id="skusColumns">
+        ${alias}.sku_type,
+        ${alias}.sku_type_id,
+        ${alias}.inv_id,
+        case
+        when ${alias}.sku_type_start_at &gt;CURRENT_TIMESTAMP(0) then 'P'
+        when ${alias}.sku_type_end_at  &lt;CURRENT_TIMESTAMP(0) then 'D'
+        else ${alias}.sku_type_status
+        end as sku_type_status,
+        ${alias}.sku_type_price,
+        ${alias}.sku_type_theme_id,
+        ${alias}.sku_type_sold_amount,
+        ${alias}.sku_type_limit_amount,
+        ${alias}.sku_type_title,
+        ${alias}.sku_type_start_at,
+        ${alias}.sku_type_end_at,
+        ${alias}.sku_type_restrict_amount,
+        ${alias}.sku_type_floor_price,
+        ${alias}.sku_type_discount,
+        ${alias}.sku_type_img,
+        ${alias}.id,
+        ${alias}.item_id,
+        ${alias}.item_color,
+        ${alias}.item_size,
+        ${alias}.amount,
+        ${alias}.item_src_price,
+        ${alias}.item_price,
+        ${alias}.item_cost_price,
+        ${alias}.item_discount,
+        ${alias}.sold_amount,
+        ${alias}.rest_amount,
+        ${alias}.inv_img,
+        ${alias}.item_preview_imgs::text,
+        ${alias}.or_destroy,
+        ${alias}.destroy_at,
+        ${alias}.update_at,
+        ${alias}.create_at,
+        ${alias}.or_master_inv,
+        ${alias}.state,
+        ${alias}.inv_area,
+        case
+        when ${alias}.inv_area='H' then '杭州保税仓备货'
+        when ${alias}.inv_area='G' then '广州保税仓备货'
+        when ${alias}.inv_area='S' then '上海保税仓备货'
+        when ${alias}.inv_area='SZ' then '上海保税区直邮'
+        when ${alias}.inv_area='GZ' then '广州保税仓直邮'
+        when ${alias}.inv_area='HZ' then '杭州保税仓直邮'
+        when ${alias}.inv_area='K' then '海外直邮'
+        else '其它'
+        end as inv_area_nm,
+        ${alias}.restrict_amount,
+        ${alias}.inv_title,
+        ${alias}.inv_customs,
+        COALESCE(${alias}.postal_tax_rate,(select f.rate from tax_code f where f.code = t.postal_tax_code)) as postal_tax_rate,
+        (select parameter_val from sys_parameter where parameter_code='POSTAL_STANDARD') as postalStandard,
+        ${alias}.inv_weight,
+        ${alias}.postal_tax_rate,
+        ${alias}.carriage_model_code,
+        ${alias}.record_code,
+        ${alias}.start_at,
+        ${alias}.end_at,
+        ${alias}.or_vary_price,
+        ${alias}.share_url,
+        ${alias}.share_count,
+        ${alias}.collect_count,
+        ${alias}.browse_count,
+        ${alias}.theme_id,
+        ${alias}.inv_code
+    </sql>
+
+
+    <select id="getAllSkus" resultType="domain.SkuVo" parameterType="domain.SkuVo">
+        select
+        <include refid="skusColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from skus t where 1=1
+        <if test="skuType!=null and skuType!=''">
+            and sku_type=#{skuType}
+        </if>
+        <if test="skuTypeId!=null and skuTypeId!=''">
+            and sku_type_id=#{skuTypeId}
+        </if>
+        <if test="invId!=null and invId!=''">
+            and inv_id=#{invId}
+        </if>
+        <if test="skuTypeStatus!=null and skuTypeStatus!=''">
+            and sku_type_status=#{skuTypeStatus}
+        </if>
+    </select>
+
+
     <!---  获取用户购物车,以用户ID或者CartID    -->
 
     <select id="getInv" resultType="domain.Sku" parameterType="domain.Sku">

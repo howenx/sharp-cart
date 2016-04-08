@@ -7,7 +7,7 @@ GET         /client/cart/list                                                con
 GET         /client/cart/del/$cartId<[0-9]+>                                 controllers.Application.delCart(cartId:Long)
 POST        /client/cart                                                     controllers.Application.cart()
 POST        /client/cart/get/sku/list                                        controllers.Application.getCartSku
-GET         /client/cart/verify/amount/$skuId<[0-9]+>/$amount<[0-9]+>        controllers.Application.verifySkuAmount(skuId:Long,amount:Integer)
+POST        /client/cart/nologin/verify/amount                               controllers.Application.verifySkuAmount()
 
 POST        /client/settle                                                   controllers.OrderCtrl.settle()
 GET         /client/coupons/list                                             controllers.OrderCtrl.couponsList()
