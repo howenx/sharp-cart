@@ -25,8 +25,22 @@
     <!-- 更新一条多样化价格信息 -->
     <update id="updateVaryPrice" parameterType="domain.VaryPrice">
         update vary_price
-        set
-        inv_id=#{invId}, price=#{price}, sold_amount=#{soldAmount}, limit_amount=#{limitAmount}, status=#{status}
+        set  id=id
+        <if test="invId!=null and invId!=''">
+            ,inv_id=#{invId}
+        </if>
+        <if test="price!=null and price!=''">
+            ,price=#{price}
+        </if>
+        <if test="soldAmount!=null and soldAmount!=''">
+            ,sold_amount=#{soldAmount}
+        </if>
+        <if test="limitAmount!=null and limitAmount!=''">
+            ,limit_amount=#{limitAmount}
+        </if>
+        <if test="status!=null and status!=''">
+            ,status=#{status}
+        </if>
         where id = #{id}
     </update>
 

@@ -26,7 +26,6 @@ import service.SkuService;
 import util.ComUtil;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -59,7 +58,7 @@ public class Application extends Controller {
     //将Json串转换成List
     public final static ObjectMapper mapper = new ObjectMapper();
 
-    public static final Timeout TIMEOUT = new Timeout(100, TimeUnit.MILLISECONDS);
+    public static final Timeout TIMEOUT = new Timeout(1000, TimeUnit.MILLISECONDS);
 
 
     /**
@@ -74,6 +73,11 @@ public class Application extends Controller {
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
 
+<<<<<<< HEAD
+=======
+        Logger.info("==cart==" + json);
+
+>>>>>>> b86bbfbe3ab2ed14e0e4dd77d59030bb0381116a
         try {
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
@@ -86,12 +90,16 @@ public class Application extends Controller {
                     } else if (cp.getRestMessageCode() != null && cp.getRestrictMessageCode() == Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()) {
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(cp.getRestMessageCode()), cp.getRestMessageCode())));
                         return ok(result);
-                    }else if (cp.getRestMessageCode() != null) {//加入购物车商品有错误
+                    } else if (cp.getRestMessageCode() != null) {//加入购物车商品有错误
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(cp.getRestMessageCode()), cp.getRestMessageCode())));
                         return ok(result);
                     }
                 }
+<<<<<<< HEAD
                 Optional<List<CartItemDTO>> cartItemDTOList=cartMid.getCarts(userId);
+=======
+                Optional<List<CartItemDTO>> cartItemDTOList = cartMid.getCarts(userId);
+>>>>>>> b86bbfbe3ab2ed14e0e4dd77d59030bb0381116a
                 result.putPOJO("cartList", Json.toJson(cartItemDTOList.get()));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
@@ -186,35 +194,56 @@ public class Application extends Controller {
     }
 
     /**
-     * 登录与未登录状态下校验加入购物车数量是否超出或者商品是否失效
+     * 未登录状态下校验加入购物车数量是否超出或者商品是否失效
      *
-     * @param skuId  库存ID
-     * @param amount 数量
      * @return result
      */
-    public Result verifySkuAmount(Long skuId, Integer amount) {
+    public Result verifySkuAmount() {
+
         ObjectNode result = Json.newObject();
+
+        Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
+
         try {
-            Sku sku = new Sku();
-            sku.setId(skuId);
-            Optional<Sku> skuOptional = Optional.ofNullable(skuService.getInv(sku));
-            if (skuOptional.isPresent()) {
-                sku = skuOptional.get();
-                if (sku.getState().equals("S")) {
-                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
-                    return ok(result);
-                } else if (comUtil.isOutOfRestrictAmount(amount,sku)) {
-                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex()), Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex())));
-                    return ok(result);
-                } else if (amount > sku.getRestAmount()) {
-                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
-                    return ok(result);
+            if (json.isPresent() && json.get().size() > 0) {
+                CartDto cartDto =mapper.convertValue(json.get(), mapper.getTypeFactory().constructType(CartDto.class));
+                SkuVo skuVo = new SkuVo();
+                skuVo.setSkuTypeId(cartDto.getSkuTypeId());
+                skuVo.setSkuType(cartDto.getSkuType());
+
+                Optional<List<SkuVo>> skuVos = Optional.ofNullable(skuService.getAllSkus(skuVo));
+
+                if (skuVos.isPresent()) {
+                    skuVo = skuVos.get().get(0);
+
+                    if (skuVo.getSkuTypeStatus().equals("S")) {
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_INVALID.getIndex()), Message.ErrorCode.SKU_INVALID.getIndex())));
+                        return ok(result);
+                    } else if (comUtil.isOutOfRestrictAmount(cartDto.getAmount(), skuVo)) {
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex()), Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex())));
+                        return ok(result);
+                    } else if (cartDto.getAmount() > skuVo.getRestAmount()) {
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex()), Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex())));
+                        return ok(result);
+                    } else if (cartDto.getSkuType().equals("vary")) {
+                        Integer varyAmount = validateVary(skuVo.getSkuTypeId(), cartDto.getAmount());
+                        if (varyAmount==null || varyAmount<0){
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.VARY_OVER_LIMIT.getIndex()), Message.ErrorCode.VARY_OVER_LIMIT.getIndex())));
+                            return ok(result);
+                        }else {
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                            return ok(result);
+                        }
+                    } else {
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                        return ok(result);
+                    }
                 } else {
-                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.NOT_FOUND_SKU.getIndex()), Message.ErrorCode.NOT_FOUND_SKU.getIndex())));
                     return ok(result);
                 }
             } else {
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex()), Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex())));
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
                 return ok(result);
             }
         } catch (Exception ex) {
@@ -225,6 +254,24 @@ public class Application extends Controller {
         }
     }
 
+
+    /**
+     * 校验vary类型商品的卖出数量是否超出,超出返回true,否则返回false
+     *
+     * @param varyId varyId
+     * @param amount amount
+     * @return Boolean
+     */
+    public  Integer validateVary(Long varyId, Integer amount) {
+        VaryPrice varyPrice = new VaryPrice();
+        varyPrice.setId(varyId);
+        List<VaryPrice> varyPriceList = skuService.getVaryPriceBy(varyPrice);
+        if (varyPriceList.size() > 0) {
+            varyPrice = varyPriceList.get(0);
+            return varyPrice.getLimitAmount()-(varyPrice.getSoldAmount() + amount)  ;
+        }
+        return null;
+    }
 
     /**
      * 处理系统启动时候去做第一次请求,完成对定时任务的执行

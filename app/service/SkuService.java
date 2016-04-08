@@ -22,4 +22,8 @@ public interface SkuService {
 
     SubjectPrice getSbjPriceById(Long id);
 
+    List<SkuVo> getAllSkus(SkuVo skuVo);
+
+    Integer updateVaryPrice(VaryPrice varyPrice);
+
 }

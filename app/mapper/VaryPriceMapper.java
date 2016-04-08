@@ -12,7 +12,7 @@ public interface VaryPriceMapper {
 
     Long insertVaryPrice(VaryPrice varyPrice);
 
-    void updateVaryPrice(VaryPrice varyPrice);
+    Integer updateVaryPrice(VaryPrice varyPrice);
 
     List<VaryPrice> getVaryPriceBy(VaryPrice varyPrice);
 

@@ -58,4 +58,14 @@ public class SkuServiceImpl implements SkuService{
         return subjectPriceMapper.getSbjPriceById(id);
     }
 
+    @Override
+    public List<SkuVo> getAllSkus(SkuVo skuVo) {
+        return skuMapper.getAllSkus(skuVo);
+    }
+
+    @Override
+    public Integer updateVaryPrice(VaryPrice varyPrice) {
+        return varyPriceMapper.updateVaryPrice(varyPrice);
+    }
+
 }
