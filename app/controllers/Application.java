@@ -73,11 +73,6 @@ public class Application extends Controller {
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
 
-<<<<<<< HEAD
-=======
-        Logger.info("==cart==" + json);
-
->>>>>>> b86bbfbe3ab2ed14e0e4dd77d59030bb0381116a
         try {
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
@@ -95,11 +90,9 @@ public class Application extends Controller {
                         return ok(result);
                     }
                 }
-<<<<<<< HEAD
+                
                 Optional<List<CartItemDTO>> cartItemDTOList=cartMid.getCarts(userId);
-=======
-                Optional<List<CartItemDTO>> cartItemDTOList = cartMid.getCarts(userId);
->>>>>>> b86bbfbe3ab2ed14e0e4dd77d59030bb0381116a
+
                 result.putPOJO("cartList", Json.toJson(cartItemDTOList.get()));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
