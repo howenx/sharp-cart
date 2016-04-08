@@ -23,10 +23,14 @@ public class Carriage implements Serializable {
     private String cityCode;
     private String modelCode;
 
+    private String storeArea;
+    private String deliveryCode;
+    private String deliveryName;
+
     public Carriage() {
     }
 
-    public Carriage(Long id, Integer firstNum, BigDecimal firstFee, Integer addNum, BigDecimal addFee, String modelName, String cityCode, String modelCode) {
+    public Carriage(Long id, Integer firstNum, BigDecimal firstFee, Integer addNum, BigDecimal addFee, String modelName, String cityCode, String modelCode, String storeArea, String deliveryCode, String deliveryName) {
         this.id = id;
         this.firstNum = firstNum;
         this.firstFee = firstFee;
@@ -35,6 +39,9 @@ public class Carriage implements Serializable {
         this.modelName = modelName;
         this.cityCode = cityCode;
         this.modelCode = modelCode;
+        this.storeArea = storeArea;
+        this.deliveryCode = deliveryCode;
+        this.deliveryName = deliveryName;
     }
 
     public Long getId() {
@@ -101,6 +108,30 @@ public class Carriage implements Serializable {
         this.modelCode = modelCode;
     }
 
+    public String getStoreArea() {
+        return storeArea;
+    }
+
+    public void setStoreArea(String storeArea) {
+        this.storeArea = storeArea;
+    }
+
+    public String getDeliveryCode() {
+        return deliveryCode;
+    }
+
+    public void setDeliveryCode(String deliveryCode) {
+        this.deliveryCode = deliveryCode;
+    }
+
+    public String getDeliveryName() {
+        return deliveryName;
+    }
+
+    public void setDeliveryName(String deliveryName) {
+        this.deliveryName = deliveryName;
+    }
+
     @Override
     public String toString() {
         return "Carriage{" +
@@ -112,6 +143,9 @@ public class Carriage implements Serializable {
                 ", modelName='" + modelName + '\'' +
                 ", cityCode='" + cityCode + '\'' +
                 ", modelCode='" + modelCode + '\'' +
+                ", storeArea='" + storeArea + '\'' +
+                ", deliveryCode='" + deliveryCode + '\'' +
+                ", deliveryName='" + deliveryName + '\'' +
                 '}';
     }
 }

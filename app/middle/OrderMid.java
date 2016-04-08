@@ -2,6 +2,7 @@ package middle;
 
 import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
+import controllers.Application;
 import controllers.OrderCtrl;
 import domain.*;
 import modules.SysParCom;
@@ -45,6 +46,9 @@ public class OrderMid {
 
     @Inject
     private ComUtil comUtil;
+
+    @Inject
+    private Application application;
 
     /**
      * 订单结算
@@ -171,8 +175,6 @@ public class OrderMid {
 
         SettleFeeVo settleFeeVo = new SettleFeeVo();
 
-        //运费
-        BigDecimal shipFeeSingle = BigDecimal.ZERO;
 
         //行邮税
         BigDecimal postalFeeSingle = BigDecimal.ZERO;
@@ -187,105 +189,103 @@ public class OrderMid {
 
         Boolean orPinRestrict = false;//用于标识用户购买的拼购商品是否超出限购数量
 
+
+        Integer totalWeight = 0;//计算所有商品的总重量
+
         for (CartDto cartDto : settleDTO.getCartDtos()) {
 
-            Sku sku = new Sku();
-            sku.setId(cartDto.getSkuId());
-            Optional<Sku> skuOptional = Optional.ofNullable(skuService.getInv(sku));
+            SkuVo skuVo = new SkuVo();
+            skuVo.setSkuType(cartDto.getSkuType());
+            skuVo.setSkuTypeId(cartDto.getSkuTypeId());
+
+            Optional<List<SkuVo>> skuOptional = Optional.ofNullable(skuService.getAllSkus(skuVo));
 
             if (skuOptional.isPresent()) {
-                sku = skuOptional.get();
+                skuVo = skuOptional.get().get(0);
             } else {
                 settleFeeVo.setMessageCode(Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex());
                 return settleFeeVo;
             }
 
             //先确定商品状态是正常,然后确定商品结算数量是否超出库存量
-            if (!sku.getState().equals("Y")) {
+            if (!skuVo.getState().equals("Y")) {
                 settleFeeVo.setMessageCode(Message.ErrorCode.SKU_INVALID.getIndex());
                 return settleFeeVo;
-            } else if (comUtil.isOutOfRestrictAmount(cartDto.getAmount(),sku)) {
+            } else if (!skuVo.getSkuTypeStatus().equals("Y")) {
+                settleFeeVo.setMessageCode(Message.ErrorCode.SKU_DOWN.getIndex());
+                return settleFeeVo;
+            }
+            else if (comUtil.isOutOfRestrictAmount(cartDto.getAmount(),skuVo)) {
                 settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex());
                 return settleFeeVo;
-            } else if (cartDto.getAmount() > sku.getRestAmount()) {
+            } else if (cartDto.getAmount() > skuVo.getRestAmount()) {
                 settleFeeVo.setMessageCode(Message.ErrorCode.SKU_AMOUNT_SHORTAGE.getIndex());
                 return settleFeeVo;
             } else {
                 //邮费
                 if (address != null && address.getProvinceCode() != null) {
-                    shipFeeSingle = shipFeeSingle.add(calculateShipFee(address.getProvinceCode(), sku.getCarriageModelCode(), cartDto.getAmount()));
-                } else shipFeeSingle = BigDecimal.ZERO;
+                    totalWeight+=skuVo.getInvWeight();
+                }
 
-                switch (cartDto.getSkuType()) {
-                    case "item":
-                        //sku总计费用
-                        totalFeeSingle = totalFeeSingle.add(sku.getItemPrice().multiply(new BigDecimal(cartDto.getAmount())));
-                        //单sku产生的行邮税
-                        postalFeeSingle = postalFeeSingle.add(calculatePostalTax(sku.getPostalTaxRate(), sku.getItemPrice(), cartDto.getAmount()));
-                        skuTypeList.add("item");
-                        break;
-                    case "vary":
-                        VaryPrice varyPrice = new VaryPrice();
-                        varyPrice.setId(cartDto.getSkuTypeId());
-                        List<VaryPrice> varyPriceList = skuService.getVaryPriceBy(varyPrice);
-                        if (varyPriceList.size() > 0) {
-                            varyPrice = varyPriceList.get(0);
+                skuTypeList.add(skuVo.getSkuType());
+
+                if (cartDto.getSkuType().equals("pin")){
+                    PinActivity pinActivity = new PinActivity();
+                    pinActivity.setMasterUserId(userId);
+                    pinActivity.setPinId(cartDto.getSkuTypeId());
+                    pinActivity.setStatus("Y");
+                    List<PinActivity> pinActivities=promotionService.selectPinActivity(pinActivity);
+                    if (pinActivities.size()>0){
+                        settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_PIN_SINGLE_ONE_TIME.getIndex());
+                    }
+
+                    PinTieredPrice pinTieredPrice = new PinTieredPrice();
+                    pinTieredPrice.setId(cartDto.getPinTieredPriceId());
+                    pinTieredPrice.setPinId(cartDto.getSkuTypeId());
+                    pinTieredPrice = promotionService.getTieredPriceById(pinTieredPrice);
+                    totalFeeSingle = totalFeeSingle.add(pinTieredPrice.getPrice().multiply(new BigDecimal(cartDto.getAmount())));
+                    //单sku产生的行邮税
+                    postalFeeSingle = postalFeeSingle.add(calculatePostalTax(skuVo.getPostalTaxRate(), pinTieredPrice.getPrice(), cartDto.getAmount()));
+
+
+                    PinSku pinSku = promotionService.getPinSkuById(cartDto.getSkuTypeId());
+
+                    //用户存在,需要验证用户是否符合限购策略
+                    Order order = new Order();
+                    order.setOrderType(2);//拼购订单
+                    order.setUserId(userId);
+                    List<Order> orders = cartService.getPinUserOrder(order);
+                    if (orders.size() > 0) {
+                        Integer userPin = 1;//拼购购买商品计数
+                        for (Order os : orders) {
+                            OrderLine orderLine = new OrderLine();
+                            orderLine.setOrderId(os.getOrderId());
+                            orderLine.setSkuType(cartDto.getSkuType());
+                            orderLine.setSkuTypeId(cartDto.getSkuTypeId());
+                            List<OrderLine> lines = cartService.selectOrderLine(orderLine);
+                            userPin += lines.size();
                         }
-                        totalFeeSingle = totalFeeSingle.add(varyPrice.getPrice().multiply(new BigDecimal(cartDto.getAmount())));
-                        //单sku产生的行邮税
-                        postalFeeSingle = postalFeeSingle.add(calculatePostalTax(sku.getPostalTaxRate(), varyPrice.getPrice(), cartDto.getAmount()));
-                        skuTypeList.add("vary");
-                        break;
-                    case "customize":
-                        SubjectPrice subjectPrice = skuService.getSbjPriceById(cartDto.getSkuTypeId());
-                        totalFeeSingle = totalFeeSingle.add(subjectPrice.getPrice().multiply(new BigDecimal(cartDto.getAmount())));
-                        //单sku产生的行邮税
-                        postalFeeSingle = postalFeeSingle.add(calculatePostalTax(sku.getPostalTaxRate(), subjectPrice.getPrice(), cartDto.getAmount()));
-                        skuTypeList.add("customize");
-                        break;
-                    case "pin":
-                        PinActivity pinActivity = new PinActivity();
-                        pinActivity.setMasterUserId(userId);
-                        pinActivity.setPinId(cartDto.getSkuTypeId());
-                        pinActivity.setStatus("Y");
-                        List<PinActivity> pinActivities=promotionService.selectPinActivity(pinActivity);
-                        if (pinActivities.size()>0){
-                            settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_PIN_SINGLE_ONE_TIME.getIndex());
+                        if (userPin > pinSku.getRestrictAmount()) {
+                            orPinRestrict = true;
                         }
-
-                        PinTieredPrice pinTieredPrice = new PinTieredPrice();
-                        pinTieredPrice.setId(cartDto.getPinTieredPriceId());
-                        pinTieredPrice.setPinId(cartDto.getSkuTypeId());
-                        pinTieredPrice = promotionService.getTieredPriceById(pinTieredPrice);
-                        totalFeeSingle = totalFeeSingle.add(pinTieredPrice.getPrice().multiply(new BigDecimal(cartDto.getAmount())));
-                        //单sku产生的行邮税
-                        postalFeeSingle = postalFeeSingle.add(calculatePostalTax(sku.getPostalTaxRate(), pinTieredPrice.getPrice(), cartDto.getAmount()));
-                        skuTypeList.add("pin");
-
-                        PinSku pinSku = promotionService.getPinSkuById(cartDto.getSkuTypeId());
-
-                        //用户存在,需要验证用户是否符合限购策略
-                        Order order = new Order();
-                        order.setOrderType(2);//拼购订单
-                        order.setUserId(userId);
-                        List<Order> orders = cartService.getPinUserOrder(order);
-                        if (orders.size() > 0) {
-                            Integer userPin = 1;//拼购购买商品计数
-                            for (Order os : orders) {
-                                OrderLine orderLine = new OrderLine();
-                                orderLine.setOrderId(os.getOrderId());
-                                orderLine.setSkuType(cartDto.getSkuType());
-                                orderLine.setSkuTypeId(cartDto.getSkuTypeId());
-                                List<OrderLine> lines = cartService.selectOrderLine(orderLine);
-                                userPin += lines.size();
-                            }
-                            if (userPin > pinSku.getRestrictAmount()) {
-                                orPinRestrict = true;
-                            }
+                    }
+                } else{
+                    if (cartDto.getSkuType().equals("vary")) {
+                        Integer varyAmount = application.validateVary(skuVo.getSkuTypeId(), cartDto.getAmount());
+                        if (varyAmount==null || varyAmount<0){
+                            settleFeeVo.setMessageCode(Message.ErrorCode.VARY_OVER_LIMIT.getIndex());
                         }
-                        break;
+                    }
+                    totalFeeSingle = totalFeeSingle.add(skuVo.getSkuTypePrice().multiply(new BigDecimal(cartDto.getAmount())));
+                    postalFeeSingle = postalFeeSingle.add(calculatePostalTax(skuVo.getPostalTaxRate(), skuVo.getSkuTypePrice(), cartDto.getAmount()));
                 }
             }
+        }
+
+        BigDecimal shipFeeSingle = BigDecimal.ZERO;
+
+        if (address != null && address.getProvinceCode() != null) {
+            shipFeeSingle= calculateShipFee(address.getProvinceCode(),settleDTO.getInvArea(),totalWeight);
         }
 
 
@@ -337,20 +337,24 @@ public class OrderMid {
 
 
     //计算邮费
-    private BigDecimal calculateShipFee(String provinceCode, String carriageModelCode, Integer amount) throws Exception {
+    private BigDecimal calculateShipFee(String provinceCode, String invArea, Integer totalWeight) throws Exception {
         BigDecimal shipFee = BigDecimal.ZERO;
         //取邮费
         Carriage carriage = new Carriage();
         carriage.setCityCode(provinceCode);
-        carriage.setModelCode(carriageModelCode);
+        carriage.setStoreArea(invArea);
         Optional<Carriage> carriageOptional = Optional.ofNullable(skuService.getCarriage(carriage));
         if (carriageOptional.isPresent()) {
             carriage = carriageOptional.get();
             //规则:如果购买数量小于首件数量要求,则取首费,否则就整除续件数量+1,乘以续费再加首费
-            if (amount <= carriage.getFirstNum()) {
+            if (totalWeight <= carriage.getFirstNum()) {
                 shipFee = shipFee.add(carriage.getFirstFee());
             } else {
-                shipFee = shipFee.add(carriage.getFirstFee()).add(new BigDecimal((amount / carriage.getAddNum()) + 1).multiply(carriage.getAddFee()));
+                Integer addWeight = 0;
+                if ((totalWeight-carriage.getFirstNum())%carriage.getAddNum()>0){
+                    addWeight = (totalWeight-carriage.getFirstNum())/carriage.getAddNum()+1;
+                }else addWeight = (totalWeight-carriage.getFirstNum())/carriage.getAddNum();
+                shipFee = shipFee.add(carriage.getFirstFee()).add(new BigDecimal(addWeight).multiply(carriage.getAddFee()));
             }
         }
         return shipFee;

@@ -205,14 +205,29 @@
 
     <!--获取邮费模版-->
     <select id="getCarriage" parameterType="domain.Carriage" resultType="domain.Carriage">
-        SELECT c1.id,
+        SELECT COALESCE (cc.id, c.id) id,
+        COALESCE (cc.add_fee,c.add_fee) add_fee,
+        COALESCE (cc.add_num,c.add_num) add_num,
+        COALESCE (cc.city_code,c.city_code) city_code,
+        COALESCE (cc.first_fee,c.first_fee) first_fee,
+        COALESCE (cc.first_num,c.first_num) first_num,
+        COALESCE (cc.model_code,c.model_code) model_code,
+        COALESCE (cc.model_name,c.model_name) model_name,
+        COALESCE (cc.delivery_code,c.delivery_code) delivery_code,
+        COALESCE (cc.delivery_name,c.delivery_name) delivery_name,
+        COALESCE (cc.store_area,c.store_area) store_area
+        FROM carriage c LEFT JOIN
+        (SELECT c1.id,
         c1.add_fee,
         c1.add_num,
         c1.city_code,
         c1.first_fee,
         c1.first_num,
         c1.model_code,
-        c1.model_name
+        c1.model_name,
+        c1.delivery_code,
+        c1.delivery_name,
+        c1.store_area
         FROM carriage c1
         WHERE 1=1
         <if test="cityCode!=null and cityCode!=''">
@@ -221,8 +236,11 @@
         <if test="cityCode==null or cityCode==''">
             and c1.city_code = 'ALL'
         </if>
-        <if test="modelCode!=null and modelCode!=''">
-            and c1.model_code = #{modelCode}
+        ) cc
+        on cc.store_area=c.store_area where 1=1
+        <if test="storeArea!=null and storeArea!=''">
+            and c.store_area = #{storeArea}
         </if>
+        and c.city_code = 'ALL'
     </select>
 </mapper>
