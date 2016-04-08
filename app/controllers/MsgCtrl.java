@@ -4,10 +4,7 @@ import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.MsgTypeEnum;
-import domain.Feedback;
-import domain.Message;
-import domain.Msg;
-import domain.MsgRec;
+import domain.*;
 import filters.UserAuth;
 import modules.SysParCom;
 import play.Logger;
@@ -52,8 +49,20 @@ public class MsgCtrl extends Controller {
     //@Security.Authenticated(UserAuth.class)
     public Result testMsg() {
         //Long userId = (Long) ctx().args.get("userId");
-        addMsgRec(1000073L, MsgTypeEnum.Discount, "title", "content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
-        addSysMsg(MsgTypeEnum.Discount, "titlesys111111", "contentsys", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D", new Timestamp(System.currentTimeMillis() + 24 * 60 * 60 * 1000));
+        addMsgRec(1000230L, MsgTypeEnum.Discount, "title", "content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+//        addSysMsg(MsgTypeEnum.Logistics, "titlesys111111", "Logistics contentsys", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D", new Timestamp(System.currentTimeMillis() + 24 * 60 * 60 * 1000));
+        addMsgRec(1000230L, MsgTypeEnum.Coupon, "title", "Coupon content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000230L, MsgTypeEnum.Goods, "Goods title", "Goods content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000230L, MsgTypeEnum.Logistics, "Logistics title", "Logistics content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000230L, MsgTypeEnum.System, "System title", "System Coupon content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+
+        addMsgRec(1000132L, MsgTypeEnum.Discount, "title", "content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+//        addSysMsg(MsgTypeEnum.Logistics, "titlesys111111", "Logistics contentsys", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D", new Timestamp(System.currentTimeMillis() + 24 * 60 * 60 * 1000));
+        addMsgRec(1000132L, MsgTypeEnum.Coupon, "title", "Coupon content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000132L, MsgTypeEnum.Goods, "Goods title", "Goods content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000132L, MsgTypeEnum.Logistics, "Logistics title", "Logistics content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000132L, MsgTypeEnum.System, "System title", "System Coupon content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+
         // checkRecSysMsgOnline(1000073L);
         //cleanMsgAtFixedTime();
         ObjectNode result = newObject();
@@ -183,7 +192,8 @@ public class MsgCtrl extends Controller {
         ObjectNode result = newObject();
         Long userId = (Long) ctx().args.get("userId");
         checkNotRecSysMsg(userId);
-        Map<String, Integer> msgTypeMap = new HashMap<String, Integer>();
+       // Map<String, Integer> msgTypeMap = new HashMap<String, Integer>();
+        List<MsgTypeDTO> msgTypeDTOList=new ArrayList<>();
         try {
 
             for (MsgTypeEnum msgTypeEnum : MsgTypeEnum.values()) {
@@ -194,10 +204,16 @@ public class MsgCtrl extends Controller {
                 Optional<List<MsgRec>> msgRecList = Optional.ofNullable(msgService.getMsgRecBy(msgRec)); //该类别下有消息
                 if (msgRecList.isPresent() && msgRecList.get().size() > 0) {
                     msgRec.setReadStatus(1);
-                    msgTypeMap.put(msgTypeEnum.getMsgType(), msgService.getNotReadMsgNum(msgRec)); //未读条数
+                    MsgTypeDTO msgTypeDTO=new MsgTypeDTO();
+                    msgTypeDTO.setMsgType(msgTypeEnum.getMsgType());
+                    msgTypeDTO.setNum(msgService.getNotReadMsgNum(msgRec));
+                    msgTypeDTO.setContent(msgRecList.get().get(0).getMsgContent());
+                    msgTypeDTO.setCreateAt(msgRecList.get().get(0).getCreateAt());
+                    msgTypeDTOList.add(msgTypeDTO);
+                  //  msgTypeMap.put(msgTypeEnum.getMsgType(), msgService.getNotReadMsgNum(msgRec)); //未读条数
                 }
             }
-            result.putPOJO("msgTypeMap", Json.toJson(msgTypeMap));
+            result.putPOJO("msgTypeDTOList", Json.toJson(msgTypeDTOList));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             return ok(result);
         } catch (Exception ex) {
