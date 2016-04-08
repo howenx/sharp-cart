@@ -73,8 +73,6 @@ public class Application extends Controller {
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
 
-        Logger.info("==cart==" + json);
-
         try {
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
@@ -92,7 +90,9 @@ public class Application extends Controller {
                         return ok(result);
                     }
                 }
-                Optional<List<CartItemDTO>> cartItemDTOList = cartMid.getCarts(userId);
+                
+                Optional<List<CartItemDTO>> cartItemDTOList=cartMid.getCarts(userId);
+
                 result.putPOJO("cartList", Json.toJson(cartItemDTOList.get()));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
