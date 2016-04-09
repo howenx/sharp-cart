@@ -49,19 +49,19 @@ public class MsgCtrl extends Controller {
     //@Security.Authenticated(UserAuth.class)
     public Result testMsg() {
         //Long userId = (Long) ctx().args.get("userId");
-        addMsgRec(1000230L, MsgTypeEnum.Discount, "title", "content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
-//        addSysMsg(MsgTypeEnum.Logistics, "titlesys111111", "Logistics contentsys", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D", new Timestamp(System.currentTimeMillis() + 24 * 60 * 60 * 1000));
-        addMsgRec(1000230L, MsgTypeEnum.Coupon, "title", "Coupon content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
-        addMsgRec(1000230L, MsgTypeEnum.Goods, "Goods title", "Goods content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
-        addMsgRec(1000230L, MsgTypeEnum.Logistics, "Logistics title", "Logistics content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
-        addMsgRec(1000230L, MsgTypeEnum.System, "System title", "System Coupon content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000230L, MsgTypeEnum.Discount, "title", "content", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D");
+//        addSysMsg(MsgTypeEnum.Logistics, "titlesys111111", "Logistics contentsys", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D", new Timestamp(System.currentTimeMillis() + 24 * 60 * 60 * 1000));
+        addMsgRec(1000230L, MsgTypeEnum.Coupon, "title", "Coupon content", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000230L, MsgTypeEnum.Goods, "Goods title", "Goods content", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000230L, MsgTypeEnum.Logistics, "Logistics title", "Logistics content", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000230L, MsgTypeEnum.System, "System title", "System Coupon content", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D");
 
-        addMsgRec(1000132L, MsgTypeEnum.Discount, "title", "content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
-//        addSysMsg(MsgTypeEnum.Logistics, "titlesys111111", "Logistics contentsys", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D", new Timestamp(System.currentTimeMillis() + 24 * 60 * 60 * 1000));
-        addMsgRec(1000132L, MsgTypeEnum.Coupon, "title", "Coupon content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
-        addMsgRec(1000132L, MsgTypeEnum.Goods, "Goods title", "Goods content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
-        addMsgRec(1000132L, MsgTypeEnum.Logistics, "Logistics title", "Logistics content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
-        addMsgRec(1000132L, MsgTypeEnum.System, "System title", "System Coupon content", "/uploads/minify/f4e65749a1b0407f977d25d1f9ec5c841445411170985.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000132L, MsgTypeEnum.Discount, "title", "content", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D");
+//        addSysMsg(MsgTypeEnum.Logistics, "titlesys111111", "Logistics contentsys", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D", new Timestamp(System.currentTimeMillis() + 24 * 60 * 60 * 1000));
+        addMsgRec(1000132L, MsgTypeEnum.Coupon, "title", "Coupon content", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000132L, MsgTypeEnum.Goods, "Goods title", "Goods content", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000132L, MsgTypeEnum.Logistics, "Logistics title", "Logistics content", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D");
+        addMsgRec(1000132L, MsgTypeEnum.System, "System title", "System Coupon content", "item/photo/20160407/2df4b58a804d4c799df91a9e1bb8949a1460017299392.jpg", "/comm/detail/888301/111324", "D");
 
         // checkRecSysMsgOnline(1000073L);
         //cleanMsgAtFixedTime();

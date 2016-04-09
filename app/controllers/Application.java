@@ -90,7 +90,7 @@ public class Application extends Controller {
                         return ok(result);
                     }
                 }
-                
+
                 Optional<List<CartItemDTO>> cartItemDTOList=cartMid.getCarts(userId);
 
                 result.putPOJO("cartList", Json.toJson(cartItemDTOList.get()));

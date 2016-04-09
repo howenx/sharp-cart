@@ -198,9 +198,9 @@ public class OrderMid {
             skuVo.setSkuType(cartDto.getSkuType());
             skuVo.setSkuTypeId(cartDto.getSkuTypeId());
 
-            Optional<List<SkuVo>> skuOptional = Optional.ofNullable(skuService.getAllSkus(skuVo));
 
-            if (skuOptional.isPresent()) {
+            Optional<List<SkuVo>> skuOptional = Optional.ofNullable(skuService.getAllSkus(skuVo));
+            if (skuOptional.isPresent()&&skuOptional.get().size()>0) { //可能为null,加入数量判断
                 skuVo = skuOptional.get().get(0);
             } else {
                 settleFeeVo.setMessageCode(Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex());

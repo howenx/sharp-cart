@@ -66,20 +66,18 @@ public class OrderCtrl extends Controller {
         ObjectNode result = newObject();
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
-        Logger.info("=settle=="+json);
+     //   Logger.info("====settle=="+json);
 
         try {
             Long userId = (Long) ctx().args.get("userId");
             if (json.isPresent() && json.get().size() > 0) {
 
                 SettleOrderDTO settleOrderDTO = mapper.convertValue(json.get(), SettleOrderDTO.class);
-                Logger.info("=settle=="+json);
                 SettleVo settleVo = orderMid.OrderSettle(settleOrderDTO, userId);
                 if (settleVo.getMessageCode() != null) {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(settleVo.getMessageCode()), settleVo.getMessageCode())));
                     return ok(result);
                 }
-                Logger.info("====return ==="+Json.toJson(settleVo));
                 result.putPOJO("settle", Json.toJson(settleVo));
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
@@ -446,7 +444,6 @@ public class OrderCtrl extends Controller {
         ObjectNode result = newObject();
 
         Http.MultipartFormData body = request().body().asMultipartFormData();
-        Logger.info("==request().body()==="+body);
 
         Map<String, String[]> stringMap = body.asFormUrlEncoded();
         Map<String, String> map = new HashMap<>();
