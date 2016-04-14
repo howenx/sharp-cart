@@ -10,6 +10,7 @@ import middle.OrderMid;
 import modules.SysParCom;
 import org.apache.commons.io.FileUtils;
 import play.Logger;
+import play.data.Form;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.*;
@@ -66,7 +67,7 @@ public class OrderCtrl extends Controller {
         ObjectNode result = newObject();
 
         Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
-     //   Logger.info("====settle=="+json);
+        //   Logger.info("====settle=="+json);
 
         try {
             Long userId = (Long) ctx().args.get("userId");
@@ -222,6 +223,15 @@ public class OrderCtrl extends Controller {
                         map.put("address", address);
 
                     }
+
+                    //查询是否存在退款信息
+                    Refund refund = new Refund();
+                    refund.setOrderId(o.getOrderId());
+                    Optional<List<Refund>> listRefundOptional = Optional.ofNullable(cartService.selectRefund(refund));
+                    if (listRefundOptional.isPresent() && listRefundOptional.get().size()>0){
+                        map.put("refund",listRefundOptional.get().get(0));
+                    }
+
                     if (o.getOrderStatus().equals("I"))
                         o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
 
@@ -317,6 +327,7 @@ public class OrderCtrl extends Controller {
                 }
             }
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            Logger.error("擦擦啊擦------>\n"+Json.toJson(mapList));
             result.putPOJO("orderList", Json.toJson(mapList));
 
             return ok(result);
@@ -347,7 +358,7 @@ public class OrderCtrl extends Controller {
                 if (listOptional.isPresent() && listOptional.get().size() > 0) {
                     order = cartService.getOrderBy(order).get(0);
                     Optional<Long> longOptional = Optional.ofNullable(CalCountDown.getTimeSubtract(order.getOrderCreateAt()));
-                    if (longOptional.isPresent() && longOptional.get()< 0) {
+                    if (longOptional.isPresent() && longOptional.get() < 0) {
                         cancelOrderActor.tell(orderId, null);
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex()), Message.ErrorCode.ORDER_CANCEL_AUTO.getIndex())));
                         return ok(result);
@@ -443,20 +454,18 @@ public class OrderCtrl extends Controller {
 
         ObjectNode result = newObject();
 
-        Http.MultipartFormData body = request().body().asMultipartFormData();
-
-        Map<String, String[]> stringMap = body.asFormUrlEncoded();
-        Map<String, String> map = new HashMap<>();
-
-        stringMap.forEach((k, v) -> map.put(k, v[0]));
-
-        Optional<JsonNode> json = Optional.ofNullable(Json.toJson(map));
-        Logger.info("==json=="+json);
         Long userId = (Long) ctx().args.get("userId");
-        try {
-            if (json.isPresent() && json.get().size() > 0) {
 
-                Refund refund = Json.fromJson(json.get(), Refund.class);
+        Http.MultipartFormData body = request().body().asMultipartFormData();
+        Form<Refund> userForm = Form.form(Refund.class).bindFromRequest();
+
+        if (userForm.hasErrors()) {
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
+            return ok(result);
+        } else {
+            try {
+                Refund refund = userForm.get();
+
                 if (refund.getOrderId() != null && refund.getSkuId() != null) {
                     OrderLine orderLine = new OrderLine();
                     orderLine.setOrderId(refund.getOrderId());
@@ -490,17 +499,15 @@ public class OrderCtrl extends Controller {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(result);
 
-            } else {
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
+            } catch (Exception ex) {
+                Logger.error("server exception:" + ex.getMessage());
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
                 return ok(result);
             }
-
-        } catch (Exception ex) {
-            Logger.error("server exception:" + ex.getMessage());
-            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
-            return ok(result);
         }
     }
+
+
 
 
     /**
@@ -529,8 +536,8 @@ public class OrderCtrl extends Controller {
                 Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
                 if (!(collectList.isPresent() && collectList.get().size() > 0)) { //未收藏
                     collect = createCollect(userId, collectSubmitDTO);
-                }else{
-                    collect=collectList.get().get(0);
+                } else {
+                    collect = collectList.get().get(0);
                 }
                 if (null != collect) {
                     result.putPOJO("collectId", collect.getCollectId());

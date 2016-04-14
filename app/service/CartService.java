@@ -65,4 +65,6 @@ public interface CartService {
     Boolean insertCollect(Collect collect)throws Exception;
     List<Collect> selectCollect(Collect collect)throws Exception;
     Boolean deleteCollect(Collect collect)throws Exception;
+
+    Integer UpdateCartBy(Cart cart) throws Exception;
 }

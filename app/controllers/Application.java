@@ -93,9 +93,15 @@ public class Application extends Controller {
 
                 Optional<List<CartItemDTO>> cartItemDTOList=cartMid.getCarts(userId);
 
-                result.putPOJO("cartList", Json.toJson(cartItemDTOList.get()));
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-                return ok(result);
+                if (cartItemDTOList.isPresent()&& cartItemDTOList.get().size()>0){
+                    result.putPOJO("cartList", Json.toJson(cartItemDTOList.get()));
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                    return ok(result);
+                }
+                else{
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex()), Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex())));
+                    return ok(result);
+                }
             } else {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
                 return ok(result);

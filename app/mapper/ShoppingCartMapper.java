@@ -15,6 +15,8 @@ public interface ShoppingCartMapper {
 
     Integer updateCart(Cart cart) throws Exception;
 
+    Integer UpdateCartBy(Cart cart) throws Exception;
+
     Integer addCart(Cart cart) throws Exception;
 
     List<Order> getOrderBy(Order order) throws Exception;

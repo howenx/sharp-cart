@@ -1,5 +1,8 @@
 package domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import play.data.validation.Constraints;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.security.Timestamp;
@@ -10,42 +13,65 @@ import java.util.Optional;
  * Created by howen on 15/12/22.
  */
 public class Refund implements Serializable{
-
+    @JsonIgnore
     private Long        id;//主键
+    @Constraints.Required
     private Long        orderId;//订单ID
+    @Constraints.Required
     private Long        splitOrderId;//子订单ID
+    @JsonIgnore
     private Long        skuId;//商品ID
+    @JsonIgnore
+    private String      skuType;//商品类型
+    @JsonIgnore
+    private Long        skuTypeId;//商品类型ID
+    @Constraints.Required
     private BigDecimal  payBackFee;//退款金额
+    @Constraints.Required
     private String      reason;//申请退款原因
     private String      state;//状态
+    @JsonIgnore
     private String      pgTradeNo;//支付流水号
+    @JsonIgnore
     private String      pgCode;//支付返回码
+    @JsonIgnore
     private String      pgMessage;//支付返回消息
 
+    @JsonIgnore
     private Timestamp   createAt;//创建时间
+    @JsonIgnore
     private Timestamp   updateAt;//更新时间
+    @JsonIgnore
     private Integer     amount;//申请退款数量
+    @JsonIgnore
     private String      refundImg;//退款上传图片
+    @JsonIgnore
     private String      contactName;//联系人姓名
     private String      contactTel;//联系人电话
+    @JsonIgnore
     private String      expressCompany;//快递公司名称
+    @JsonIgnore
     private String      expressCompCode;//快递公司编码
+    @JsonIgnore
     private String      expressNum;//快递编号
     private String      rejectReason;//客服拒绝退款原因
 
+    @JsonIgnore
     private Long        userId;//用户ID
-
+    @Constraints.Required
     private String      refundType;//退款类型，pin：拼购自动退款，receive：收货后申请退款，deliver：发货前退款
 
 
     public Refund() {
     }
 
-    public Refund(Long id, Long orderId, Long splitOrderId, Long skuId, BigDecimal payBackFee, String reason, String state, String pgTradeNo, String pgCode, String pgMessage, Timestamp createAt, Timestamp updateAt, Integer amount, String refundImg, String contactName, String contactTel, String expressCompany, String expressCompCode, String expressNum, String rejectReason, Long userId, String refundType) {
+    public Refund(Long id, Long orderId, Long splitOrderId, Long skuId, String skuType, Long skuTypeId, BigDecimal payBackFee, String reason, String state, String pgTradeNo, String pgCode, String pgMessage, Timestamp createAt, Timestamp updateAt, Integer amount, String refundImg, String contactName, String contactTel, String expressCompany, String expressCompCode, String expressNum, String rejectReason, Long userId, String refundType) {
         this.id = id;
         this.orderId = orderId;
         this.splitOrderId = splitOrderId;
         this.skuId = skuId;
+        this.skuType = skuType;
+        this.skuTypeId = skuTypeId;
         this.payBackFee = payBackFee;
         this.reason = reason;
         this.state = state;
@@ -96,6 +122,22 @@ public class Refund implements Serializable{
 
     public void setSkuId(Long skuId) {
         this.skuId = skuId;
+    }
+
+    public String getSkuType() {
+        return skuType;
+    }
+
+    public void setSkuType(String skuType) {
+        this.skuType = skuType;
+    }
+
+    public Long getSkuTypeId() {
+        return skuTypeId;
+    }
+
+    public void setSkuTypeId(Long skuTypeId) {
+        this.skuTypeId = skuTypeId;
     }
 
     public BigDecimal getPayBackFee() {
@@ -249,6 +291,8 @@ public class Refund implements Serializable{
                 ", orderId=" + orderId +
                 ", splitOrderId=" + splitOrderId +
                 ", skuId=" + skuId +
+                ", skuType='" + skuType + '\'' +
+                ", skuTypeId=" + skuTypeId +
                 ", payBackFee=" + payBackFee +
                 ", reason='" + reason + '\'' +
                 ", state='" + state + '\'' +

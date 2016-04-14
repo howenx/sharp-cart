@@ -362,9 +362,11 @@ public class OrderMid {
 
     //计算行邮税
     private BigDecimal calculatePostalTax(String postalTaxRate, BigDecimal price, Integer amount) {
+        if (postalTaxRate==null){
+            return BigDecimal.ZERO;
+        }
         BigDecimal postalFee = BigDecimal.ZERO;
         //计算行邮税,行邮税加和
-        Logger.info(postalTaxRate+"=postalTaxRate==="+price+"==="+amount);
         postalFee = postalFee.add(new BigDecimal(postalTaxRate).multiply(price).multiply(new BigDecimal(amount)).multiply(new BigDecimal(0.01)));
         return postalFee;
     }

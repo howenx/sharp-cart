@@ -94,6 +94,10 @@ public class CartMid {
                     cartList.setItemSize(skuVo.getItemSize());
                     cartList.setItemPrice(skuVo.getSkuTypePrice());
                     cartList.setState(cart.getStatus());
+                    if (cart.getStatus().equals("S")){
+                        cart.setStatus("N");
+                        cartService.UpdateCartBy(cart);
+                    }
                     cartList.setInvArea(skuVo.getInvArea());
                     cartList.setInvAreaNm(skuVo.getInvAreaNm());
                     cartList.setRestrictAmount(skuVo.getSkuTypeRestrictAmount());

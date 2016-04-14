@@ -1,8 +1,8 @@
 package middle;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.MsgTypeEnum;
 import controllers.Application;
 import controllers.MsgCtrl;
@@ -10,7 +10,6 @@ import controllers.PushCtrl;
 import domain.*;
 import modules.SysParCom;
 import net.spy.memcached.MemcachedClient;
-import org.apache.commons.collections.map.HashedMap;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -27,6 +26,8 @@ import javax.inject.Named;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
+
+import static modules.SysParCom.ERP_PUSH;
 
 /**
  * 京东支付中间层
@@ -59,6 +60,9 @@ public class JDPayMid {
     @Inject
     private Configuration configuration;
 
+    @Inject
+    private ActorSystem system;
+
     /**
      * 京东支付异步通知结果
      *
@@ -82,7 +86,11 @@ public class JDPayMid {
                 order.setPgTradeNo(params.get("trade_no"));
 
                 if (cartService.updateOrder(order)) {
+
                     Logger.info("京东支付回调订单更新payFrontNotify: " + Json.toJson(order));
+                    system.actorSelection(ERP_PUSH).tell(order.getOrderId(), ActorRef.noSender());
+                    Logger.info("调用ERP推送订单:"+order.getOrderId());
+
                     if (params.containsKey("token")) {
                         Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
                         IdPlus idPlus = new IdPlus();

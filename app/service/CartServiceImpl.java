@@ -166,4 +166,9 @@ public class CartServiceImpl  implements CartService{
     public Boolean deleteCollect(Collect collect) throws Exception {
         return shoppingCartMapper.deleteCollect(collect)>=0;
     }
+
+    @Override
+    public Integer UpdateCartBy(Cart cart) throws Exception {
+        return shoppingCartMapper.UpdateCartBy(cart);
+    }
 }

@@ -60,7 +60,7 @@ public class SysParCom {
     public static String PIN_SUCCESS_MSG;
     public static String PIN_ADD_MSG;
     public static String M_PIN;
-
+    public static String ERP_PUSH;
 
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
@@ -112,6 +112,8 @@ public class SysParCom {
         PIN_SUCCESS_MSG = configuration.getString("pin_success_msg");
         PIN_ADD_MSG  = configuration.getString("pin_add_msg");
         M_PIN = configuration.getString("m.jump.pin");
+
+        ERP_PUSH = configuration.getString("erp.order.push");
 
     }
 

@@ -155,6 +155,56 @@
         </if>
     </update>
 
+    <update id="UpdateCartBy" parameterType="domain.Cart">
+        update sp_cart  set update_at= CURRENT_TIMESTAMP(0)
+        <if test="userId != null and userId!=''">
+            ,user_id=#{userId}
+        </if>
+        <if test="skuId != null and skuId!=''">
+            ,sku_id=#{skuId}
+        </if>
+        <if test="itemId != null and itemId!=''">
+            ,item_id=#{itemId}
+        </if>
+        <if test="amount != null and amount!=''">
+            ,amount=#{amount}
+        </if>
+        <if test="price != null and price!=''">
+            ,price=#{price}
+        </if>
+        <if test="destroyAt != null and destroyAt!=''">
+            ,destroy_at=CURRENT_TIMESTAMP(0)
+        </if>
+        <if test="orderId != null and orderId!=''">
+            ,order_id=#{orderId}
+        </if>
+        <if test="status != null and status!=''">
+            ,status=#{status}
+        </if>
+        <if test="skuTitle != null and skuTitle!=''">
+            ,sku_title=#{skuTitle}
+        </if>
+        <if test="skuType!=null and skuType !=''">
+            ,sku_type = #{skuType}
+        </if>
+        <if test="skuTypeId!=null and skuTypeId !=''">
+            ,sku_type_id = #{skuTypeId}
+        </if>
+        where 1=1
+        <if test="cartId!=null and cartId !=''">
+            and cart_id = #{cartId}
+        </if>
+        <if test="userId!=null and userId !=''">
+            and user_id = #{userId}
+        </if>
+        <if test="skuType!=null and skuType !=''">
+            and sku_type = #{skuType}
+        </if>
+        <if test="skuTypeId!=null and skuTypeId !=''">
+            and sku_type_id = #{skuTypeId}
+        </if>
+    </update>
+
     <insert id="addCart" parameterType="domain.Cart" useGeneratedKeys="true" keyProperty="cartId">
         insert into sp_cart (user_id
         ,sku_id
@@ -793,30 +843,44 @@
         pay_back_fee        ,
         reason              ,
         create_at           ,
-        amount              ,
+        <if test="amount!=null and amount!=''">
+            amount,
+        </if>
         <if test="refundImg!=null and refundImg!=''">
-            refund_img          ,
+            refund_img,
         </if>
         <if test="contactName!=null and contactName!=''">
-            contact_name        ,
+            contact_name,
         </if>
         <if test="contactTel!=null and contactTel!=''">
             contact_tel,
         </if>
-        user_id             ,
-        split_order_id      ,
-        sku_id
-        <if test="refundType!=null and refundType!=''">
-            ,refund_type
+        <if test="skuType!=null and skuType!=''">
+            sku_type,
         </if>
+        <if test="skuTypeId!=null and skuTypeId!=''">
+            sku_type_id,
+        </if>
+        <if test="skuId!=null and skuId!=''">
+            sku_id,
+        </if>
+        <if test="refundType!=null and refundType!=''">
+            refund_type,
+        </if>
+        <if test="splitOrderId!=null and splitOrderId!=''">
+            split_order_id,
+        </if>
+        user_id
         )values(
         #{orderId},
         #{payBackFee},
         #{reason},
         CURRENT_TIMESTAMP(0),
-        #{amount},
+        <if test="amount!=null and amount!=''">
+            #{amount},
+        </if>
         <if test="refundImg!=null and refundImg!=''">
-            #{refundImg}          ,
+            #{refundImg},
         </if>
         <if test="contactName!=null and contactName!=''">
             #{contactName},
@@ -824,12 +888,22 @@
         <if test="contactTel!=null and contactTel!=''">
             #{contactTel},
         </if>
-        #{userId},
-        #{splitOrderId},
-        #{skuId}
-        <if test="refundType!=null and refundType!=''">
-            ,#{refundType}
+        <if test="skuType!=null and skuType!=''">
+            #{skuType},
         </if>
+        <if test="skuTypeId!=null and skuTypeId!=''">
+            #{skuTypeId},
+        </if>
+        <if test="skuId!=null and skuId!=''">
+            #{skuId},
+        </if>
+        <if test="refundType!=null and refundType!=''">
+            #{refundType},
+        </if>
+        <if test="splitOrderId!=null and splitOrderId!=''">
+            #{splitOrderId},
+        </if>
+          #{userId}
         )
     </insert>
 
@@ -876,6 +950,12 @@
         <if test="orderId!=null and orderId!=''">
             and order_id = #{orderId}
         </if>
+        <if test="skuType!=null and skuType!=''">
+            and sku_type = #{skuType}
+        </if>
+        <if test="skuTypeId!=null and skuTypeId!=''">
+            and skut_type_id = #{skuTypeId}
+        </if>
     </insert>
 
     <select id="selectRefund" parameterType="domain.Refund" resultType="domain.Refund" >
@@ -900,6 +980,8 @@
         reject_reason       ,
         user_id             ,
         split_order_id      ,
+        sku_type,
+        sku_type_id,
         sku_id,
         refund_type
         from sp_refund where 1=1
