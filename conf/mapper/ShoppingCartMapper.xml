@@ -711,7 +711,14 @@
         postal_fee            ,
         express_num           ,
         express_code          ,
-        express_nm
+        express_nm,
+        pay_insp_return_code,
+        pay_insp_return_msg,
+        pay_customs_return_code,
+        pay_customs_return_msg,
+        sub_pg_trade_no,
+        pay_response_code,
+        pay_response_msg
         from order_split where 1=1
         <if test="splitId!=null and splitId!=''">
             and split_id = #{splitId}

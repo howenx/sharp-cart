@@ -29,8 +29,12 @@ public class OrderSplit implements Serializable{
     private BigDecimal shipFee;
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal postalFee;
-    private String  cbeArea;
 
+    private String expressNum;
+    private String expressCode;
+    private String expressNm;
+
+    private String  cbeArea;
     private String payInspReturnCode      ;
     private String payInspReturnMsg       ;
     private String payCustomsReturnCode   ;
@@ -43,7 +47,7 @@ public class OrderSplit implements Serializable{
     public OrderSplit() {
     }
 
-    public OrderSplit(Long splitId, Long orderId, String state, String cbeCode, String inspReturnCode, String inspReturnMsg, String customsReturnCode, String customsReturnMsg, BigDecimal totalFee, BigDecimal totalPayFee, Integer totalAmount, BigDecimal shipFee, BigDecimal postalFee, String cbeArea, String payInspReturnCode, String payInspReturnMsg, String payCustomsReturnCode, String payCustomsReturnMsg, String subPgTradeNo, String payResponseCode, String payResponseMsg) {
+    public OrderSplit(Long splitId, Long orderId, String state, String cbeCode, String inspReturnCode, String inspReturnMsg, String customsReturnCode, String customsReturnMsg, BigDecimal totalFee, BigDecimal totalPayFee, Integer totalAmount, BigDecimal shipFee, BigDecimal postalFee, String expressNum, String expressCode, String expressNm, String cbeArea, String payInspReturnCode, String payInspReturnMsg, String payCustomsReturnCode, String payCustomsReturnMsg, String subPgTradeNo, String payResponseCode, String payResponseMsg) {
         this.splitId = splitId;
         this.orderId = orderId;
         this.state = state;
@@ -57,6 +61,9 @@ public class OrderSplit implements Serializable{
         this.totalAmount = totalAmount;
         this.shipFee = shipFee;
         this.postalFee = postalFee;
+        this.expressNum = expressNum;
+        this.expressCode = expressCode;
+        this.expressNm = expressNm;
         this.cbeArea = cbeArea;
         this.payInspReturnCode = payInspReturnCode;
         this.payInspReturnMsg = payInspReturnMsg;
@@ -171,6 +178,30 @@ public class OrderSplit implements Serializable{
         this.postalFee = postalFee;
     }
 
+    public String getExpressNum() {
+        return expressNum;
+    }
+
+    public void setExpressNum(String expressNum) {
+        this.expressNum = expressNum;
+    }
+
+    public String getExpressCode() {
+        return expressCode;
+    }
+
+    public void setExpressCode(String expressCode) {
+        this.expressCode = expressCode;
+    }
+
+    public String getExpressNm() {
+        return expressNm;
+    }
+
+    public void setExpressNm(String expressNm) {
+        this.expressNm = expressNm;
+    }
+
     public String getCbeArea() {
         return cbeArea;
     }
@@ -235,7 +266,6 @@ public class OrderSplit implements Serializable{
         this.payResponseMsg = payResponseMsg;
     }
 
-
     @Override
     public String toString() {
         return "OrderSplit{" +
@@ -252,6 +282,9 @@ public class OrderSplit implements Serializable{
                 ", totalAmount=" + totalAmount +
                 ", shipFee=" + shipFee +
                 ", postalFee=" + postalFee +
+                ", expressNum='" + expressNum + '\'' +
+                ", expressCode='" + expressCode + '\'' +
+                ", expressNm='" + expressNm + '\'' +
                 ", cbeArea='" + cbeArea + '\'' +
                 ", payInspReturnCode='" + payInspReturnCode + '\'' +
                 ", payInspReturnMsg='" + payInspReturnMsg + '\'' +

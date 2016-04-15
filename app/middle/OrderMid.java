@@ -12,14 +12,13 @@ import service.CartService;
 import service.IdService;
 import service.PromotionService;
 import service.SkuService;
+import util.CalCountDown;
 import util.ComUtil;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +49,9 @@ public class OrderMid {
     @Inject
     private Application application;
 
+    @Inject
+    private OrderCtrl orderCtrl;
+
     /**
      * 订单结算
      *
@@ -60,7 +62,7 @@ public class OrderMid {
      */
     public SettleVo OrderSettle(SettleOrderDTO settleOrderDTO, Long userId) throws Exception {
 
-        SettleVo  settleVo = new SettleVo();
+        SettleVo settleVo = new SettleVo();
 
         //取用户地址
         Optional<Address> addressOptional = Optional.ofNullable(selectAddress(settleOrderDTO.getAddressId(), userId));
@@ -200,7 +202,7 @@ public class OrderMid {
 
 
             Optional<List<SkuVo>> skuOptional = Optional.ofNullable(skuService.getAllSkus(skuVo));
-            if (skuOptional.isPresent()&&skuOptional.get().size()>0) { //可能为null,加入数量判断
+            if (skuOptional.isPresent() && skuOptional.get().size() > 0) { //可能为null,加入数量判断
                 skuVo = skuOptional.get().get(0);
             } else {
                 settleFeeVo.setMessageCode(Message.ErrorCode.SKU_DETAIL_NULL_EXCEPTION.getIndex());
@@ -214,8 +216,7 @@ public class OrderMid {
             } else if (!skuVo.getSkuTypeStatus().equals("Y")) {
                 settleFeeVo.setMessageCode(Message.ErrorCode.SKU_DOWN.getIndex());
                 return settleFeeVo;
-            }
-            else if (comUtil.isOutOfRestrictAmount(cartDto.getAmount(),skuVo)) {
+            } else if (comUtil.isOutOfRestrictAmount(cartDto.getAmount(), skuVo)) {
                 settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex());
                 return settleFeeVo;
             } else if (cartDto.getAmount() > skuVo.getRestAmount()) {
@@ -224,18 +225,18 @@ public class OrderMid {
             } else {
                 //邮费
                 if (address != null && address.getProvinceCode() != null) {
-                    totalWeight+=skuVo.getInvWeight();
+                    totalWeight += skuVo.getInvWeight();
                 }
 
                 skuTypeList.add(skuVo.getSkuType());
 
-                if (cartDto.getSkuType().equals("pin")){
+                if (cartDto.getSkuType().equals("pin")) {
                     PinActivity pinActivity = new PinActivity();
                     pinActivity.setMasterUserId(userId);
                     pinActivity.setPinId(cartDto.getSkuTypeId());
                     pinActivity.setStatus("Y");
-                    List<PinActivity> pinActivities=promotionService.selectPinActivity(pinActivity);
-                    if (pinActivities.size()>0){
+                    List<PinActivity> pinActivities = promotionService.selectPinActivity(pinActivity);
+                    if (pinActivities.size() > 0) {
                         settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_PIN_SINGLE_ONE_TIME.getIndex());
                     }
 
@@ -269,10 +270,10 @@ public class OrderMid {
                             orPinRestrict = true;
                         }
                     }
-                } else{
+                } else {
                     if (cartDto.getSkuType().equals("vary")) {
                         Integer varyAmount = application.validateVary(skuVo.getSkuTypeId(), cartDto.getAmount());
-                        if (varyAmount==null || varyAmount<0){
+                        if (varyAmount == null || varyAmount < 0) {
                             settleFeeVo.setMessageCode(Message.ErrorCode.VARY_OVER_LIMIT.getIndex());
                         }
                     }
@@ -285,7 +286,7 @@ public class OrderMid {
         BigDecimal shipFeeSingle = BigDecimal.ZERO;
 
         if (address != null && address.getProvinceCode() != null) {
-            shipFeeSingle= calculateShipFee(address.getProvinceCode(),settleDTO.getInvArea(),totalWeight);
+            shipFeeSingle = calculateShipFee(address.getProvinceCode(), settleDTO.getInvArea(), totalWeight);
         }
 
 
@@ -327,7 +328,7 @@ public class OrderMid {
         }
 
         //如果存在单个海关的金额超过1000,返回   直邮不限制
-        if (comUtil.isOutOfPostalLimit(settleDTO.getInvArea(),totalFeeSingle)) {
+        if (comUtil.isOutOfPostalLimit(settleDTO.getInvArea(), totalFeeSingle)) {
             settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_SUM_PRICE.getIndex());
             return settleFeeVo;
         }
@@ -351,9 +352,9 @@ public class OrderMid {
                 shipFee = shipFee.add(carriage.getFirstFee());
             } else {
                 Integer addWeight = 0;
-                if ((totalWeight-carriage.getFirstNum())%carriage.getAddNum()>0){
-                    addWeight = (totalWeight-carriage.getFirstNum())/carriage.getAddNum()+1;
-                }else addWeight = (totalWeight-carriage.getFirstNum())/carriage.getAddNum();
+                if ((totalWeight - carriage.getFirstNum()) % carriage.getAddNum() > 0) {
+                    addWeight = (totalWeight - carriage.getFirstNum()) / carriage.getAddNum() + 1;
+                } else addWeight = (totalWeight - carriage.getFirstNum()) / carriage.getAddNum();
                 shipFee = shipFee.add(carriage.getFirstFee()).add(new BigDecimal(addWeight).multiply(carriage.getAddFee()));
             }
         }
@@ -362,7 +363,7 @@ public class OrderMid {
 
     //计算行邮税
     private BigDecimal calculatePostalTax(String postalTaxRate, BigDecimal price, Integer amount) {
-        if (postalTaxRate==null){
+        if (postalTaxRate == null) {
             return BigDecimal.ZERO;
         }
         BigDecimal postalFee = BigDecimal.ZERO;
@@ -464,11 +465,11 @@ public class OrderMid {
 
             BigDecimal totalDiscountSingle = BigDecimal.ZERO;//用于计数除过最后一笔订单折扣后总计
 
-            for (Integer i=0;i<settleFeeVoList.size();i++) {
-                BigDecimal singleDiscount =settleFeeVoList.get(i).getSingleCustomsSumFee().divide(settleVo.getTotalFee(),BigDecimal.ROUND_DOWN).multiply(discount);
-                if (i==settleFeeVoList.size()-1){
+            for (Integer i = 0; i < settleFeeVoList.size(); i++) {
+                BigDecimal singleDiscount = settleFeeVoList.get(i).getSingleCustomsSumFee().divide(settleVo.getTotalFee(), BigDecimal.ROUND_DOWN).multiply(discount);
+                if (i == settleFeeVoList.size() - 1) {
                     settleFeeVoList.get(i).setDiscountFeeSingleCustoms(discount.subtract(totalDiscountSingle));
-                }else {
+                } else {
                     settleFeeVoList.get(i).setDiscountFeeSingleCustoms(singleDiscount);
                     totalDiscountSingle = singleDiscount.add(totalDiscountSingle);
                 }
@@ -492,4 +493,179 @@ public class OrderMid {
         }
         return settleVo;
     }
+
+
+    public List<Map> getOrders(Order order) throws Exception {
+        Optional<List<Order>> orderList = Optional.ofNullable(cartService.getOrderBy(order));
+
+        //返回总数据
+        List<Map> mapList = new ArrayList<>();
+
+        try {
+            if (orderList.isPresent() && orderList.get().size() > 0) {
+
+                for (Order o : orderList.get()) {
+                    Map<String, Object> map = new HashMap<>();
+                    Map<String, Object> orderAddress = getOrderAddress(o);
+
+                    if (orderAddress != null) map.putAll(orderAddress);
+
+                    Map<String, Object> orderRefund = getOrderRefund(o);
+
+                    if (orderRefund != null) map.putAll(orderRefund);
+
+                    if (o.getOrderStatus().equals("I"))
+                        o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
+
+                    //未支付订单
+                    if (o.getOrderStatus().equals("I") || o.getOrderStatus().equals("C")) {
+                        Map<String, Object> orderI = getIorders(o);
+
+                        if (orderI != null) map.putAll(orderI);
+                    }else {
+                        Map<String, Object> orderSplit = getSplitOrders(o);
+
+                        if (orderSplit != null) map.putAll(orderSplit);
+                    }
+                    mapList.add(map);
+                }
+                return mapList;
+            }else return null;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+
+    private Map<String, Object> getIorders(Order order) throws Exception {
+
+        //用于保存每个订单对应的明细list和地址信息
+        Map<String, Object> map = new HashMap<>();
+
+        OrderLine orderLine = new OrderLine();
+        orderLine.setOrderId(order.getOrderId());
+
+        List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
+
+        //每个订单对应的商品明细
+        List<CartSkuDto> skuDtoList = new ArrayList<>();
+
+        Integer orderAmount = 0;
+
+        for (OrderLine orl : orderLineList) {
+            CartSkuDto skuDto = new CartSkuDto();
+
+            //组装返回的订单商品明细
+            skuDto.setSkuId(orl.getSkuId());
+            skuDto.setAmount(orl.getAmount());
+            orderAmount += skuDto.getAmount();
+            skuDto.setPrice(orl.getPrice());
+            skuDto.setSkuTitle(orl.getSkuTitle());
+            skuDto.setInvImg(orderCtrl.getInvImg(orl.getSkuImg()));
+            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getSkuType() + "/" + orl.getItemId() + "/" + orl.getSkuTypeId());
+
+            skuDto.setItemColor(orl.getSkuColor());
+            skuDto.setItemSize(orl.getSkuSize());
+            skuDto.setSkuType(orl.getSkuType());
+            skuDto.setSkuTypeId(orl.getSkuTypeId());
+            skuDtoList.add(skuDto);
+        }
+
+        order.setOrderAmount(orderAmount);
+        //组装每个订单对应的明细和地址
+        map.put("order", order);
+        map.put("sku", skuDtoList);
+
+        return map;
+    }
+
+    private Map<String, Object> getSplitOrders(Order order) throws Exception {
+        //用于保存每个订单对应的明细list和地址信息
+        Map<String, Object> map = new HashMap<>();
+
+        OrderSplit orderSplit = new OrderSplit();
+        orderSplit.setOrderId(order.getOrderId());
+        Optional<List<OrderSplit>> optionalOrderSplitList = Optional.ofNullable(cartService.selectOrderSplit(orderSplit));
+        if (optionalOrderSplitList.isPresent() && optionalOrderSplitList.get().size() > 0) {
+            for (OrderSplit osp : optionalOrderSplitList.get()) {
+                Order orderS = new Order();
+                orderS.setOrderId(osp.getOrderId());
+                orderS.setOrderAmount(osp.getTotalAmount());
+                orderS.setPayMethod(order.getPayMethod());
+                orderS.setPayTotal(osp.getTotalPayFee());
+                orderS.setTotalFee(osp.getTotalFee());
+                orderS.setShipFee(osp.getShipFee());
+                orderS.setPostalFee(osp.getPostalFee());
+                orderS.setOrderCreateAt(order.getOrderCreateAt());
+                orderS.setOrderStatus(order.getOrderStatus());
+
+                OrderLine orderLine = new OrderLine();
+                orderLine.setOrderId(order.getOrderId());
+                orderS.setOrderSplitId(osp.getSplitId());
+                List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
+
+                //每个订单对应的商品明细
+                List<CartSkuDto> skuDtoList = new ArrayList<>();
+
+                for (OrderLine orl : orderLineList) {
+                    CartSkuDto skuDto = new CartSkuDto();
+
+                    //组装返回的订单商品明细
+                    skuDto.setSkuId(orl.getSkuId());
+                    skuDto.setAmount(orl.getAmount());
+                    skuDto.setPrice(orl.getPrice());
+                    skuDto.setSkuTitle(orl.getSkuTitle());
+
+                    skuDto.setInvImg(orderCtrl.getInvImg(orl.getSkuImg()));
+                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getSkuType() + "/" + orl.getItemId() + "/" + orl.getSkuTypeId());
+
+                    skuDto.setSkuType(orl.getSkuType());
+                    skuDto.setSkuTypeId(orl.getSkuTypeId());
+                    skuDto.setItemColor(orl.getSkuColor());
+                    skuDto.setItemSize(orl.getSkuSize());
+                    skuDtoList.add(skuDto);
+                }
+
+                map.put("order", orderS);
+                map.put("sku", skuDtoList);
+            }
+            return map;
+        } else return null;
+    }
+
+    private Map<String, Object> getOrderAddress(Order order) throws Exception {
+        //用于保存每个订单对应的明细list和地址信息
+        Map<String, Object> map = new HashMap<>();
+        OrderAddress orderAddress = new OrderAddress();
+        orderAddress.setOrderId(order.getOrderId());
+
+        Optional<List<OrderAddress>> orderAddressOptional = Optional.ofNullable(cartService.selectOrderAddress(orderAddress));
+
+        if (orderAddressOptional.isPresent() && orderAddressOptional.get().size() > 0) {
+            //获取地址信息
+            Address address = new Address();
+            address.setDeliveryCity(orderAddressOptional.get().get(0).getDeliveryCity());
+            address.setDeliveryDetail(orderAddressOptional.get().get(0).getDeliveryAddress());
+            address.setIdCardNum(orderAddressOptional.get().get(0).getDeliveryCardNum());
+            address.setName(orderAddressOptional.get().get(0).getDeliveryName());
+            address.setTel(orderAddressOptional.get().get(0).getDeliveryTel());
+            map.put("address", address);
+            return map;
+        } else return null;
+    }
+
+    private Map<String, Object> getOrderRefund(Order order) throws Exception {
+        //用于保存每个订单对应的明细list和地址信息
+        Map<String, Object> map = new HashMap<>();
+        //查询是否存在退款信息
+        Refund refund = new Refund();
+        refund.setOrderId(order.getOrderId());
+        Optional<List<Refund>> listRefundOptional = Optional.ofNullable(cartService.selectRefund(refund));
+        if (listRefundOptional.isPresent() && listRefundOptional.get().size() > 0) {
+            map.put("refund", listRefundOptional.get().get(0));
+            return map;
+        } else return null;
+    }
+
 }

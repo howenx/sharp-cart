@@ -61,6 +61,7 @@ public class SysParCom {
     public static String PIN_ADD_MSG;
     public static String M_PIN;
     public static String ERP_PUSH;
+    public static String EXPRESS_URL;
 
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
@@ -114,6 +115,8 @@ public class SysParCom {
         M_PIN = configuration.getString("m.jump.pin");
 
         ERP_PUSH = configuration.getString("erp.order.push");
+
+        EXPRESS_URL=configuration.getString("express.url");
 
     }
 

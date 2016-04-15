@@ -13,6 +13,7 @@ import play.Logger;
 import play.data.Form;
 import play.libs.F;
 import play.libs.Json;
+import play.libs.ws.WSClient;
 import play.mvc.*;
 import service.CartService;
 import service.PromotionService;
@@ -25,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static akka.pattern.Patterns.ask;
+import static modules.SysParCom.EXPRESS_URL;
 import static play.libs.Json.newObject;
 
 /**
@@ -53,6 +55,9 @@ public class OrderCtrl extends Controller {
 
     @Inject
     private OrderMid orderMid;
+
+    @Inject
+    private WSClient ws;
 
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -195,147 +200,60 @@ public class OrderCtrl extends Controller {
                 order.setOrderId(orderId);
             }
             order.setUserId(userId);
-
-            Optional<List<Order>> orderList = Optional.ofNullable(cartService.getOrderBy(order));
-
             //返回总数据
-            List<Map> mapList = new ArrayList<>();
+            List<Map> mapList = orderMid.getOrders(order);
 
-            if (orderList.isPresent()) {
-
-                for (Order o : orderList.get()) {
-                    //用于保存每个订单对应的明细list和地址信息
-                    Map<String, Object> map = new HashMap<>();
-
-                    OrderAddress orderAddress = new OrderAddress();
-                    orderAddress.setOrderId(o.getOrderId());
-
-                    Optional<List<OrderAddress>> orderAddressOptional = Optional.ofNullable(cartService.selectOrderAddress(orderAddress));
-
-                    if (orderAddressOptional.isPresent()) {
-                        //获取地址信息
-                        Address address = new Address();
-                        address.setDeliveryCity(orderAddressOptional.get().get(0).getDeliveryCity());
-                        address.setDeliveryDetail(orderAddressOptional.get().get(0).getDeliveryAddress());
-                        address.setIdCardNum(orderAddressOptional.get().get(0).getDeliveryCardNum());
-                        address.setName(orderAddressOptional.get().get(0).getDeliveryName());
-                        address.setTel(orderAddressOptional.get().get(0).getDeliveryTel());
-                        map.put("address", address);
-
-                    }
-
-                    //查询是否存在退款信息
-                    Refund refund = new Refund();
-                    refund.setOrderId(o.getOrderId());
-                    Optional<List<Refund>> listRefundOptional = Optional.ofNullable(cartService.selectRefund(refund));
-                    if (listRefundOptional.isPresent() && listRefundOptional.get().size()>0){
-                        map.put("refund",listRefundOptional.get().get(0));
-                    }
-
-                    if (o.getOrderStatus().equals("I"))
-                        o.setCountDown(CalCountDown.getTimeSubtract(o.getOrderCreateAt()));
-
-                    //未支付订单
-                    if (o.getOrderStatus().equals("I") || o.getOrderStatus().equals("C")) {
-
-                        OrderLine orderLine = new OrderLine();
-                        orderLine.setOrderId(o.getOrderId());
-
-                        List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
-
-                        //每个订单对应的商品明细
-                        List<CartSkuDto> skuDtoList = new ArrayList<>();
-
-                        Integer orderAmount = 0;
-
-                        for (OrderLine orl : orderLineList) {
-                            CartSkuDto skuDto = new CartSkuDto();
-
-                            //组装返回的订单商品明细
-                            skuDto.setSkuId(orl.getSkuId());
-                            skuDto.setAmount(orl.getAmount());
-                            orderAmount += skuDto.getAmount();
-                            skuDto.setPrice(orl.getPrice());
-                            skuDto.setSkuTitle(orl.getSkuTitle());
-                            skuDto.setInvImg(getInvImg(orl.getSkuImg()));
-                            skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getSkuType() + "/" + orl.getItemId() + "/" + orl.getSkuTypeId());
-
-                            skuDto.setItemColor(orl.getSkuColor());
-                            skuDto.setItemSize(orl.getSkuSize());
-                            skuDto.setSkuType(orl.getSkuType());
-                            skuDto.setSkuTypeId(orl.getSkuTypeId());
-                            skuDtoList.add(skuDto);
-                        }
-
-                        o.setOrderAmount(orderAmount);
-                        //组装每个订单对应的明细和地址
-                        map.put("order", o);
-                        map.put("sku", skuDtoList);
-                        mapList.add(map);
-                    }
-                    //否则以子订单来显示
-                    else {
-                        OrderSplit orderSplit = new OrderSplit();
-                        orderSplit.setOrderId(o.getOrderId());
-                        Optional<List<OrderSplit>> optionalOrderSplitList = Optional.ofNullable(cartService.selectOrderSplit(orderSplit));
-                        if (optionalOrderSplitList.isPresent()) {
-                            for (OrderSplit osp : optionalOrderSplitList.get()) {
-                                Order orderS = new Order();
-                                orderS.setOrderId(osp.getOrderId());
-                                orderS.setOrderAmount(osp.getTotalAmount());
-                                orderS.setPayMethod(o.getPayMethod());
-                                orderS.setPayTotal(osp.getTotalPayFee());
-                                orderS.setTotalFee(osp.getTotalFee());
-                                orderS.setShipFee(osp.getShipFee());
-                                orderS.setPostalFee(osp.getPostalFee());
-                                orderS.setOrderCreateAt(o.getOrderCreateAt());
-                                orderS.setOrderStatus(o.getOrderStatus());
-
-                                OrderLine orderLine = new OrderLine();
-                                orderLine.setOrderId(o.getOrderId());
-                                orderS.setOrderSplitId(osp.getSplitId());
-                                List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
-
-                                //每个订单对应的商品明细
-                                List<CartSkuDto> skuDtoList = new ArrayList<>();
-
-                                for (OrderLine orl : orderLineList) {
-                                    CartSkuDto skuDto = new CartSkuDto();
-
-                                    //组装返回的订单商品明细
-                                    skuDto.setSkuId(orl.getSkuId());
-                                    skuDto.setAmount(orl.getAmount());
-                                    skuDto.setPrice(orl.getPrice());
-                                    skuDto.setSkuTitle(orl.getSkuTitle());
-
-                                    skuDto.setInvImg(getInvImg(orl.getSkuImg()));
-                                    skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getSkuType() + "/" + orl.getItemId() + "/" + orl.getSkuTypeId());
-
-                                    skuDto.setSkuType(orl.getSkuType());
-                                    skuDto.setSkuTypeId(orl.getSkuTypeId());
-                                    skuDto.setItemColor(orl.getSkuColor());
-                                    skuDto.setItemSize(orl.getSkuSize());
-                                    skuDtoList.add(skuDto);
-                                }
-
-                                map.put("order", orderS);
-                                map.put("sku", skuDtoList);
-                                mapList.add(map);
-                            }
-                        }
-                    }
-                }
+            if (mapList != null && mapList.size() > 0) {
+                Logger.error("擦擦啊擦------>\n" + Json.toJson(mapList));
+                result.putPOJO("orderList", Json.toJson(mapList));
             }
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-            Logger.error("擦擦啊擦------>\n"+Json.toJson(mapList));
-            result.putPOJO("orderList", Json.toJson(mapList));
-
             return ok(result);
         } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
+        }
+    }
+
+    @Security.Authenticated(UserAuth.class)
+    public F.Promise<Result> express(Long orderId) {
+        ObjectNode result = newObject();
+        Order order = new Order();
+        order.setOrderId(orderId);
+        try {
+            Optional<List<Order>> orderList = Optional.ofNullable(cartService.getOrderBy(order));
+
+            if(orderList.isPresent()&&orderList.get().size()>0){
+                order = orderList.get().get(0);
+                if (order.getOrderStatus().equals("D") ||order.getOrderStatus().equals("R")){
+                    OrderSplit orderSplit = new OrderSplit();
+                    orderSplit.setOrderId(order.getOrderId());
+                    Optional<List<OrderSplit>> optionalOrderSplitList = Optional.ofNullable(cartService.selectOrderSplit(orderSplit));
+                    if (optionalOrderSplitList.isPresent() && optionalOrderSplitList.get().size() > 0) {
+                        orderSplit = optionalOrderSplitList.get().get(0);
+                        Logger.error("快递编号: " + orderSplit.getExpressCode() + "\n快递名称: " + orderSplit.getExpressNm());
+//                        orderSplit.setExpressCode("jd");
+//                        orderSplit.setExpressNum("12837698789");
+                        return ws.url(EXPRESS_URL + "&com=" + orderSplit.getExpressCode() + "&nu=" + orderSplit.getExpressCode()).get().map(wsResponse -> ok(wsResponse.asJson()));
+                    } else {
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.DATA_NOT_EXISTS.getIndex()), Message.ErrorCode.DATA_NOT_EXISTS.getIndex())));
+                        return F.Promise.promise(() -> ok(result));
+                    }
+                }else{
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_NOT_DELIVERY.getIndex()), Message.ErrorCode.ORDER_NOT_DELIVERY.getIndex())));
+                    return F.Promise.promise(() -> ok(result));
+                }
+            }else{
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_NOT_EXISTS.getIndex()), Message.ErrorCode.ORDER_NOT_EXISTS.getIndex())));
+                return F.Promise.promise(() -> ok(result));
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("server exception:" + ex.getMessage());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return F.Promise.promise(() -> ok(result));
         }
     }
 
@@ -506,8 +424,6 @@ public class OrderCtrl extends Controller {
             }
         }
     }
-
-
 
 
     /**

@@ -54,6 +54,7 @@ public class Order implements Serializable {
     @JsonIgnore
     private Long                pinActiveId;       //拼购活动ID
 
+
     public Order() {
     }
 
