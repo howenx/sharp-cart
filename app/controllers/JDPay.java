@@ -250,7 +250,7 @@ public class JDPay extends Controller {
             if (params.containsKey("trade_class") && params.get("trade_class").equals("SALE")) {
                 if (params.containsKey("out_trade_no") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
                     Logger.info("京东支付异步通知数据: " + params.toString());
-                    if (jdPayMid.asynPay(params).equals("success")) {
+                    if (jdPayMid.asynPay(params,"back").equals("success")) {
                         Order order = new Order();
                         order.setOrderId(Long.valueOf(params.get("out_trade_no")));
                         try {
@@ -324,7 +324,7 @@ public class JDPay extends Controller {
         } else {
             if (params.containsKey("out_trade_no") && params.containsKey("token") && params.containsKey("trade_no") && params.containsKey("trade_status") && params.get("trade_status").equals("FINI")) {
                 //需要先判断订单状态,如果是S状态就去调用否则不能2次调用,而且如果订单是被更新为PF状态,那么就需要前段返回到拼购失败页面
-                if (jdPayMid.asynPay(params).equals("success")) {
+                if (jdPayMid.asynPay(params,"front").equals("success")) {
                     Order order = new Order();
                     order.setOrderId(Long.valueOf(params.get("out_trade_no")));
 

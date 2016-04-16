@@ -68,7 +68,7 @@ public class JDPayMid {
      *
      * @param params 参数
      */
-    public String asynPay(Map<String, String> params) {
+    public String asynPay(Map<String, String> params,String method) {
 
         Order order = new Order();
         order.setOrderId(Long.valueOf(params.get("out_trade_no")));
@@ -87,18 +87,17 @@ public class JDPayMid {
 
                 if (cartService.updateOrder(order)) {
 
-                    Logger.info("京东支付回调订单更新payFrontNotify: " + Json.toJson(order));
+                    Logger.info("京东支付回调订单更新订单信息: " + Json.toJson(order));
                     system.actorSelection(ERP_PUSH).tell(order.getOrderId(), ActorRef.noSender());
                     Logger.info("调用ERP推送订单:"+order.getOrderId());
 
-                    if (params.containsKey("token")) {
+                    if (params.containsKey("token") && method.equals("front")) { //支付前端通知返回token
                         Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
                         IdPlus idPlus = new IdPlus();
                         idPlus.setUserId(userId);
                         Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
                         idPlus.setPayJdToken(params.get("token"));
                         if (idPlusOptional.isPresent()) {
-                            Logger.error("idPlus内容---->\n"+idPlus);
                             if (idService.updateIdPlus(idPlus)) {
                                 Logger.info("京东支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
                                 return "success";
@@ -115,7 +114,10 @@ public class JDPayMid {
                                 return "error";
                             }
                         }
-                    } else {
+                    } else if (method.equals("back")){
+                        Logger.error("京东支付后端回调返回成功");
+                        return "success";
+                    }else{
                         Logger.error("asynPay未找到返回数据中的token字断");
                         return "error";
                     }
