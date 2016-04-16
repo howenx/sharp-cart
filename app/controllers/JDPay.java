@@ -258,16 +258,30 @@ public class JDPay extends Controller {
                             if (orders.size() > 0) {
                                 order = orders.get(0);
                                 if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
-                                    if (dealPinActivity(params, order) == null) return ok("error");
-                                    else return ok("success");
-                                } else return ok("success");
-                            } else return ok("error");
+                                    if (dealPinActivity(params, order) == null) {
+                                        Logger.error("************京东支付异步通知 拼购订单返回处理结果为空************");
+                                        return ok("error");
+                                    }
+                                    else {
+                                        Logger.error("************京东支付异步通知 拼购订单返回成功************");
+                                        return ok("success");
+                                    }
+                                } else {
+                                    Logger.error("************京东支付异步通知 普通订单返回成功************");
+                                    return ok("success");
+                                }
+                            } else {
+                                Logger.error("************京东支付异步通知 订单未找到************");
+                                return ok("error");
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                             return ok("error");
                         }
+                    }else {
+                        Logger.error("************京东支付异步通知 异步方法调用返回失败************");
+                        return ok("error");
                     }
-                    return ok("error");
                 } else {
                     Logger.error("支付回调参数校验失败或者支付状态有误: " + params.toString());
                     return ok("error");
