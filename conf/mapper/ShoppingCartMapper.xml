@@ -941,6 +941,15 @@
         <if test="state!=null and state!=''">
             ,state =  #{state}
         </if>
+        <if test="pgCode!=null and pgCode!=''">
+            ,pg_code =  #{pgCode}
+        </if>
+        <if test="pgMessage!=null and pgMessage!=''">
+            ,pg_message =  #{pgMessage}
+        </if>
+        <if test="pgTradeNo!=null and pgTradeNo!=''">
+            ,pg_trade_no =  #{pgTradeNo}
+        </if>
         where 1=1
         <if test="id!=null and id!=''">
             and id = #{id}

@@ -72,6 +72,7 @@ public class Message implements Serializable{
         DATA_NOT_EXISTS("未找到数据",1019),
         ORDER_NOT_EXISTS("未查询到此订单信息",1020),
         ORDER_NOT_DELIVERY("此订单尚未发货",1021),
+        CONFIRM_DELIVERY_FAIL("确认收货失败",1022),
 
         SKU_AMOUNT_SHORTAGE("亲,此件商品库存不足了", 2001),
         SKU_INVALID("亲,您已经长时间未操作,此商品已经失效,建议您刷新购物车", 2002),

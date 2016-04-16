@@ -7,7 +7,6 @@ import domain.Order;
 import domain.OrderLine;
 import domain.Sku;
 import play.Logger;
-import play.libs.Json;
 import service.CartService;
 import service.SkuService;
 
@@ -19,10 +18,10 @@ import java.util.Optional;
  * 取消订单
  * Created by howen on 15/12/19.
  */
-public class CancelOrderActor extends AbstractActor {
+public class ResumeInvActor extends AbstractActor {
 
     @Inject
-    public CancelOrderActor(CartService cartService, SkuService skuService) {
+    public ResumeInvActor(CartService cartService, SkuService skuService) {
         receive(ReceiveBuilder.match(Long.class, orderId -> {
 
             Order order = new Order();
@@ -38,10 +37,14 @@ public class CancelOrderActor extends AbstractActor {
             if (listOptional.isPresent() && listOptional.get().size() > 0) {
                 order = listOptional.get().get(0);
 
+                Logger.error("申请退款后恢复库存,订单明细----->"+order.toString());
 
-                if (order.getOrderStatus().equals("I")) {
+
+                if (order.getOrderStatus().equals("S")) {
                     //恢复库存
                     if (orderLineList.isPresent()) {
+
+                        Logger.error("申请退款后恢复库存,订单内容---->"+orderLineList.get().toString());
 
                         orderLineList.get().forEach(ordL -> {
                             Sku sku = new Sku();
@@ -49,7 +52,7 @@ public class CancelOrderActor extends AbstractActor {
                             try {
                                 sku = skuService.getInv(sku);
                             } catch (Exception e) {
-                                Logger.error("CancelOrderActor Sku Select Error:" + e.getMessage());
+                                Logger.error("ResumeInvActor Sku Select Error:" + e.getMessage());
                                 e.printStackTrace();
                             }
                             switch (sku.getState()) {
@@ -71,19 +74,19 @@ public class CancelOrderActor extends AbstractActor {
                                 if (skuService.updateInv(sku))
                                     Logger.debug("恢复库存ID: " + sku.getId()+" 需要恢复的数量: "+ordL.getAmount());
                             } catch (Exception e) {
-                                Logger.error("CancelOrderActor Error:" + e.getMessage());
+                                Logger.error("ResumeInvActor Error:" + e.getMessage());
                                 sender().tell(500,self());
                                 e.printStackTrace();
                             }
                         });
-                        //更新订单状态为取消状态
-                        order.setOrderStatus("C");
+                        //更新订单状态为退款状态
+                        order.setOrderStatus("T");
                         try {
                             if (cartService.updateOrder(order))
-                                Logger.debug("取消订单,更新订单状态,订单ID: " + order.getOrderId());
+                                Logger.info("更新订单退款状态,订单ID: " + order.getOrderId());
                         } catch (Exception e) {
                             sender().tell(500,self());
-                            Logger.error("CancelOrderActor 更新订单状态 Error:" + e.getMessage());
+                            Logger.error("ResumeInvActor 更新订单状态 Error:" + e.getMessage());
                             e.printStackTrace();
                         }
 
@@ -96,10 +99,10 @@ public class CancelOrderActor extends AbstractActor {
                             couponVo = couponVoList.get().get(0);
                             try {
                                 if (cartService.deleteCouponF(couponVo))
-                                    Logger.debug("取消订单,删除免邮券ID: " + couponVo.getCoupId());
+                                    Logger.debug("恢复库存,删除免邮券ID: " + couponVo.getCoupId());
                             } catch (Exception e) {
                                 sender().tell(500,self());
-                                Logger.error("CancelOrderActor 删除免邮券 Error:" + e.getMessage());
+                                Logger.error("ResumeInvActor 删除免邮券 Error:" + e.getMessage());
                                 e.printStackTrace();
                             }
                         }
@@ -114,7 +117,7 @@ public class CancelOrderActor extends AbstractActor {
                                 couponVo1.setOrderId(((Integer) 0).longValue());
                                 try {
                                     if (cartService.updateCoupon(couponVo1))
-                                        Logger.debug("取消订单,更新优惠券ID: " + couponVo1.getCoupId());
+                                        Logger.debug("恢复库存,更新优惠券ID: " + couponVo1.getCoupId());
                                 } catch (Exception e) {
                                     sender().tell(500,self());
                                     e.printStackTrace();
@@ -127,7 +130,7 @@ public class CancelOrderActor extends AbstractActor {
             }
             sender().tell(200,self());
         }).matchAny(s -> {
-            Logger.error("CancelOrderActor received messages not matched: {}", s.toString());
+            Logger.error("ResumeInvActor received messages not matched: {}", s.toString());
             unhandled(s);
         }).build());
     }

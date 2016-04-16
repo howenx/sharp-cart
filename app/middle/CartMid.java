@@ -11,6 +11,7 @@ import service.SkuService;
 import util.ComUtil;
 
 import javax.inject.Inject;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +112,7 @@ public class CartMid {
                     cartList.setInvTitle(skuVo.getSkuTypeTitle());
                     cartList.setCreateAt(cart.getCreateAt());
                     cartList.setInvCustoms(skuVo.getInvCustoms());
-                    cartList.setPostalTaxRate(skuVo.getPostalTaxRate());
+                    cartList.setPostalTaxRate(skuVo.getPostalTaxRate()==null? "0":skuVo.getPostalTaxRate());
                     cartList.setPostalStandard(skuVo.getPostalStandard());
                     cartList.setSkuType(cart.getSkuType());
                     cartList.setSkuTypeId(cart.getSkuTypeId());

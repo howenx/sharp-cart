@@ -20,6 +20,7 @@ GET         /client/order/verify/$orderId<[0-9]+>                            con
 GET         /client/order/del/$orderId<[0-9]+>                               controllers.OrderCtrl.delOrder(orderId:Long)
 POST        /client/order/apply/refund                                       controllers.OrderCtrl.refundApply()
 GET         /client/order/express/$orderId<[0-9]+>                           controllers.OrderCtrl.express(orderId:Long)
+GET         /client/order/confirm/delivery/$orderId<[0-9]+>                  controllers.OrderCtrl.confirmDelivery(orderId:Long)
 
 POST        /client/collect/submit                                           controllers.OrderCtrl.submitCollect()
 GET         /client/collect/get/collect/list                                 controllers.OrderCtrl.getCollect

@@ -204,7 +204,6 @@ public class OrderCtrl extends Controller {
             List<Map> mapList = orderMid.getOrders(order);
 
             if (mapList != null && mapList.size() > 0) {
-                Logger.error("擦擦啊擦------>\n" + Json.toJson(mapList));
                 result.putPOJO("orderList", Json.toJson(mapList));
             }
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
@@ -225,27 +224,30 @@ public class OrderCtrl extends Controller {
         try {
             Optional<List<Order>> orderList = Optional.ofNullable(cartService.getOrderBy(order));
 
-            if(orderList.isPresent()&&orderList.get().size()>0){
+            if (orderList.isPresent() && orderList.get().size() > 0) {
                 order = orderList.get().get(0);
-                if (order.getOrderStatus().equals("D") ||order.getOrderStatus().equals("R")){
+                if (order.getOrderStatus().equals("D") || order.getOrderStatus().equals("R")) {
                     OrderSplit orderSplit = new OrderSplit();
                     orderSplit.setOrderId(order.getOrderId());
                     Optional<List<OrderSplit>> optionalOrderSplitList = Optional.ofNullable(cartService.selectOrderSplit(orderSplit));
                     if (optionalOrderSplitList.isPresent() && optionalOrderSplitList.get().size() > 0) {
                         orderSplit = optionalOrderSplitList.get().get(0);
-                        Logger.error("快递编号: " + orderSplit.getExpressCode() + "\n快递名称: " + orderSplit.getExpressNm());
-//                        orderSplit.setExpressCode("jd");
-//                        orderSplit.setExpressNum("12837698789");
-                        return ws.url(EXPRESS_URL + "&com=" + orderSplit.getExpressCode() + "&nu=" + orderSplit.getExpressCode()).get().map(wsResponse -> ok(wsResponse.asJson()));
+                        Logger.info("快递编号: " + orderSplit.getExpressNum() + "\n快递名称: " + orderSplit.getExpressNm());
+                        final String expressName =  orderSplit.getExpressNm();
+                        return ws.url(EXPRESS_URL + "&com=" + orderSplit.getExpressCode() + "&nu=" + orderSplit.getExpressNum()).get().map(wsResponse -> {
+                            JsonNode jsonNode = wsResponse.asJson();
+                            ((ObjectNode)jsonNode).put("expressName",expressName);
+                            return ok(jsonNode);
+                        });
                     } else {
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.DATA_NOT_EXISTS.getIndex()), Message.ErrorCode.DATA_NOT_EXISTS.getIndex())));
                         return F.Promise.promise(() -> ok(result));
                     }
-                }else{
+                } else {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_NOT_DELIVERY.getIndex()), Message.ErrorCode.ORDER_NOT_DELIVERY.getIndex())));
                     return F.Promise.promise(() -> ok(result));
                 }
-            }else{
+            } else {
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_NOT_EXISTS.getIndex()), Message.ErrorCode.ORDER_NOT_EXISTS.getIndex())));
                 return F.Promise.promise(() -> ok(result));
             }
@@ -375,9 +377,13 @@ public class OrderCtrl extends Controller {
         Long userId = (Long) ctx().args.get("userId");
 
         Http.MultipartFormData body = request().body().asMultipartFormData();
+
+        Logger.error("请求数据--->\n"+request().body());
+
         Form<Refund> userForm = Form.form(Refund.class).bindFromRequest();
 
         if (userForm.hasErrors()) {
+            Logger.error("校验错误: " + userForm.errorsAsJson().toString());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
             return ok(result);
         } else {
@@ -427,9 +433,53 @@ public class OrderCtrl extends Controller {
 
 
     /**
+     * 确认收货
+     *
+     * @param orderId orderId
+     * @return Result
+     */
+    @Security.Authenticated(UserAuth.class)
+    public Result confirmDelivery(Long orderId) {
+        ObjectNode result = newObject();
+        Order order = new Order();
+        order.setOrderId(orderId);
+        Long userId = (Long) ctx().args.get("userId");
+        try {
+            Optional<List<Order>> orderList = Optional.ofNullable(cartService.getOrderBy(order));
+
+            if (orderList.isPresent() && orderList.get().size() > 0) {
+                order = orderList.get().get(0);
+                if (order.getOrderStatus().equals("D")) {
+                    order.setOrderStatus("R");
+                    order.setUserId(userId);
+                    if (cartService.updateOrder(order)) {
+                        Logger.info("确认收货成功:" + userId);
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                        return ok(result);
+                    } else {
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CONFIRM_DELIVERY_FAIL.getIndex()), Message.ErrorCode.CONFIRM_DELIVERY_FAIL.getIndex())));
+                        return ok(result);
+                    }
+                } else {
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_NOT_DELIVERY.getIndex()), Message.ErrorCode.ORDER_NOT_DELIVERY.getIndex())));
+                    return ok(result);
+                }
+            } else {
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_NOT_EXISTS.getIndex()), Message.ErrorCode.ORDER_NOT_EXISTS.getIndex())));
+                return ok(result);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("server exception:" + ex.getMessage());
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+    }
+
+    /**
      * 收藏
      *
-     * @return
+     * @return Result
      */
     @Security.Authenticated(UserAuth.class)
     public Result submitCollect() {

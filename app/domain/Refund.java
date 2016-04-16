@@ -13,6 +13,8 @@ import java.util.Optional;
  * Created by howen on 15/12/22.
  */
 public class Refund implements Serializable{
+    private static final long serialVersionUID = 55L;
+
     @JsonIgnore
     private Long        id;//主键
     @Constraints.Required

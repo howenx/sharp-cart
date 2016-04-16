@@ -30,5 +30,7 @@ public class ActorModule extends AbstractModule implements AkkaGuiceSupport {
         bindActor(MsgRecActor.class,"msgActor");
         bindActor(SchedulerCleanMsgActor.class,"schedulerCleanMsgActor");
         bindActor(DelScheduleActor.class,"delScheduleActor");
+        bindActor(ApplyRefundActor.class,"applyRefundActor");
+        bindActor(ResumeInvActor.class,"resumeInvActor");
     }
 }
