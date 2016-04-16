@@ -168,8 +168,12 @@ public class JDPay extends Controller {
             map.put("out_trade_no", orderId.toString());
             map.put("return_params", orderId.toString());//成功支付,或者查询时候,返回订单编号
             map.put("trade_subject", "韩秘美-订单编号" + orderId);
-//            map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
-            map.put("trade_amount", String.valueOf(1));
+            if(ONE_CENT_PAY){
+                map.put("trade_amount", "1");
+            }else{
+                map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
+            }
+
             //自用字断
             map.put("all_fee", order.getPayTotal().stripTrailingZeros().toPlainString());
             if (idPlusOptional.isPresent() && idPlusOptional.get().getPayJdToken() != null) {
@@ -259,19 +263,19 @@ public class JDPay extends Controller {
                                 order = orders.get(0);
                                 if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
                                     if (dealPinActivity(params, order) == null) {
-                                        Logger.error("************京东支付异步通知 拼购订单返回处理结果为空************");
+                                        Logger.error("************京东支付异步通知 拼购订单返回处理结果为空************,"+order.getOrderId());
                                         return ok("error");
                                     }
                                     else {
-                                        Logger.error("************京东支付异步通知 拼购订单返回成功************");
+                                        Logger.error("************京东支付异步通知 拼购订单返回成功************,"+order.getOrderId());
                                         return ok("success");
                                     }
                                 } else {
-                                    Logger.error("************京东支付异步通知 普通订单返回成功************");
+                                    Logger.error("************京东支付异步通知 普通订单返回成功************,"+order.getOrderId());
                                     return ok("success");
                                 }
                             } else {
-                                Logger.error("************京东支付异步通知 订单未找到************");
+                                Logger.error("************京东支付异步通知 订单未找到************,"+order.getOrderId());
                                 return ok("error");
                             }
                         } catch (Exception e) {
@@ -279,7 +283,7 @@ public class JDPay extends Controller {
                             return ok("error");
                         }
                     }else {
-                        Logger.error("************京东支付异步通知 异步方法调用返回失败************");
+                        Logger.error("************京东支付异步通知 异步方法调用返回失败************,"+params.get("out_trade_no"));
                         return ok("error");
                     }
                 } else {
@@ -365,77 +369,17 @@ public class JDPay extends Controller {
 
         params.put("out_trade_no", refund.getId().toString());
         params.put("original_out_trade_no", refund.getOrderId().toString());
-        params.put("trade_amount", refund.getPayBackFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
+
+        if (ONE_CENT_PAY){
+            params.put("trade_amount", "1");
+        }else params.put("trade_amount", refund.getPayBackFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
+
+
         params.put("trade_subject", refund.getReason());
         params.put("return_params", refund.getId().toString());
         getBasicInfo().forEach(params::put);
         params.put("sign_data", Crypto.create_sign(params, SysParCom.JD_SECRET));
         return params;
-    }
-
-    /**
-     * 退款接口
-     *
-     * @return 返回
-     */
-    public F.Promise<Result> payBack() {
-        ObjectNode result = Json.newObject();
-        Form<Refund> refundForm = Form.form(Refund.class).bindFromRequest();
-        try {
-            Refund refund = refundForm.get();
-            Optional<List<Refund>> refundOptional = Optional.ofNullable(cartService.selectRefund(refund));
-            Boolean flags;
-            if (refundOptional.isPresent() && refundOptional.get().size() > 0) {
-                refund.setId(refundOptional.get().get(0).getId());
-                flags = cartService.updateRefund(refund);
-            } else flags = cartService.insertRefund(refund);
-            if (flags) {
-                Map<String, String> params = payBackParams(refund, request().queryString(), request().body().asFormUrlEncoded());
-                StringBuilder sb = new StringBuilder();
-                params.forEach((k, v) -> {
-                    sb.append(k).append("=").append(v).append("&");
-                });
-
-                return ws.url(JD_REFUND_URL).setContentType("application/x-www-form-urlencoded").post(sb.toString()).map(wsResponse -> {
-                    JsonNode response = wsResponse.asJson();
-                    Logger.info("京东退款返回数据JSON: " + response.toString());
-                    Refund re = new Refund();
-                    re.setId(response.get("out_trade_no").asLong());
-                    re.setOrderId(response.get("return_params").asLong());
-                    re.setPgCode(response.get("response_code").asText());
-                    re.setPgMessage(response.get("response_message").asText());
-                    re.setPgTradeNo(response.get("trade_no").asText());
-                    re.setState(response.get("is_success").asText());
-                    re.setRefundType("receive");
-
-                    if (cartService.updateRefund(re)) {
-                        if (re.getState().equals("Y")) {
-                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.REFUND_SUCCESS.getIndex()), Message.ErrorCode.REFUND_SUCCESS.getIndex())));
-                            return ok(result);
-                        } else {
-                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.REFUND_FAILED.getIndex()), Message.ErrorCode.REFUND_FAILED.getIndex())));
-                            return ok(result);
-                        }
-                    } else {
-                        Logger.error("payBack update exception");
-                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
-                        return ok(result);
-                    }
-                });
-            } else return promise(() -> ok("db insert error"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return promise(() -> ok("error"));
-        }
-    }
-
-    /**
-     * 退款页面
-     *
-     * @return page
-     */
-    public Result payRefund() {
-        return ok(views.html.payback.render());
     }
 
 

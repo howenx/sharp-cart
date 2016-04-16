@@ -62,6 +62,7 @@ public class SysParCom {
     public static String M_PIN;
     public static String ERP_PUSH;
     public static String EXPRESS_URL;
+    public static Boolean ONE_CENT_PAY;
 
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
@@ -117,6 +118,8 @@ public class SysParCom {
         ERP_PUSH = configuration.getString("erp.order.push");
 
         EXPRESS_URL=configuration.getString("express.url");
+
+        ONE_CENT_PAY = configuration.getBoolean("one.cent.pay");
 
     }
 

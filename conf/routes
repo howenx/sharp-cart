@@ -31,9 +31,6 @@ GET         /client/collect/del/$collectId<[0-9]+>                           con
 GET         /client/pay/order/get/$orderId<[0-9]+>                           controllers.JDPay.cashDesk(orderId:Long)
 POST        /client/pay/jd/back                                              controllers.JDPay.payBackendNotify()
 POST        /client/pay/jd/front                                             controllers.JDPay.payFrontNotify()
-GET         /client/payback                                                  controllers.JDPay.payRefund()
-POST        /client/payback/refund                                           controllers.JDPay.payBack()
-
 
 #app启动时定时
 GET         /client/schedule/:cipher                                         controllers.Application.getFirstApp(cipher:String)

@@ -102,7 +102,7 @@ public class JDPayMid {
                                 Logger.info("京东支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
                                 return "success";
                             } else {
-                                Logger.error("asynPay更新用户token失败");
+                                Logger.info("asynPay更新用户token失败");
                                 return "error";
                             }
                         } else {
@@ -110,19 +110,19 @@ public class JDPayMid {
                                 Logger.info("京东支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
                                 return "success";
                             } else {
-                                Logger.error("asynPay插入用户token失败");
+                                Logger.error("asynPay插入用户token失败,"+order.getOrderId());
                                 return "error";
                             }
                         }
                     } else if (method.equals("back")){
-                        Logger.error("京东支付后端回调返回成功");
+                        Logger.info("京东支付后端回调返回成功,"+order.getOrderId());
                         return "success";
                     }else{
-                        Logger.error("asynPay未找到返回数据中的token字断");
+                        Logger.error("asynPay未找到返回数据中的token字断,"+order.getOrderId());
                         return "error";
                     }
                 } else {
-                    Logger.error("asynPay更新订单状态失败");
+                    Logger.error("asynPay更新订单状态失败,"+order.getOrderId());
                     return "error";
                 }
             }
