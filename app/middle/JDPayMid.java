@@ -68,7 +68,7 @@ public class JDPayMid {
      *
      * @param params 参数
      */
-    public String asynPay(Map<String, String> params,String method) {
+    public String asynPay(Map<String, String> params) {
 
         Order order = new Order();
         order.setOrderId(Long.valueOf(params.get("out_trade_no")));
@@ -77,6 +77,28 @@ public class JDPayMid {
             List<Order> orders = cartService.getOrder(order);
 
             if (orders.size() > 0) order = orders.get(0);
+
+            //支付回调更新用户token
+            if (params.containsKey("token") && params.containsKey("buyer_info") && Json.parse(params.get("buyer_info")).get("customer_code")!=null) {
+                Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
+                IdPlus idPlus = new IdPlus();
+                idPlus.setUserId(userId);
+                Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
+                idPlus.setPayJdToken(params.get("token"));
+                if (idPlusOptional.isPresent()) {
+                    if (idService.updateIdPlus(idPlus)) {
+                        Logger.info("京东支付成功回调更新用户Token:" + Json.toJson(idPlus));
+                    } else {
+                        Logger.info("asynPay更新用户token失败");
+                    }
+                } else {
+                    if (idService.insertIdPlus(idPlus)) {
+                        Logger.info("京东支付成功回调创建用户Token:" + Json.toJson(idPlus));
+                    } else {
+                        Logger.error("asynPay插入用户token失败," + order.getOrderId());
+                    }
+                }
+            }
 
             if (order.getOrderStatus().equals("S") || order.getOrderStatus().equals("PS") || order.getOrderStatus().equals("PF") || order.getOrderStatus().equals("F")) {
                 return "success";
@@ -89,45 +111,18 @@ public class JDPayMid {
 
                     Logger.info("京东支付回调订单更新订单信息: " + Json.toJson(order));
                     system.actorSelection(ERP_PUSH).tell(order.getOrderId(), ActorRef.noSender());
-                    Logger.info("调用ERP推送订单:"+order.getOrderId());
+                    Logger.info("调用ERP推送订单:" + order.getOrderId());
 
-                    if (params.containsKey("token") && method.equals("front")) { //支付前端通知返回token
-                        Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
-                        IdPlus idPlus = new IdPlus();
-                        idPlus.setUserId(userId);
-                        Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
-                        idPlus.setPayJdToken(params.get("token"));
-                        if (idPlusOptional.isPresent()) {
-                            if (idService.updateIdPlus(idPlus)) {
-                                Logger.info("京东支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
-                                return "success";
-                            } else {
-                                Logger.info("asynPay更新用户token失败");
-                                return "error";
-                            }
-                        } else {
-                            if (idService.insertIdPlus(idPlus)) {
-                                Logger.info("京东支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
-                                return "success";
-                            } else {
-                                Logger.error("asynPay插入用户token失败,"+order.getOrderId());
-                                return "error";
-                            }
-                        }
-                    } else if (method.equals("back")){
-                        Logger.info("京东支付后端回调返回成功,"+order.getOrderId());
-                        return "success";
-                    }else{
-                        Logger.error("asynPay未找到返回数据中的token字断,"+order.getOrderId());
-                        return "error";
-                    }
+                    Logger.info("京东支付后端回调返回成功," + order.getOrderId());
+                    return "success";
+
                 } else {
-                    Logger.error("asynPay更新订单状态失败,"+order.getOrderId());
+                    Logger.error("asynPay更新订单状态失败," + order.getOrderId());
                     return "error";
                 }
             }
         } catch (Exception e) {
-            Logger.error("支付回调订单更新出错payFrontNotify: " + e.getMessage());
+            Logger.error("asynPay支付回调订单出错: " + e.getMessage());
             e.printStackTrace();
             return "error";
         }
@@ -268,7 +263,7 @@ public class JDPayMid {
      *
      * @param activity activity
      */
-    public void pinPushMsg(PinActivity activity,String message,Long pinUserId) {
+    public void pinPushMsg(PinActivity activity, String message, Long pinUserId) {
         PinSku pinSku = promotionService.getPinSkuById(activity.getPinId());
 
         JsonNode js_invImg = Json.parse(pinSku.getPinImg());
@@ -277,7 +272,7 @@ public class JDPayMid {
             pinUser.setPinActiveId(activity.getPinActiveId());
             List<PinUser> pinUsers = promotionService.selectPinUser(pinUser);
             for (PinUser p : pinUsers) {
-                if (pinUserId == null || !pinUserId.equals(p.getId())){
+                if (pinUserId == null || !pinUserId.equals(p.getId())) {
                     //发消息
                     msgCtrl.addMsgRec(p.getUserId(), MsgTypeEnum.Goods, message, pinSku.getPinTitle(), js_invImg.get("url").asText(), "/promotion/pin/activity/" + activity.getPinActiveId(), "V");
                     //推送消息
@@ -292,6 +287,7 @@ public class JDPayMid {
 
     /**
      * 获取京东订单的报关参数
+     *
      * @param splitId 子订单ID
      * @return map
      */
@@ -303,8 +299,8 @@ public class JDPayMid {
 
         try {
             List<OrderSplit> orders = cartService.selectOrderSplit(ordersplit);
-            if (orders.size()>0) ordersplit = orders.get(0);
-        }catch (Exception ex){
+            if (orders.size() > 0) ordersplit = orders.get(0);
+        } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error(ex.getMessage());
         }
@@ -318,13 +314,13 @@ public class JDPayMid {
         params.put("customer_no", SysParCom.JD_SELLER);
         params.put("request_datetime", req_date);
         params.put("sign_type", sign_type);
-        params.put("custom",ordersplit.getCbeCode());
+        params.put("custom", ordersplit.getCbeCode());
 
-        params.put("tax_fee",ordersplit.getPostalFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
+        params.put("tax_fee", ordersplit.getPostalFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
 
-        params.put("goods_fee",ordersplit.getTotalPayFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
+        params.put("goods_fee", ordersplit.getTotalPayFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
 
-        params.put("freight",ordersplit.getShipFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
+        params.put("freight", ordersplit.getShipFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
 
         //tax_fee       //税款金额，单位：分，默认为0分
         //goods_fee     //货款金额，单位：分，默认与子订单支付时金额相同
@@ -332,7 +328,7 @@ public class JDPayMid {
         //other_fee     //其它费用金额，单位：分，默认为0分
         //biz_type      //业务类型，重庆海关报送时必填
 
-        Map<String, String> customs = Application.mapper.convertValue(configuration.getObject(ordersplit.getCbeCode()), Application.mapper.getTypeFactory().constructMapType(Map.class,String.class,String.class));
+        Map<String, String> customs = Application.mapper.convertValue(configuration.getObject(ordersplit.getCbeCode()), Application.mapper.getTypeFactory().constructMapType(Map.class, String.class, String.class));
         if (customs.size() > 0) params.putAll(customs);
 
         params.put("sign_data", Crypto.create_sign(params, SysParCom.JD_SECRET));
@@ -348,8 +344,8 @@ public class JDPayMid {
 
         try {
             List<OrderSplit> orders = cartService.selectOrderSplit(ordersplit);
-            if (orders.size()>0) ordersplit = orders.get(0);
-        }catch (Exception ex){
+            if (orders.size() > 0) ordersplit = orders.get(0);
+        } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error(ex.getMessage());
         }
@@ -363,11 +359,11 @@ public class JDPayMid {
         params.put("customer_no", SysParCom.JD_SELLER);
         params.put("request_datetime", req_date);
         params.put("sign_type", sign_type);
-        params.put("out_trade_no",ordersplit.getOrderId().toString());
+        params.put("out_trade_no", ordersplit.getOrderId().toString());
 
-        params.put("sub_order_no",ordersplit.getSplitId().toString());
+        params.put("sub_order_no", ordersplit.getSplitId().toString());
 
-        params.put("sub_out_trade_no",ordersplit.getSubPgTradeNo());
+        params.put("sub_out_trade_no", ordersplit.getSubPgTradeNo());
 
         params.put("sign_data", Crypto.create_sign(params, SysParCom.JD_SECRET));
 
