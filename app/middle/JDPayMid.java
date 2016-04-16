@@ -98,18 +98,31 @@ public class JDPayMid {
                         Optional<IdPlus> idPlusOptional = Optional.ofNullable(idService.getIdPlus(idPlus));
                         idPlus.setPayJdToken(params.get("token"));
                         if (idPlusOptional.isPresent()) {
+                            Logger.error("idPlus内容---->\n"+idPlus);
                             if (idService.updateIdPlus(idPlus)) {
                                 Logger.info("京东支付成功回调更新用户Token payFrontNotify:" + Json.toJson(idPlus));
                                 return "success";
-                            } else return "error";
+                            } else {
+                                Logger.error("asynPay更新用户token失败");
+                                return "error";
+                            }
                         } else {
                             if (idService.insertIdPlus(idPlus)) {
                                 Logger.info("京东支付成功回调创建用户Token payFrontNotify:" + Json.toJson(idPlus));
                                 return "success";
-                            } else return "error";
+                            } else {
+                                Logger.error("asynPay插入用户token失败");
+                                return "error";
+                            }
                         }
-                    } else return "error";
-                } else return "error";
+                    } else {
+                        Logger.error("asynPay未找到返回数据中的token字断");
+                        return "error";
+                    }
+                } else {
+                    Logger.error("asynPay更新订单状态失败");
+                    return "error";
+                }
             }
         } catch (Exception e) {
             Logger.error("支付回调订单更新出错payFrontNotify: " + e.getMessage());
