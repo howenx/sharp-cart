@@ -27,7 +27,7 @@ libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4" withSource
 
 libraryDependencies += "org.postgresql" % "postgresql" % "9.4-1205-jdbc42" withSources() withJavadoc()
 
-libraryDependencies += "com.h2database" % "h2" % "1.4.188" withSources() withJavadoc()
+libraryDependencies += "com.h2database" % "h2" % "1.4.191"
 
 libraryDependencies += "org.mybatis" % "mybatis" % "3.3.0" withSources() withJavadoc()
 
@@ -48,6 +48,11 @@ libraryDependencies += "com.typesafe.akka" % "akka-kernel_2.11" % "2.4.1" withSo
 libraryDependencies += "com.typesafe.akka" % "akka-slf4j_2.11" % "2.4.1" withSources() withJavadoc()
 
 libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.4.1" withSources() withJavadoc()
+
+libraryDependencies += "com.aliyun.mns" % "aliyun-sdk-mns" % "1.1.3"
+
+libraryDependencies += "ch.qos.logback" % "logback-access" % "1.1.3"
+
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-persistence" % "2.4.1",

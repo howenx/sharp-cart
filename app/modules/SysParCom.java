@@ -64,6 +64,10 @@ public class SysParCom {
     public static String EXPRESS_URL;
     public static Boolean ONE_CENT_PAY;
 
+    public static String MNS_ENDPOINT;
+    public static String MNS_KEY;
+    public static String MNS_SECRET;
+
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
 
@@ -121,6 +125,9 @@ public class SysParCom {
 
         ONE_CENT_PAY = configuration.getBoolean("one.cent.pay");
 
+        MNS_ENDPOINT= configuration.getString("mns.accountendpoint");
+        MNS_KEY= configuration.getString("mns.accesskeyid");
+        MNS_SECRET= configuration.getString("mns.accesskeysecret");
     }
 
 }

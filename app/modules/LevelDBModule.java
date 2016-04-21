@@ -4,6 +4,8 @@ import com.google.inject.AbstractModule;
 import middle.CartMid;
 import middle.JDPayMid;
 import middle.OrderMid;
+import util.LogUtil;
+import util.MnsInit;
 
 /**
  * 启动leveldb
@@ -20,5 +22,7 @@ public class LevelDBModule extends AbstractModule {
         bind(SysParCom.class).asEagerSingleton();
         bind(RemoteActorModule.class).asEagerSingleton();
         bind(AppOnStart.class).asEagerSingleton();
+        bind(MnsInit.class).asEagerSingleton();
+        bind(LogUtil.class).asEagerSingleton();
     }
 }

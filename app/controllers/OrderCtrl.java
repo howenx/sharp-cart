@@ -585,7 +585,7 @@ public class OrderCtrl extends Controller {
             collect.setUserId(userId);
             List<CollectDto> collectDtoList = new ArrayList<CollectDto>();
             Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
-            if (collectList.isPresent()) {
+            if (collectList.isPresent() && collectList.get().size()>0) {
                 for (Collect c : collectList.get()) {
                     CollectDto collectDto = new CollectDto();
                     collectDto.setCollectId(c.getCollectId());

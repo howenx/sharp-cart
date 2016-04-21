@@ -67,7 +67,7 @@ public class CartMid {
 
         Optional<List<Cart>> listOptional = Optional.ofNullable(cartService.getCarts(c));
 
-        if (listOptional.isPresent()) {
+        if (listOptional.isPresent() && listOptional.get().size()>0) {
             //返回数据组装,根据用户id查询出所有可显示的购物车数据
             List<Cart> listCart = listOptional.get();
 
@@ -143,7 +143,7 @@ public class CartMid {
 
         Optional<List<SkuVo>> skuVos = Optional.ofNullable(skuService.getAllSkus(skuVo));
 
-        if (skuVos.isPresent()){
+        if (skuVos.isPresent() && skuVos.get().size()>0){
             skuVo = skuVos.get().get(0);
 
             cart.setItemId(skuVo.getItemId());
@@ -248,7 +248,7 @@ public class CartMid {
 
             Optional<List<SkuVo>> skuVos = Optional.ofNullable(skuService.getAllSkus(skuVo));
 
-            if (skuVos.isPresent()) {
+            if (skuVos.isPresent() && skuVos.get().size()>0) {
                 skuVo = skuVos.get().get(0);
 
                 //返回数据组装

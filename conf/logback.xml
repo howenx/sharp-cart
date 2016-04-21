@@ -38,6 +38,12 @@
     </appender>
 
 
+    <!--<appender name="CUSTOM" class="util.CountingConsoleAppender">-->
+        <!--<encoder>-->
+            <!--<pattern>%coloredLevel - %date - %logger - %message%n%xException</pattern>-->
+        <!--</encoder>-->
+    <!--</appender>-->
+
     <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="FILE"/>
     </appender>
@@ -69,6 +75,7 @@
     <root level="INFO">
         <appender-ref ref="ASYNC_STDOUT"/>
         <appender-ref ref="ASYNC_FILE"/>
+        <!--<appender-ref ref="CUSTOM"/>-->
     </root>
 
 </configuration>
