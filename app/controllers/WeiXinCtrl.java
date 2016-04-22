@@ -1,9 +1,13 @@
 package controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.squareup.okhttp.*;
 import domain.Message;
 import domain.Order;
 import modules.SysParCom;
+import net.glxn.qrgen.core.image.ImageType;
+import net.glxn.qrgen.javase.QRCode;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -28,8 +32,10 @@ import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.sql.Timestamp;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static modules.SysParCom.ONE_CENT_PAY;
 import static play.libs.Json.newObject;
 
@@ -52,7 +58,7 @@ public class WeiXinCtrl extends Controller {
         this.promotionService = promotionService;
     }
 
-    public String getPayUnifiedorderParams(Long userId, Order order,String tradeType) throws Exception {
+    public String getPayUnifiedorderParams(Order order,String tradeType) throws Exception {
         /**
          * <xml>
          <appid>wx2421b1c4370ec43b</appid>
@@ -76,10 +82,10 @@ public class WeiXinCtrl extends Controller {
         paramMap.put("appid",SysParCom.WEIXIN_APP_ID); //应用ID
         paramMap.put("mch_id",SysParCom.WEIXIN_MCH_ID);
         paramMap.put("nonce_str",UUID.randomUUID().toString().replaceAll("-", ""));
-        paramMap.put("body","韩秘美-订单编号" + orderId);
+        paramMap.put("body","韩秘美-订单编号" + orderId); //URLEncoder.encode
         paramMap.put("notify_url",SysParCom.SHOPPING_URL+"/client/pay/jd/back");
         paramMap.put("out_trade_no",orderId.toString());
-        paramMap.put("spbill_create_ip",order.getOrderIp());
+        paramMap.put("spbill_create_ip","127.0.0.1");
         paramMap.put("trade_type",tradeType);
         paramMap.put("attach",orderId.toString());//附加数据，在查询API和支付通知中原样返回，该字段主要用于商户携带订单的自定义数据
 
@@ -126,39 +132,15 @@ public class WeiXinCtrl extends Controller {
 
     }
 
+    /**
+     * 获取deeplink
+     * @param prepayId
+     * @param tradeType
+     * @return
+     * @throws UnsupportedEncodingException
+     */
 
     public String getWeiXinDeeplink(String prepayId,String tradeType) throws UnsupportedEncodingException {
-        /**
-         * 公众账号ID	appid	是	String(32)	wx8888888888888888	微信分配的公众账号ID
-         随机字符串	noncestr	是	String(32)	5K8264ILTKCH16CQ2502SI8ZNMTM67VS	随机字符串，不长于32位。推荐随机数生成算法
-         订单详情扩展字符串	package	是	String(32)	WAP	扩展字段，固定填写WAP
-         预支付交易会话标识	prepayid	是	String(64)	wx201410272009395522657a690389285100	微信统一下单接口返回的预支付回话标识，用于后续接口调用中使用，该值有效期为2小时
-         签名	sign	是	String(32)	C380BEC2BFD727A4B6845133519F3AD6	签名，详见签名生成算法
-         时间戳	timestamp	是	String(32)	1414561699
-         当前的时间，其他详见时间戳规则
-
-
-         生成deeplink 的步骤如下：
-         步骤1：按URL 格式组装参数, $value 部分进行URL 编码，生成string1：
-         string1 ： key1=Urlencode($value1)&key2=Urlencode($value2、&...
-         步骤2：对string1 作整体的Urlencode，生成string2：
-         String2=Urlencode(string1);
-         步骤3：拼接前缀，生成最终deeplink
-
-         举例如下：
-         String1：
-         appid=wxf5b5e87a6a0fde94&noncestr=123&package=WAP&prepayid=wx20141210163048
-         0281750c890475924233&sign=53D411FB74FE0B0C79CC94F2AB0E2333&timestamp=1417511263
-         再对整个string1 做一次URLEncode
-         string2：
-         appid%3Dwxf5b5e87a6a0fde94%26noncestr%3D123%26package%3DWAP%26prepayid%3Dw
-         x201412101630480281750c890475924233%26sign%3D53D411FB74FE0B0C79CC94F2AB0E2
-         333%26timestamp%3D1417511263
-         再加上协议头weixin：//wap/pay? 得到最后的deeplink
-         weixin：//wap/pay?appid%3Dwxf5b5e87a6a0fde94%26noncestr%3D123%26package%3DW
-         AP%26prepayid%3Dwx201412101630480281750c890475924233%26sign%3D53D411FB74FE0
-         B0C79CC94F2AB0E2333%26timestamp%3D1417511263
-         */
         TreeMap<String,String> paramMap=new TreeMap<>();
         paramMap.put("appid",SysParCom.WEIXIN_APP_ID);
         paramMap.put("noncestr",UUID.randomUUID().toString().replaceAll("-", ""));
@@ -193,8 +175,8 @@ public class WeiXinCtrl extends Controller {
      */
     public Result payUnifiedorder(String tradeType,Long orderId){
         ObjectNode objectNode = newObject();
-        Long userId = (Long) ctx().args.get("userId");
-        userId=1000242L;
+       // Long userId = (Long) ctx().args.get("userId");
+       // userId=1000242L;
         try{
             Order order = new Order();
             order.setOrderId(orderId);
@@ -214,7 +196,7 @@ public class WeiXinCtrl extends Controller {
             conn.setDoOutput(true);
             conn.setRequestMethod("POST");
             OutputStream dataOut = conn.getOutputStream();
-            String sendStr = getPayUnifiedorderParams(userId,order,"APP");
+            String sendStr = getPayUnifiedorderParams(order,tradeType);
             dataOut.write(sendStr.getBytes());
             dataOut.flush();
             dataOut.close();
@@ -235,11 +217,13 @@ public class WeiXinCtrl extends Controller {
                 String  result = buffer.toString();
                 Logger.info("微信统一下单返回内容"+result);
 
+
                 Map<String,String> resultMap=xmlToMap(result);
                 if(null==resultMap||resultMap.size()<=0){
                     objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
                     return ok(objectNode);
                 }
+
                 if("FAIL".equals(resultMap.get("return_code"))){ //返回状态码  SUCCESS/FAIL 此字段是通信标识，非交易标识，交易是否成功需要查看result_code来判断
                     objectNode.putPOJO("message", Json.toJson(new domain.Message(resultMap.get("return_msg"), domain.Message.ErrorCode.FAILURE.getIndex())));
                     return ok(objectNode);
@@ -250,12 +234,62 @@ public class WeiXinCtrl extends Controller {
                 }
 
 
-                objectNode.putPOJO("trade_type",resultMap.get("trade_type")); //交易类型
-                objectNode.putPOJO("prepay_id",resultMap.get("prepay_id")); //预支付交易会话标识
+                if("NATIVE".equals(tradeType)){ //扫码支付
+                    String code_url=resultMap.get("code_url");
+                    if(null==code_url||"".equals(code_url)){
+                        objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
+                        return ok(objectNode);
+                    }
+                    objectNode.put("code_url",code_url); //二维码地址 TODO test
+
+                    //生成二维码图片
+                    ByteArrayOutputStream qrOut = createQrGen(code_url);
+
+                    ////上传图片  TODO ...
+                    RequestBody requestBody = new MultipartBuilder()
+                            .type(MultipartBuilder.FORM)
+                            .addFormDataPart("params", "minify")
+                            .addFormDataPart("photo", "1.jpg", RequestBody.create(MediaType.parse("image/jpeg"), qrOut.toByteArray()))
+                            .build();
 
 
-                objectNode.putPOJO("deeplink",getWeiXinDeeplink(resultMap.get("prepay_id"),tradeType)); //deeplink
+                    Request request = new Request.Builder()
+                            .url(SysParCom.IMAGE_URL+"upload")
+                            .post(requestBody)
+                            .build();
 
+                    OkHttpClient client = new OkHttpClient();
+                    Response response = client.newCall(request).execute();
+                    Logger.info("====response====="+response);
+
+                    if (response.isSuccessful()) {
+                        JsonNode json = Json.parse(new String(response.body().bytes(),UTF_8));
+                        Logger.error("上传返回:\n"+json.toString());
+                        String code_image_url=json.get("oss_url").asText();
+                        objectNode.put("code_image_url",code_image_url); //二维码地址
+                        //保存订单的二维码数据
+                        order.setQrCodeUrl(code_image_url);
+                        order.setQrCodeAt(new Timestamp(System.currentTimeMillis()));
+                        cartService.updateOrder(order);
+                    }
+
+
+/////////////删除/////////////////
+                    String fileName = "code.jpg";
+                    OutputStream os = new FileOutputStream(new File(("/Users/sibyl.sun/Downloads"),fileName));
+                    os.write(qrOut.toByteArray());
+                    os.flush();
+                    os.close();
+//                    objectNode.put("code_image_url","/Users/sibyl.sun/Downloads/"+fileName); //二维码地址
+                    //////////////////////////////
+
+                }else{
+
+                    String prepay_id=resultMap.get("prepay_id");
+                    objectNode.put("trade_type",resultMap.get("trade_type")); //交易类型
+                    objectNode.put("prepay_id",prepay_id); //预支付交易会话标识
+                    objectNode.put("deeplink",getWeiXinDeeplink(prepay_id,tradeType)); //deeplink
+                }
                 objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(objectNode);
 
@@ -297,6 +331,30 @@ public class WeiXinCtrl extends Controller {
         }
         return resultMap;
     }
+
+    /**
+     * 支付回调
+     * @return
+     */
+    public Result payBackendNotify(){
+        
+        return ok("payBackendNotify");
+    }
+
+
+    /***
+     * 生成二维码数据流
+     * @param url
+     * @return
+     * @throws IOException
+     */
+    public static ByteArrayOutputStream createQrGen(String url) throws IOException {
+        //如果有中文，可使用withCharset("UTF-8")方法
+        //设置二维码url链接，图片宽度250*250，JPG类型
+        return QRCode.from(url).withSize(250, 250).to(ImageType.JPG).stream();
+    }
+
+
 
 
 }

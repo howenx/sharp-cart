@@ -14,14 +14,24 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt){
         dataType: 'json',
         error : function(request) {
             console.log("data="+request);
-            alert("提交订单失败,请检测是否已登录");
+            alert("支付失败,请重新尝试");
          },
         success: function(data) {
             console.log("data="+data);
             if(""!=data&&null!=data){
                 if(data.message.code==200){ //成功
-                //弹出微信支付界面 TODO
-                    window.location = data.deeplink;
+
+                    if("NATIVE"==tradeType){ //扫码支付
+                        $("#codeImageUrl").attr("src",data.code_image_url);
+                        alert("微信返回的code_url="+data.code_url);
+                    }else{
+                        //弹出微信支付界面 TODO
+                        console.log("prepay_id="+data.prepay_id);
+                        console.log("deeplink="+data.deeplink);
+                        //window.location = data.deeplink;
+                        alert("prepay_id="+data.prepay_id+"\n"+"deeplink="+data.deeplink);
+                    }
+
                 }else{
                     alert(data.message.message);
                 }

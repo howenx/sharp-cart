@@ -1,4 +1,4 @@
-@(params:java.util.Map[String,String])
+@(params:java.util.Map[String,String],qr_code_url:String)
 
 <!DOCTYPE html>
 <html lang="en">
@@ -25,11 +25,27 @@
             <div class="right-icon"></div>
         </div>
         <hr>
-        <div class="weixin pay" onclick="payUnifiedorder('APP',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1)">
+        <div class="weixin pay"  style="display:none" onclick="payUnifiedorder('APP',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1)" >
             <span>微信支付</span>
             <em>仅安装微信6.0.2及以上版本客户端使用</em>
             <div class="right-icon"></div>
         </div>
+        @if(""!=qr_code_url&&null!=qr_code_url){
+            <div class="weixin pay">
+                <span>微信扫码支付</span>
+                <em>仅安装微信6.0.2及以上版本客户端使用</em>
+                <div class="right-icon"></div>
+                <div ><img src="@qr_code_url"/></div>
+            </div>
+        }
+        @if(""==qr_code_url||null==qr_code_url){
+            <div class="weixin pay" onclick="payUnifiedorder('NATIVE',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1)">
+                <span>微信扫码支付</span>
+                <em>仅安装微信6.0.2及以上版本客户端使用</em>
+                <div class="right-icon"></div>
+                <div ><img src="" id="codeImageUrl"/></div>
+            </div>
+        }
         <div style="display:none">
             <form id="jdsubmit" name="jdsubmit" action="@params.get("""url""")" method="POST">
             @for((k,v) <- params) {
