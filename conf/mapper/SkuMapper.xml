@@ -243,4 +243,35 @@
         </if>
         and c.city_code = 'ALL'
     </select>
+
+    <sql id="versioningColumns">
+        ${alias}.id              ,
+        ${alias}.release_number   ,
+        ${alias}.product_type    ,
+        ${alias}.download_link   ,
+        ${alias}.admin_user_id   ,
+        ${alias}.release_desc    ,
+        to_char(${alias}.release_at, 'YYYY-MM-DD HH24:MI:SS') release_at,
+        ${alias}.file_name         ,
+        ${alias}.current_version   ,
+        ${alias}.update_req_xml     ,
+        ${alias}.app_store_download_link,
+        ${alias}.release_name
+    </sql>
+    <!-- -->
+    <select id="getVersioning" resultType="domain.VersionVo" parameterType="domain.VersionVo">
+        select
+        <include refid="versioningColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from versioning t where 1=1
+        <if test="productType!=null and productType!=''">
+            and product_type=#{productType}
+        </if>
+        <if test="id!=null and id!=''">
+            and id=#{id}
+        </if>
+        order by current_version DESC,release_number DESC
+    </select>
+
 </mapper>

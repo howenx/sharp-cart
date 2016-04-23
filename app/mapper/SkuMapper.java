@@ -1,9 +1,6 @@
 package mapper;
 
-import domain.Carriage;
-import domain.Sku;
-import domain.SkuVo;
-import domain.SysParameter;
+import domain.*;
 
 import java.util.List;
 
@@ -22,5 +19,7 @@ public interface SkuMapper {
     SysParameter getSysParameter(SysParameter sysParameter) throws Exception;
 
     List<SkuVo> getAllSkus(SkuVo skuVo);
+
+    List<VersionVo> getVersioning(VersionVo versionVo);
 
 }

@@ -26,4 +26,6 @@ public interface SkuService {
 
     Integer updateVaryPrice(VaryPrice varyPrice);
 
+    List<VersionVo> getVersioning(VersionVo versionVo);
+
 }

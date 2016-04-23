@@ -11,7 +11,7 @@ import play.libs.akka.AkkaGuiceSupport;
 public class ActorModule extends AbstractModule implements AkkaGuiceSupport {
     @Override
     protected void configure() {
-
+        bindActor(ShoppingRunActor.class, "shoppingRunActor");
         bindActor(OrderSplitActor.class, "subOrderActor");
         bindActor(OrderAddressActor.class, "orderAddressActor");
         bindActor(OrderLineActor.class, "orderLineActor");

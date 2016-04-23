@@ -68,4 +68,9 @@ public class SkuServiceImpl implements SkuService{
         return varyPriceMapper.updateVaryPrice(varyPrice);
     }
 
+    @Override
+    public List<VersionVo> getVersioning(VersionVo versionVo) {
+        return skuMapper.getVersioning(versionVo);
+    }
+
 }
