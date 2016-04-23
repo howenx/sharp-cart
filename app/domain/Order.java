@@ -53,7 +53,10 @@ public class Order implements Serializable {
     private Integer             orderType;//订单类型
     @JsonIgnore
     private Long                pinActiveId;       //拼购活动ID
-
+    @JsonIgnore
+    private String              qrCodeUrl;//二维码图片地址
+    @JsonIgnore
+    private Timestamp           qrCodeAt;//二维码创建时间
 
     public Order() {
     }
@@ -314,6 +317,24 @@ public class Order implements Serializable {
                 ", countDown=" + countDown +
                 ", orderType=" + orderType +
                 ", pinActiveId=" + pinActiveId +
+                ", qrCodeUrl=" + qrCodeUrl +
+                ", qrCodeAt=" + qrCodeAt +
                 '}';
+    }
+
+    public String getQrCodeUrl() {
+        return qrCodeUrl;
+    }
+
+    public void setQrCodeUrl(String qrCodeUrl) {
+        this.qrCodeUrl = qrCodeUrl;
+    }
+
+    public Timestamp getQrCodeAt() {
+        return qrCodeAt;
+    }
+
+    public void setQrCodeAt(Timestamp qrCodeAt) {
+        this.qrCodeAt = qrCodeAt;
     }
 }

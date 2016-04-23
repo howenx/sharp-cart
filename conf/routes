@@ -48,3 +48,7 @@ POST        /client/feedback                                                 con
 #test
 GET         /client/push                                                     controllers.PushCtrl.testPush()
 GET         /client/msg/testMsg                                              controllers.MsgCtrl.testMsg()
+
+#微信
+GET        /client/pay/unifiedorder/$tradeType<[a-zA-Z]+>/$orderId<[0-9]+>   controllers.WeiXinCtrl.payUnifiedorder(tradeType:String,orderId:Long)
+POST       /client/pay/weixin/back                                           controllers.WeiXinCtrl.payBackendNotify()

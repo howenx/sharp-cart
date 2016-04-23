@@ -68,6 +68,11 @@ public class SysParCom {
     public static String MNS_KEY;
     public static String MNS_SECRET;
 
+    public static String WEIXIN_APP_ID;
+    public static String WEIXIN_MCH_ID;
+    public static String WEIXIN_KEY;
+    public static String WEIXIN_PAY_UNIFIEDORDER;
+
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
 
@@ -128,6 +133,11 @@ public class SysParCom {
         MNS_ENDPOINT= configuration.getString("mns.accountendpoint");
         MNS_KEY= configuration.getString("mns.accesskeyid");
         MNS_SECRET= configuration.getString("mns.accesskeysecret");
+
+        WEIXIN_APP_ID=configuration.getString("weixin.app.id");
+        WEIXIN_MCH_ID=configuration.getString("weixin.mch.id");
+        WEIXIN_KEY=configuration.getString("weixin.key");
+        WEIXIN_PAY_UNIFIEDORDER=configuration.getString("weixin.pay.unifiedorder");
     }
 
 }

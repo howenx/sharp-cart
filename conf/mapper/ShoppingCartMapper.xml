@@ -44,7 +44,9 @@
         ${alias}.postal_fee           ,
         to_char(${alias}.confirm_receive_at, 'YYYY-MM-DD HH24:MI:SS') confirm_receive_at,
         ${alias}.pin_active_id         ,
-        ${alias}.order_type
+        ${alias}.order_type,
+        ${alias}.qr_code_url,
+        ${alias}.qr_code_at
     </sql>
 
     <!---  获取用户购物车,以用户ID或者CartID    -->
