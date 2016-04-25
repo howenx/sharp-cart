@@ -10,6 +10,7 @@ import filters.UserAuth;
 import middle.JDPayMid;
 import modules.NewScheduler;
 import modules.SysParCom;
+import net.spy.memcached.MemcachedClient;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -31,6 +32,7 @@ import util.Crypto;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -67,6 +69,9 @@ public class JDPay extends Controller {
 
     @Inject
     NewScheduler newScheduler;
+
+    @Inject
+    private MemcachedClient cache;
 
 
     @Inject

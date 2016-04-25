@@ -357,6 +357,10 @@
         <if test="pinActiveId!=null and pinActiveId !=''">
             pin_active_id = #{pinActiveId},
         </if>
+        <if test="qrCodeUrl!=null and qrCodeUrl !=''">
+            qr_code_url = #{qrCodeUrl},
+        </if>
+
         updated_at = CURRENT_TIMESTAMP(0)
          where 1=1
         <if test="userId!=null and userId !=''">

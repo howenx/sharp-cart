@@ -30,12 +30,13 @@
             <em>仅安装微信6.0.2及以上版本客户端使用</em>
             <div class="right-icon"></div>
         </div>
+
         @if(""!=qr_code_url&&null!=qr_code_url){
             <div class="weixin pay">
                 <span>微信扫码支付</span>
                 <em>仅安装微信6.0.2及以上版本客户端使用</em>
                 <div class="right-icon"></div>
-                <div ><img src="@qr_code_url"/></div>
+                <div ><img src="/client/pay/getQRCode/@qr_code_url"/></div>
             </div>
         }
         @if(""==qr_code_url||null==qr_code_url){
