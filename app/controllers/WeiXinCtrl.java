@@ -1,13 +1,12 @@
 package controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.squareup.okhttp.*;
 import domain.Message;
 import domain.Order;
 import modules.SysParCom;
 import net.glxn.qrgen.core.image.ImageType;
 import net.glxn.qrgen.javase.QRCode;
+import net.spy.memcached.MemcachedClient;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -34,8 +33,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.List;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static modules.SysParCom.ONE_CENT_PAY;
 import static play.libs.Json.newObject;
 
@@ -52,6 +51,9 @@ public class WeiXinCtrl extends Controller {
     private PromotionService promotionService;
 
     @Inject
+    private MemcachedClient cache;
+
+    @Inject
     public WeiXinCtrl(CartService cartService, IdService idService, PromotionService promotionService) {
         this.cartService = cartService;
         this.idService = idService;
@@ -59,21 +61,6 @@ public class WeiXinCtrl extends Controller {
     }
 
     public String getPayUnifiedorderParams(Order order,String tradeType) throws Exception {
-        /**
-         * <xml>
-         <appid>wx2421b1c4370ec43b</appid>
-         <attach>支付测试</attach>
-         <body>APP支付测试</body>
-         <mch_id>10000100</mch_id>
-         <nonce_str>1add1a30ac87aa2db72f57a2375d8fec</nonce_str>
-         <notify_url>http://wxpay.weixin.qq.com/pub_v2/pay/notify.v2.php</notify_url>
-         <out_trade_no>1415659990</out_trade_no>
-         <spbill_create_ip>14.23.150.211</spbill_create_ip>
-         <total_fee>1</total_fee>
-         <trade_type>APP</trade_type>
-         <sign>0CB01533B8C1EF103065174F50BCA001</sign>
-         </xml>
-         */
 
         TreeMap<String,String> paramMap=new TreeMap<>();
 
@@ -83,7 +70,7 @@ public class WeiXinCtrl extends Controller {
         paramMap.put("mch_id",SysParCom.WEIXIN_MCH_ID);
         paramMap.put("nonce_str",UUID.randomUUID().toString().replaceAll("-", ""));
         paramMap.put("body","韩秘美-订单编号" + orderId); //URLEncoder.encode
-        paramMap.put("notify_url",SysParCom.SHOPPING_URL+"/client/pay/jd/back");
+        paramMap.put("notify_url",SysParCom.SHOPPING_URL+"/client/pay/weixin/back");
         paramMap.put("out_trade_no",orderId.toString());
         paramMap.put("spbill_create_ip","127.0.0.1");
         paramMap.put("trade_type",tradeType);
@@ -240,48 +227,16 @@ public class WeiXinCtrl extends Controller {
                         objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
                         return ok(objectNode);
                     }
-                    objectNode.put("code_url",code_url); //二维码地址 TODO test
-
                     //生成二维码图片
                     ByteArrayOutputStream qrOut = createQrGen(code_url);
 
-                    ////上传图片  TODO ...
-                    RequestBody requestBody = new MultipartBuilder()
-                            .type(MultipartBuilder.FORM)
-                            .addFormDataPart("params", "minify")
-                            .addFormDataPart("photo", "1.jpg", RequestBody.create(MediaType.parse("image/jpeg"), qrOut.toByteArray()))
-                            .build();
+                    String qrCodeUrl=UUID.randomUUID().toString().replaceAll("-", "");
+                    cache.add(qrCodeUrl,2*60*60,qrOut.toByteArray());
+                    objectNode.put("qr_code_url",qrCodeUrl); //二维码地址
+                    order.setQrCodeAt(new Timestamp(System.currentTimeMillis()));
+                    order.setQrCodeUrl(qrCodeUrl);
+                    cartService.updateOrder(order);
 
-
-                    Request request = new Request.Builder()
-                            .url(SysParCom.IMAGE_URL+"upload")
-                            .post(requestBody)
-                            .build();
-
-                    OkHttpClient client = new OkHttpClient();
-                    Response response = client.newCall(request).execute();
-                    Logger.info("====response====="+response);
-
-                    if (response.isSuccessful()) {
-                        JsonNode json = Json.parse(new String(response.body().bytes(),UTF_8));
-                        Logger.error("上传返回:\n"+json.toString());
-                        String code_image_url=json.get("oss_url").asText();
-                        objectNode.put("code_image_url",code_image_url); //二维码地址
-                        //保存订单的二维码数据
-                        order.setQrCodeUrl(code_image_url);
-                        order.setQrCodeAt(new Timestamp(System.currentTimeMillis()));
-                        cartService.updateOrder(order);
-                    }
-
-
-/////////////删除/////////////////
-                    String fileName = "code.jpg";
-                    OutputStream os = new FileOutputStream(new File(("/Users/sibyl.sun/Downloads"),fileName));
-                    os.write(qrOut.toByteArray());
-                    os.flush();
-                    os.close();
-//                    objectNode.put("code_image_url","/Users/sibyl.sun/Downloads/"+fileName); //二维码地址
-                    //////////////////////////////
 
                 }else{
 
@@ -337,9 +292,65 @@ public class WeiXinCtrl extends Controller {
      * @return
      */
     public Result payBackendNotify(){
-        
-        return ok("payBackendNotify");
+        TreeMap<String,String> params=new TreeMap<>();
+        Document content= request().body().asXml();
+        Logger.info("微信支付回调返回\n"+content);
+        Element root = content.getDocumentElement();
+        NodeList books = root.getChildNodes();
+        if (books != null) {
+            for (int i = 0; i < books.getLength(); i++) {
+                Node book = books.item(i);
+                params.put(book.getNodeName(), book.getFirstChild().getNodeValue());
+                Logger.error("===payBackendNotify==节点=" + book.getNodeName() + "\ttext="+ book.getFirstChild().getNodeValue());
+            }
+        }
+
+        if(null==params.get("return_code")) {
+            Logger.error("微信支付回调,返回内容为空");
+            return ok(weixinNotifyResponse("FAIL","param is null"));
+        }
+        if("FAIL".equals(params.get("return_code"))){ //失败
+            Logger.error("微信支付回调return_code="+params.get("return_code")+",return_msg="+params.get("return_msg"));
+            return ok(weixinNotifyResponse("FAIL","return_code"));
+        }
+
+        String weixinSign=params.get("sign"); //微信发来的签名
+        params.remove("sign");
+        String sign=getWeiXinSign(params);//我方签名
+        if(!weixinSign.equals(sign)){
+            Logger.error("微信支付回调,签名不一致我方="+sign+",微信="+weixinSign);
+            return ok(weixinNotifyResponse("FAIL","SIGN ERROR"));
+        }
+
+        if("FAIL".equals(params.get("result_code"))){ //支付失败,返回支付失败的界面 TODO ...
+            Logger.error("微信支付回调result_code="+params.get("result_code")+",err_code="+params.get("err_code")+",err_code_des="+params.get("err_code_des"));
+            return ok(weixinNotifyResponse("FAIL","")); //TODO
+        }
+
+        //TODO ...成功
+
+
+
+
+        return ok(weixinNotifyResponse("SUCCESS","OK"));
     }
+
+    /**
+     * 微信通知返回信息
+     * @param return_code
+     * @param return_msg
+     * @return
+     */
+    private String weixinNotifyResponse(String return_code,String return_msg){
+        //生成xml
+        StringBuffer sb=new StringBuffer();
+        sb.append("<xml>");
+        sb.append("<return_code><![CDATA["+return_code+"]]></return_code>");
+        sb.append(" <return_msg><![CDATA["+return_msg+"]]></return_msg>");
+        sb.append("</xml>");
+        return sb.toString();
+    }
+
 
 
     /***
@@ -352,6 +363,11 @@ public class WeiXinCtrl extends Controller {
         //如果有中文，可使用withCharset("UTF-8")方法
         //设置二维码url链接，图片宽度250*250，JPG类型
         return QRCode.from(url).withSize(250, 250).to(ImageType.JPG).stream();
+    }
+
+    public Result getQRCode(String qrCodeUrl){
+        byte[] qr=(byte[]) cache.get(qrCodeUrl);
+        return ok(qr);
     }
 
 

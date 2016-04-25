@@ -22,8 +22,9 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt){
                 if(data.message.code==200){ //成功
 
                     if("NATIVE"==tradeType){ //扫码支付
-                        $("#codeImageUrl").attr("src",data.code_image_url);
-                        alert("微信返回的code_url="+data.code_url);
+
+                        $("#codeImageUrl").attr("src", "/client/pay/getQRCode/" + data.qr_code_url);
+                        //$(".weixin").unbind("click"); //移除click
                     }else{
                         //弹出微信支付界面 TODO
                         console.log("prepay_id="+data.prepay_id);
