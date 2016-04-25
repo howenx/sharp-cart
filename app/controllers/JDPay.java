@@ -388,7 +388,7 @@ public class JDPay extends Controller {
     }
 
 
-    private Map<String, String> dealPinActivity(Map<String, String> params, Order order) throws Exception {
+    public Map<String, String> dealPinActivity(Map<String, String> params, Order order) throws Exception {
         Boolean newCreatePin = false;
         List<PinUser> pinUsers;
         PinUser pinUser = new PinUser();

@@ -3,6 +3,7 @@ package controllers;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.Message;
 import domain.Order;
+import middle.JDPayMid;
 import modules.SysParCom;
 import net.glxn.qrgen.core.image.ImageType;
 import net.glxn.qrgen.javase.QRCode;
@@ -46,18 +47,19 @@ public class WeiXinCtrl extends Controller {
 
     private CartService cartService;
 
-    private IdService idService;
-
-    private PromotionService promotionService;
 
     @Inject
     private MemcachedClient cache;
 
     @Inject
-    public WeiXinCtrl(CartService cartService, IdService idService, PromotionService promotionService) {
+    private JDPayMid jdPayMid;
+
+    @Inject
+    private JDPay jdPay;
+
+    @Inject
+    public WeiXinCtrl(CartService cartService) {
         this.cartService = cartService;
-        this.idService = idService;
-        this.promotionService = promotionService;
     }
 
     public String getPayUnifiedorderParams(Order order,String tradeType) throws Exception {
@@ -262,6 +264,7 @@ public class WeiXinCtrl extends Controller {
 
     }
 
+
     /**
      * XML转MAP
      * @param xmlContent
@@ -327,11 +330,46 @@ public class WeiXinCtrl extends Controller {
             return ok(weixinNotifyResponse("FAIL","")); //TODO
         }
 
-        //TODO ...成功
+        if("SUCCESS".equals(params.get("result_code"))) {
 
+            Order order = new Order();
+            order.setOrderId(Long.valueOf(params.get("out_trade_no")));
+            order.setPayMethod("WEIXIN");
+            order.setErrorStr(params.get("err_code"));
+            order.setPgTradeNo(params.get("transaction_id"));
 
-
-
+            if (jdPayMid.asynPay(order).equals("success")) {
+                try {
+                    List<Order> orders = cartService.getOrder(order);
+                    if (orders.size() > 0) {
+                        order = orders.get(0);
+                        if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
+                            if (jdPay.dealPinActivity(params, order) == null) {
+                                Logger.error("################微信支付异步通知 拼购订单返回处理结果为空################,"+order.getOrderId());
+                                return ok(weixinNotifyResponse("FAIL","order deal fail"));
+                            }
+                            else {
+                                Logger.error("################微信支付异步通知 拼购订单返回成功################,"+order.getOrderId());
+                                return ok(weixinNotifyResponse("SUCCESS","OK"));
+                            }
+                        } else {
+                            Logger.error("################微信支付异步通知 普通订单返回成功################,"+order.getOrderId());
+                            return ok(weixinNotifyResponse("SUCCESS","OK"));
+                        }
+                    } else {
+                        Logger.error("################微信支付异步通知 订单未找到################,"+order.getOrderId());
+                        return ok(weixinNotifyResponse("FAIL","order not found"));
+                    }
+                } catch (Exception e) {
+                    Logger.error("################微信支付异步通知 出现异常################,"+order.getOrderId());
+                    e.printStackTrace();
+                    return ok(weixinNotifyResponse("FAIL",e.getMessage()));
+                }
+            }else {
+                Logger.error("################微信支付异步通知 异步方法调用返回失败################,"+params.get("out_trade_no"));
+                return ok(weixinNotifyResponse("FAIL","asynPayWeixin error"));
+            }
+        }
         return ok(weixinNotifyResponse("SUCCESS","OK"));
     }
 

@@ -360,6 +360,9 @@
         <if test="qrCodeUrl!=null and qrCodeUrl !=''">
             qr_code_url = #{qrCodeUrl},
         </if>
+        <if test="payMethod!=null and payMethod !=''">
+            pay_method = #{payMethod},
+        </if>
 
         updated_at = CURRENT_TIMESTAMP(0)
         where 1=1

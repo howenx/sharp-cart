@@ -63,6 +63,7 @@ public class JDPayMid {
     @Inject
     private ActorSystem system;
 
+
     /**
      * 京东支付异步通知结果
      *
@@ -79,7 +80,7 @@ public class JDPayMid {
             if (orders.size() > 0) order = orders.get(0);
 
             //支付回调更新用户token
-            if (params.containsKey("token") && params.containsKey("buyer_info") && Json.parse(params.get("buyer_info")).get("customer_code")!=null) {
+            if (params.containsKey("token") && params.containsKey("buyer_info") && Json.parse(params.get("buyer_info")).get("customer_code") != null) {
                 Long userId = Long.valueOf(Json.parse(params.get("buyer_info")).get("customer_code").asText());
                 IdPlus idPlus = new IdPlus();
                 idPlus.setUserId(userId);
@@ -123,6 +124,43 @@ public class JDPayMid {
             }
         } catch (Exception e) {
             Logger.error("asynPay支付回调订单出错: " + e.getMessage());
+            e.printStackTrace();
+            return "error";
+        }
+    }
+
+    public String asynPay(Order orderParams) {
+        Order order = new Order();
+        order.setOrderId(orderParams.getOrderId());
+
+        try {
+            List<Order> orders = cartService.getOrder(order);
+
+            if (orders.size() > 0) order = orders.get(0);
+
+            if (order.getOrderStatus().equals("S") || order.getOrderStatus().equals("PS") || order.getOrderStatus().equals("PF") || order.getOrderStatus().equals("F")) {
+                return "success";
+            } else {
+                order.setOrderStatus("S");
+                order.setPayMethod(orderParams.getPayMethod());
+                order.setErrorStr(orderParams.getErrorStr());
+                order.setPgTradeNo(orderParams.getPgTradeNo());
+
+                if (cartService.updateOrder(order)) {
+                    Logger.info("异步通知,支付回调订单更新订单信息: " + Json.toJson(order));
+                    system.actorSelection(ERP_PUSH).tell(order.getOrderId(), ActorRef.noSender());
+                    Logger.info("调用ERP推送订单:" + order.getOrderId());
+
+                    Logger.info("异步通知,支付后端回调返回成功," + order.getOrderId());
+                    return "success";
+
+                } else {
+                    Logger.error("asynPayWeixin更新订单状态失败," + order.getOrderId());
+                    return "error";
+                }
+            }
+        } catch (Exception e) {
+            Logger.error("asynPayWeixin支付回调订单出错: " + e.getMessage());
             e.printStackTrace();
             return "error";
         }
