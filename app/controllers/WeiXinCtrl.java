@@ -262,8 +262,8 @@ public class WeiXinCtrl extends Controller {
      * @throws SAXException
      * @throws ParserConfigurationException
      */
-    public Map<String,String> xmlToMap(String xmlContent) throws IOException, SAXException, ParserConfigurationException {
-        Map<String,String> resultMap=new HashMap<>();
+    public TreeMap<String,String> xmlToMap(String xmlContent) throws IOException, SAXException, ParserConfigurationException {
+        TreeMap<String,String> resultMap=new TreeMap<>();
         if("".equals(xmlContent)||null==xmlContent){
             return resultMap;
         }
@@ -390,81 +390,76 @@ public class WeiXinCtrl extends Controller {
      */
     public Result payBackendNotify(){
         TreeMap<String,String> params=new TreeMap<>();
-        Document content= request().body().asXml();
+        String content= request().body().asText();
         Logger.info("微信支付回调返回\n"+content);
-        Element root = content.getDocumentElement();
-        NodeList books = root.getChildNodes();
-        if (books != null) {
-            for (int i = 0; i < books.getLength(); i++) {
-                Node book = books.item(i);
-                params.put(book.getNodeName(), book.getFirstChild().getNodeValue());
-                Logger.error("===payBackendNotify==节点=" + book.getNodeName() + "\ttext="+ book.getFirstChild().getNodeValue());
+        try {
+            params = xmlToMap(content);
+
+            if (null == params.get("return_code")) {
+                Logger.error("微信支付回调,返回内容为空");
+                return ok(weixinNotifyResponse("FAIL", "param is null"));
             }
-        }
+            if (!"SUCCESS".equals(params.get("return_code"))) { //失败
+                Logger.error("微信支付回调return_code=" + params.get("return_code") + ",return_msg=" + params.get("return_msg"));
+                return ok(weixinNotifyResponse("FAIL", "return_code"));
+            }
 
+            String weixinSign = params.get("sign"); //微信发来的签名
+            String sign = getWeiXinSign(params);//我方签名
+            if (!weixinSign.equals(sign)) {
+                Logger.error("微信支付回调,签名不一致我方=" + sign + ",微信=" + weixinSign);
+                return ok(weixinNotifyResponse("FAIL", "SIGN ERROR"));
+            }
 
-        if(null==params.get("return_code")) {
-            Logger.error("微信支付回调,返回内容为空");
-            return ok(weixinNotifyResponse("FAIL","param is null"));
-        }
-        if(!"SUCCESS".equals(params.get("return_code"))){ //失败
-            Logger.error("微信支付回调return_code="+params.get("return_code")+",return_msg="+params.get("return_msg"));
-            return ok(weixinNotifyResponse("FAIL","return_code"));
-        }
+            if (!"SUCCESS".equals(params.get("result_code"))) { //支付失败,返回支付失败的界面 TODO ...
+                Logger.error("微信支付回调result_code=" + params.get("result_code") + ",err_code=" + params.get("err_code") + ",err_code_des=" + params.get("err_code_des"));
+                return ok(weixinNotifyResponse("FAIL", "")); //TODO
+            }
 
-        String weixinSign=params.get("sign"); //微信发来的签名
-        String sign=getWeiXinSign(params);//我方签名
-        if(!weixinSign.equals(sign)){
-            Logger.error("微信支付回调,签名不一致我方="+sign+",微信="+weixinSign);
-            return ok(weixinNotifyResponse("FAIL","SIGN ERROR"));
-        }
+            if ("SUCCESS".equals(params.get("result_code"))) {
 
-        if(!"SUCCESS".equals(params.get("result_code"))){ //支付失败,返回支付失败的界面 TODO ...
-            Logger.error("微信支付回调result_code="+params.get("result_code")+",err_code="+params.get("err_code")+",err_code_des="+params.get("err_code_des"));
-            return ok(weixinNotifyResponse("FAIL","")); //TODO
-        }
+                Order order = new Order();
+                order.setOrderId(Long.valueOf(params.get("out_trade_no")));
+                order.setPayMethod("WEIXIN");
+                order.setErrorStr(params.get("err_code"));
+                order.setPgTradeNo(params.get("transaction_id"));
 
-        if("SUCCESS".equals(params.get("result_code"))) {
-
-            Order order = new Order();
-            order.setOrderId(Long.valueOf(params.get("out_trade_no")));
-            order.setPayMethod("WEIXIN");
-            order.setErrorStr(params.get("err_code"));
-            order.setPgTradeNo(params.get("transaction_id"));
-
-            if (jdPayMid.asynPay(order).equals("success")) {
-                try {
-                    List<Order> orders = cartService.getOrder(order);
-                    if (orders.size() > 0) {
-                        order = orders.get(0);
-                        if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
-                            if (jdPay.dealPinActivity(params, order) == null) {
-                                Logger.error("################微信支付异步通知 拼购订单返回处理结果为空################,"+order.getOrderId());
-                                return ok(weixinNotifyResponse("FAIL","order deal fail"));
-                            }
-                            else {
-                                Logger.error("################微信支付异步通知 拼购订单返回成功################,"+order.getOrderId());
-                                return ok(weixinNotifyResponse("SUCCESS","OK"));
+                if (jdPayMid.asynPay(order).equals("success")) {
+                    try {
+                        List<Order> orders = cartService.getOrder(order);
+                        if (orders.size() > 0) {
+                            order = orders.get(0);
+                            if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
+                                if (jdPay.dealPinActivity(params, order) == null) {
+                                    Logger.error("################微信支付异步通知 拼购订单返回处理结果为空################," + order.getOrderId());
+                                    return ok(weixinNotifyResponse("FAIL", "order deal fail"));
+                                } else {
+                                    Logger.error("################微信支付异步通知 拼购订单返回成功################," + order.getOrderId());
+                                    return ok(weixinNotifyResponse("SUCCESS", "OK"));
+                                }
+                            } else {
+                                Logger.error("################微信支付异步通知 普通订单返回成功################," + order.getOrderId());
+                                return ok(weixinNotifyResponse("SUCCESS", "OK"));
                             }
                         } else {
-                            Logger.error("################微信支付异步通知 普通订单返回成功################,"+order.getOrderId());
-                            return ok(weixinNotifyResponse("SUCCESS","OK"));
+                            Logger.error("################微信支付异步通知 订单未找到################," + order.getOrderId());
+                            return ok(weixinNotifyResponse("FAIL", "order not found"));
                         }
-                    } else {
-                        Logger.error("################微信支付异步通知 订单未找到################,"+order.getOrderId());
-                        return ok(weixinNotifyResponse("FAIL","order not found"));
+                    } catch (Exception e) {
+                        Logger.error("################微信支付异步通知 出现异常################," + order.getOrderId());
+                        e.printStackTrace();
+                        return ok(weixinNotifyResponse("FAIL", e.getMessage()));
                     }
-                } catch (Exception e) {
-                    Logger.error("################微信支付异步通知 出现异常################,"+order.getOrderId());
-                    e.printStackTrace();
-                    return ok(weixinNotifyResponse("FAIL",e.getMessage()));
+                } else {
+                    Logger.error("################微信支付异步通知 异步方法调用返回失败################," + params.get("out_trade_no"));
+                    return ok(weixinNotifyResponse("FAIL", "asynPayWeixin error"));
                 }
-            }else {
-                Logger.error("################微信支付异步通知 异步方法调用返回失败################,"+params.get("out_trade_no"));
-                return ok(weixinNotifyResponse("FAIL","asynPayWeixin error"));
             }
+            return ok(weixinNotifyResponse("SUCCESS", "OK"));
+        }catch (Exception e){
+
+            return ok(weixinNotifyResponse("FAIL", e.getMessage()));
         }
-        return ok(weixinNotifyResponse("SUCCESS","OK"));
     }
 
     /**
