@@ -2,15 +2,15 @@ package controllers;
 
 import alipay.AlipayConfig;
 import domain.Order;
-import modules.SysParCom;
 import play.Logger;
 import play.mvc.Controller;
+import util.SysParCom;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-import static modules.SysParCom.ONE_CENT_PAY;
+import static util.SysParCom.ONE_CENT_PAY;
 
 /**
  * Created by sibyl.sun on 16/4/25.

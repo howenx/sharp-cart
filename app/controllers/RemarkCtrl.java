@@ -1,6 +1,7 @@
 package controllers;
 
 import akka.actor.ActorRef;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
 import filters.UserAuth;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static play.libs.Json.newObject;
 
@@ -36,6 +38,9 @@ public class RemarkCtrl extends Controller {
 
     @Inject
     private OrderCtrl orderCtrl;
+
+    private static ObjectMapper mapper = new ObjectMapper();
+
 
     /**
      * 插入评价信息
@@ -131,6 +136,9 @@ public class RemarkCtrl extends Controller {
                         List<Remark> remarkList = cartService.selectRemark(remark);
                         if (remarkList != null && remarkList.size() == 1) {
                             remark = remarkList.get(0);
+                            List<String> remarkPics = mapper.readValue(remark.getPicture(), mapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                            remarkPics = remarkPics.stream().map(pic -> SysParCom.IMAGE_URL + pic).collect(Collectors.toList());
+                            remark.setPicture(Json.toJson(remarkPics).toString());
                             map.put("comment", remark);
                         }
                         CartSkuDto skuDto = new CartSkuDto();
@@ -141,6 +149,7 @@ public class RemarkCtrl extends Controller {
                         skuDto.setPrice(orl.getPrice());
                         skuDto.setSkuTitle(orl.getSkuTitle());
 
+
                         skuDto.setInvImg(orderCtrl.getInvImg(orl.getSkuImg()));
                         skuDto.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + orl.getSkuType() + "/" + orl.getItemId() + "/" + orl.getSkuTypeId());
 
@@ -148,6 +157,7 @@ public class RemarkCtrl extends Controller {
                         skuDto.setSkuTypeId(orl.getSkuTypeId());
                         skuDto.setItemColor(orl.getSkuColor());
                         skuDto.setItemSize(orl.getSkuSize());
+                        skuDto.setOrderId(orderId);
                         map.put("orderLine", skuDto);
                         resultList.add(map);
                     }

@@ -11,6 +11,7 @@ import java.math.BigDecimal;
  * Created by howen on 15/11/25.
  */
 public class CartSkuDto implements Serializable {
+    private static final long serialVersionUID = 21L;
 
     private Long skuId;
     private Integer amount;//购买数量
@@ -24,11 +25,12 @@ public class CartSkuDto implements Serializable {
     private String itemSize;//尺码
     private String skuType;//商品类型
     private Long skuTypeId;//商品类型ID
+    private Long orderId;//订单编号
 
     public CartSkuDto() {
     }
 
-    public CartSkuDto(Long skuId, Integer amount, BigDecimal price, String skuTitle, String invImg, String invUrl, String invAndroidUrl, String itemColor, String itemSize, String skuType, Long skuTypeId) {
+    public CartSkuDto(Long skuId, Integer amount, BigDecimal price, String skuTitle, String invImg, String invUrl, String invAndroidUrl, String itemColor, String itemSize, String skuType, Long skuTypeId, Long orderId) {
         this.skuId = skuId;
         this.amount = amount;
         this.price = price;
@@ -40,6 +42,7 @@ public class CartSkuDto implements Serializable {
         this.itemSize = itemSize;
         this.skuType = skuType;
         this.skuTypeId = skuTypeId;
+        this.orderId = orderId;
     }
 
     public Long getSkuId() {
@@ -130,6 +133,14 @@ public class CartSkuDto implements Serializable {
         this.skuTypeId = skuTypeId;
     }
 
+    public Long getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
     @Override
     public String toString() {
         return "CartSkuDto{" +
@@ -144,6 +155,7 @@ public class CartSkuDto implements Serializable {
                 ", itemSize='" + itemSize + '\'' +
                 ", skuType='" + skuType + '\'' +
                 ", skuTypeId=" + skuTypeId +
+                ", orderId=" + orderId +
                 '}';
     }
 }
