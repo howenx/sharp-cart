@@ -77,6 +77,7 @@ public class SysParCom {
     public static String WEIXIN_PAY_UNIFIEDORDER;
     public static String WEIXIN_PAY_ORDERQUERY;
     public static String WEIXIN_PAY_REFUND;
+    public static String WEIXIN_SSL_PATH;
 
 
 
@@ -158,6 +159,7 @@ public class SysParCom {
         IMG_PROCESS_URL = configuration.getString("imgprocess.server.url");
         WEIXIN_PAY_ORDERQUERY=configuration.getString("weixin.pay.orderquery");
         WEIXIN_PAY_REFUND=configuration.getString("weixin.pay.refund");
+        WEIXIN_SSL_PATH=configuration.getString("weixin.ssl.path");
 
 
         //支付宝

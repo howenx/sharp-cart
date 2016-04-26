@@ -10,8 +10,6 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-import static util.SysParCom.ONE_CENT_PAY;
-
 /**
  * Created by sibyl.sun on 16/4/25.
  */
@@ -66,7 +64,7 @@ public class AlipayCtrl extends Controller {
         //付款金额，必填
         String total_fee = "";
 
-        if (ONE_CENT_PAY) {
+        if (SysParCom.ONE_CENT_PAY) {
             total_fee="1";
         } else {
             total_fee=order.getPayTotal().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString();
