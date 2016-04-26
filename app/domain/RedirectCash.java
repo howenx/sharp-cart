@@ -24,6 +24,8 @@ public class RedirectCash implements Serializable{
     @Constraints.Required
     private String securityCode; //md5(orderId+token+'HMM')
 
+    private String paySrc;//M APP
+
     public List<ValidationError> validate() {
         Map<String,String> map = new TreeMap<>();
         map.put("orderId",orderId.toString());
@@ -72,12 +74,21 @@ public class RedirectCash implements Serializable{
         this.securityCode = securityCode;
     }
 
+    public String getPaySrc() {
+        return paySrc;
+    }
+
+    public void setPaySrc(String paySrc) {
+        this.paySrc = paySrc;
+    }
+
     @Override
     public String toString() {
         return "RedirectCash{" +
                 "orderId=" + orderId +
                 ", token='" + token + '\'' +
                 ", securityCode='" + securityCode + '\'' +
+                ", paySrc='" + paySrc + '\'' +
                 '}';
     }
 }

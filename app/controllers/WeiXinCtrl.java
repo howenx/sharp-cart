@@ -5,6 +5,16 @@ import domain.Message;
 import domain.Order;
 import domain.PinUser;
 import middle.JDPayMid;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.util.EntityUtils;
 import util.SysParCom;
 import net.glxn.qrgen.core.image.ImageType;
 import net.glxn.qrgen.javase.QRCode;
@@ -24,6 +34,7 @@ import service.PromotionService;
 import util.Crypto;
 
 import javax.inject.Inject;
+import javax.net.ssl.SSLContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -32,6 +43,10 @@ import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.List;
@@ -674,7 +689,7 @@ public class WeiXinCtrl extends Controller {
         try {
             String xmlContent = getRefundParams(orderId);
             try{
-                String result=httpConnect(SysParCom.WEIXIN_PAY_REFUND,xmlContent); //接口提供所有微信支付订单的查询
+                String result=refundConnect(SysParCom.WEIXIN_PAY_REFUND,xmlContent); //接口提供所有微信支付订单的查询
                 Logger.info("微信支付退款发送内容\n"+xmlContent+"\n返回内容"+result);
                 if(""==result||null==result){
                     objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
@@ -709,6 +724,62 @@ public class WeiXinCtrl extends Controller {
         return ok(objectNode);
     }
 
+    private String refundConnect(String requestUrl,String sendStr){
+        try {
+            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            FileInputStream instream = new FileInputStream(new File(SysParCom.WEIXIN_SSL_PATH));
+
+            keyStore.load(instream, "1".toCharArray());
+            instream.close();
+            SSLContext sslcontext = SSLContexts.custom().loadKeyMaterial(keyStore, SysParCom.WEIXIN_MCH_ID.toCharArray()).build();
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext,new String[] { "TLSv1" },null,
+                    SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+            CloseableHttpClient httpclient = HttpClients.custom() .setSSLSocketFactory(sslsf) .build();
+            HttpPost httpost = new HttpPost(requestUrl);
+            httpost.addHeader("Connection", "keep-alive");
+            httpost.addHeader("Accept", "*/*");
+            httpost.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+            httpost.addHeader("Host", "api.mch.weixin.qq.com");
+            httpost.addHeader("X-Requested-With", "XMLHttpRequest");
+            httpost.addHeader("Cache-Control", "max-age=0");
+            httpost.addHeader("User-Agent", "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0) ");
+            httpost.setEntity(new StringEntity(sendStr, "UTF-8"));
+            CloseableHttpResponse response = httpclient.execute(httpost);
+            HttpEntity entity = response.getEntity();
+            Logger.info("----------------HttpEntity------------------------"+entity);
+            String jsonStr = EntityUtils.toString(response.getEntity(), "UTF-8");
+            if (entity != null) {
+                System.out.println("Response content length: " + entity.getContentLength());
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(entity.getContent()));
+                String text;
+                while ((text = bufferedReader.readLine()) != null) {
+                    System.out.println(text);
+                }
+            }
+            EntityUtils.consume(entity);
+            return jsonStr;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        return "";
+    }
+    public static String stringToAscii(String value)
+    {
+        StringBuffer sbu = new StringBuffer();
+        char[] chars = value.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            if(i != chars.length - 1)
+            {
+                sbu.append((int)chars[i]).append(",");
+            }
+            else {
+                sbu.append((int)chars[i]);
+            }
+        }
+        return sbu.toString();
+    }
 
 
 }

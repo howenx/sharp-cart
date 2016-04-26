@@ -83,7 +83,7 @@ public class JDPay extends Controller {
     }
 
     @Security.Authenticated(UserAuth.class)
-    public Result cashDesk(Long orderId) {
+    public Result cashDesk(Long orderId,String paySrc) {
 
         Map<String, String> params_failed = new HashMap<>();
         params_failed.put("m_index", M_INDEX);
@@ -106,7 +106,7 @@ public class JDPay extends Controller {
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(d.parse(order.getOrderCreateAt()));
                     Map<String, String> params = getParams(calendar.getTimeInMillis(), request().queryString(), request().body().asFormUrlEncoded(), userId, orderId);
-                    return ok(views.html.cashdesk.render(params,order.getQrCodeUrl()));
+                    return ok(views.html.cashdesk.render(params,order.getQrCodeUrl(),paySrc));
                 }
             } else return ok(views.html.jdpayfailed.render(params_failed));
         } catch (Exception ex) {
@@ -450,7 +450,7 @@ public class JDPay extends Controller {
         } else {
             RedirectCash redirectCash = redirectCashForm.get();
             flash().put("id-token", redirectCash.getToken());
-            return redirect(routes.JDPay.cashDesk(redirectCash.getOrderId()));
+            return redirect(routes.JDPay.cashDesk(redirectCash.getOrderId(),redirectCash.getPaySrc()));
         }
     }
 

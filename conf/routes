@@ -30,7 +30,8 @@ GET         /client/collect/del/$collectId<[0-9]+>                           con
 POST        /client/comment/add                                              controllers.RemarkCtrl.submitRemark
 GET         /client/comment/center/$orderId<[0-9]+>                          controllers.RemarkCtrl.orderRemarkList(orderId:Long)
 
-GET         /client/pay/order/get/$orderId<[0-9]+>                           controllers.JDPay.cashDesk(orderId:Long)
+GET         /client/pay/order/get/$orderId<[0-9]+>                           controllers.JDPay.cashDesk(orderId:Long,paySrc:String ?= "APP")
+GET         /client/pay/order/get/$orderId<[0-9]+>/$paySrc<[a-zA-Z]+>        controllers.JDPay.cashDesk(orderId:Long,paySrc:String)
 POST        /client/pay/jd/back                                              controllers.JDPay.payBackendNotify()
 POST        /client/pay/jd/front                                             controllers.JDPay.payFrontNotify()
 
@@ -53,7 +54,7 @@ GET         /client/msg/testMsg                                              con
 
 #微信
 GET        /client/weixin/pay/unifiedorder/$tradeType<[a-zA-Z]+>/$orderId<[0-9]+>   controllers.WeiXinCtrl.payUnifiedorder(tradeType:String,orderId:Long)
-POST       /client/weixin/pay/back                                                  controllers.WeiXinCtrl.payBackendNotify()
+POST        /client/weixin/pay/back                                                 controllers.WeiXinCtrl.payBackendNotify()
 GET        /client/weixin/pay/getQRCode/$qrCodeUrl<[a-zA-Z0-9]+>                    controllers.WeiXinCtrl.getQRCode(qrCodeUrl:String)
 GET        /client/weixin/pay/orderquery/$orderId<[0-9]+>                           controllers.WeiXinCtrl.payOrderquery(orderId:Long)
 GET        /client/weixin/pay/refund/$orderId<[0-9]+>                               controllers.WeiXinCtrl.payRefund(orderId:Long)
