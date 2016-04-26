@@ -263,7 +263,7 @@ public class WeiXinCtrl extends Controller {
      * @throws SAXException
      * @throws ParserConfigurationException
      */
-    private Map<String,String> xmlToMap(String xmlContent) throws IOException, SAXException, ParserConfigurationException {
+    public Map<String,String> xmlToMap(String xmlContent) throws IOException, SAXException, ParserConfigurationException {
         Map<String,String> resultMap=new HashMap<>();
         if("".equals(xmlContent)||null==xmlContent){
             return resultMap;
@@ -641,6 +641,35 @@ public class WeiXinCtrl extends Controller {
         }
     }
 
+    public String getRefundParams(Long orderId){
+        try {
+            Order order = new Order();
+            order.setOrderId(orderId);
+            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
+            if (listOptional.isPresent() && listOptional.get().size()==1){
+                order = listOptional.get().get(0);
+                TreeMap<String, String> paramMap = new TreeMap<>();
+                paramMap.put("appid", SysParCom.WEIXIN_APP_ID); //应用ID
+                paramMap.put("mch_id", SysParCom.WEIXIN_MCH_ID);
+                paramMap.put("nonce_str", UUID.randomUUID().toString().replaceAll("-", ""));
+                paramMap.put("out_trade_no", orderId + "");
+                paramMap.put("out_refund_no", orderId + ""); //商户系统内部的退款单号，商户系统内部唯一，同一退款单号多次请求只退一笔
+                Integer totalFee=order.getTotalFee().multiply(new BigDecimal(100)).intValue();
+                paramMap.put("total_fee", totalFee+""); //订单总金额，单位为分，只能为整数，详见支付金额
+                paramMap.put("refund_fee",totalFee+""); //退款总金额，订单总金额，单位为分，只能为整数，详见支付金额
+                paramMap.put("refund_fee_type", "CNY");
+                paramMap.put("op_user_id", SysParCom.WEIXIN_MCH_ID);//操作员帐号, 默认为商户号
+
+                String sign = getWeiXinSign(paramMap);
+                paramMap.put("sign", sign);
+                return mapToXml(paramMap);
+            }else return null;
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
     /**
      * 微信支付退款
      * @param orderId
@@ -649,30 +678,7 @@ public class WeiXinCtrl extends Controller {
     public Result payRefund(Long orderId){
         ObjectNode objectNode = newObject();
         try {
-            Order order = new Order();
-            order.setOrderId(orderId);
-            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
-            if (!listOptional.isPresent() || listOptional.get().size() <= 0) {
-                objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
-                return ok(objectNode);
-            }
-            order = listOptional.get().get(0);
-
-            TreeMap<String, String> paramMap = new TreeMap<>();
-            paramMap.put("appid", SysParCom.WEIXIN_APP_ID); //应用ID
-            paramMap.put("mch_id", SysParCom.WEIXIN_MCH_ID);
-            paramMap.put("nonce_str", UUID.randomUUID().toString().replaceAll("-", ""));
-            paramMap.put("out_trade_no", orderId + "");
-            paramMap.put("out_refund_no", orderId + ""); //商户系统内部的退款单号，商户系统内部唯一，同一退款单号多次请求只退一笔
-            Integer totalFee=order.getTotalFee().multiply(new BigDecimal(100)).intValue();
-            paramMap.put("total_fee", totalFee+""); //订单总金额，单位为分，只能为整数，详见支付金额
-            paramMap.put("refund_fee",totalFee+""); //退款总金额，订单总金额，单位为分，只能为整数，详见支付金额
-            paramMap.put("refund_fee_type", "CNY");
-            paramMap.put("op_user_id", SysParCom.WEIXIN_MCH_ID);//操作员帐号, 默认为商户号
-
-            String sign = getWeiXinSign(paramMap);
-            paramMap.put("sign", sign);
-            String xmlContent = mapToXml(paramMap);
+            String xmlContent = getRefundParams(orderId);
             try{
                 String result=httpConnect(SysParCom.WEIXIN_PAY_REFUND,xmlContent); //接口提供所有微信支付订单的查询
                 Logger.info("微信支付退款发送内容\n"+xmlContent+"\n返回内容"+result);
