@@ -53,7 +53,7 @@ GET         /client/msg/testMsg                                              con
 
 #微信
 GET        /client/weixin/pay/unifiedorder/$tradeType<[a-zA-Z]+>/$orderId<[0-9]+>   controllers.WeiXinCtrl.payUnifiedorder(tradeType:String,orderId:Long)
-POST        /client/weixin/pay/back                                                 controllers.WeiXinCtrl.payBackendNotify()
+POST       /client/weixin/pay/back                                                  controllers.WeiXinCtrl.payBackendNotify()
 GET        /client/weixin/pay/getQRCode/$qrCodeUrl<[a-zA-Z0-9]+>                    controllers.WeiXinCtrl.getQRCode(qrCodeUrl:String)
 GET        /client/weixin/pay/orderquery/$orderId<[0-9]+>                           controllers.WeiXinCtrl.payOrderquery(orderId:Long)
 GET        /client/weixin/pay/refund/$orderId<[0-9]+>                               controllers.WeiXinCtrl.payRefund(orderId:Long)

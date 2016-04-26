@@ -41,7 +41,6 @@ import static util.SysParCom.M_ORDERS;
 import static util.SysParCom.ONE_CENT_PAY;
 import static util.SysParCom.*;
 import static play.libs.Json.newObject;
-import static play.libs.Json.toJson;
 
 /**
  * 微信支付
