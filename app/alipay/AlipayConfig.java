@@ -11,7 +11,8 @@ package alipay;
  *该代码仅供学习和研究支付宝接口使用，只是提供一个参考。
  */
 
-import modules.SysParCom;
+
+import util.SysParCom;
 
 public class AlipayConfig {
 	

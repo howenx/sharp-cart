@@ -106,7 +106,7 @@ public class JDPay extends Controller {
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(d.parse(order.getOrderCreateAt()));
                     Map<String, String> params = getParams(calendar.getTimeInMillis(), request().queryString(), request().body().asFormUrlEncoded(), userId, orderId);
-                    return ok(views.html.cashdesk.render(params,order.getQrCodeUrl(),alipayCtrl.getAlipayParams(order)));
+                    return ok(views.html.cashdesk.render(params,order.getQrCodeUrl()));
                 }
             } else return ok(views.html.jdpayfailed.render(params_failed));
         } catch (Exception ex) {
