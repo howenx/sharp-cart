@@ -72,6 +72,19 @@ public class SysParCom {
     public static String WEIXIN_MCH_ID;
     public static String WEIXIN_KEY;
     public static String WEIXIN_PAY_UNIFIEDORDER;
+    public static String WEIXIN_PAY_ORDERQUERY;
+    public static String WEIXIN_PAY_REFUND;
+
+
+
+    public static String ALIPAY_SERVICE;
+    public static String ALIPAY_PAYMENT_TYPE;
+    public static String ALIPAY_PARTNER;
+    public static String ALIPAY_SELLER_ID;
+    public static String ALIPAY_KEY;
+    public static String ALIPAY_NOTITY_URL;
+    public static String ALIPAY_RETURN_URL;
+    public static String ALIPAY_GATEWAY;
 
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
@@ -138,6 +151,20 @@ public class SysParCom {
         WEIXIN_MCH_ID=configuration.getString("weixin.mch.id");
         WEIXIN_KEY=configuration.getString("weixin.key");
         WEIXIN_PAY_UNIFIEDORDER=configuration.getString("weixin.pay.unifiedorder");
+        WEIXIN_PAY_ORDERQUERY=configuration.getString("weixin.pay.orderquery");
+        WEIXIN_PAY_REFUND=configuration.getString("weixin.pay.refund");
+
+
+        //支付宝
+        ALIPAY_SERVICE=configuration.getString("alipay.service");
+        ALIPAY_PAYMENT_TYPE=configuration.getString("alipay.service");
+        ALIPAY_PARTNER=configuration.getString("alipay.service");
+        ALIPAY_SELLER_ID=configuration.getString("alipay.seller.id");
+        ALIPAY_KEY=configuration.getString("alipay.key");
+        ALIPAY_NOTITY_URL=configuration.getString("alipay.notify.url");
+        ALIPAY_RETURN_URL=configuration.getString("alipay.return.url");
+        ALIPAY_GATEWAY=configuration.getString("alipay.gateway");
+
     }
 
 }

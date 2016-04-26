@@ -75,6 +75,9 @@ public class JDPay extends Controller {
 
 
     @Inject
+    AlipayCtrl alipayCtrl;
+
+    @Inject
     public JDPay(CartService cartService, IdService idService, PromotionService promotionService, @Named("cancelOrderActor") ActorRef cancelOrderActor, @Named("pinFailActor") ActorRef pinFailActor) {
         this.cartService = cartService;
         this.idService = idService;
@@ -107,7 +110,7 @@ public class JDPay extends Controller {
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(d.parse(order.getOrderCreateAt()));
                     Map<String, String> params = getParams(calendar.getTimeInMillis(), request().queryString(), request().body().asFormUrlEncoded(), userId, orderId);
-                    return ok(views.html.cashdesk.render(params,order.getQrCodeUrl()));
+                    return ok(views.html.cashdesk.render(params,order.getQrCodeUrl(),alipayCtrl.getAlipayParams(order)));
                 }
             } else return ok(views.html.jdpayfailed.render(params_failed));
         } catch (Exception ex) {
