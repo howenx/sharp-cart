@@ -22,7 +22,7 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt){
                 if(data.message.code==200){ //成功
 
                     if("NATIVE"==tradeType){ //扫码支付
-
+                        $("#codeImageDiv").show();
                         $("#codeImageUrl").attr("src", "/client/weixin/pay/getQRCode/" + data.qr_code_url);
                         //$(".weixin").unbind("click"); //移除click
                     }else{

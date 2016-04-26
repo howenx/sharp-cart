@@ -47,11 +47,16 @@
             <span>微信扫码支付</span>
             <em>仅安装微信6.0.2及以上版本客户端使用</em>
             <div class="right-icon"></div>
-            <div ><img src="" id="codeImageUrl"/></div>
         </div>
-        <div><a href="/client/weixin/pay/orderquery/@params.get("""out_trade_no""")">确定</a> </div>
-        <div><a href="/client/weixin/pay/refund/@params.get("""out_trade_no""")">退款</a> </div>
-        <div><a href="/client/weixin/pay/back/test/@params.get("""out_trade_no""")">支付通知</a> </div>
+        <div id="codeImageDiv" style="display:none">
+            <img src="" id="codeImageUrl"/>
+            <div>
+                <a href="/client/weixin/pay/back/test/@params.get("""out_trade_no""")">支付通知测试</a>
+                <a href="/client/weixin/pay/orderquery/@params.get("""out_trade_no""")">确定查询订单</a>
+                <a href="/client/weixin/pay/refund/@params.get("""out_trade_no""")">退款</a>
+            </div>
+        </div>
+
         <div style="display:none">
             <form id="jdsubmit" name="jdsubmit" action="@params.get("""url""")" method="POST">
             @for((k,v) <- params) {
