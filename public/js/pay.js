@@ -9,7 +9,7 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt){
     }
     $.ajax({
         type: 'GET',
-        url: "/client/pay/unifiedorder/"+tradeType+"/"+orderId,
+        url: "/client/weixin/pay/unifiedorder/"+tradeType+"/"+orderId,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         error : function(request) {
@@ -23,7 +23,7 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt){
 
                     if("NATIVE"==tradeType){ //扫码支付
 
-                        $("#codeImageUrl").attr("src", "/client/pay/getQRCode/" + data.qr_code_url);
+                        $("#codeImageUrl").attr("src", "/client/weixin/pay/getQRCode/" + data.qr_code_url);
                         //$(".weixin").unbind("click"); //移除click
                     }else{
                         //弹出微信支付界面 TODO
@@ -40,8 +40,7 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt){
         }
     });
 
-
-}
+};
 
 
 
