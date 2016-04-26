@@ -1113,10 +1113,10 @@
             and t.order_id = #{orderId}
         </if>
         <if test="skuType!=null and skuType!=''">
-            and sku_type = #{skuType}
+            and t.sku_type = #{skuType}
         </if>
         <if test="skuTypeId!=null and skuTypeId!=''">
-            and sku_type_id = #{skuTypeId}
+            and t.sku_type_id = #{skuTypeId}
         </if>
         order by t.grade,t.create_at DESC
 
@@ -1140,13 +1140,62 @@
             and t.order_id = #{orderId}
         </if>
         <if test="skuType!=null and skuType!=''">
+            and t.sku_type = #{skuType}
+        </if>
+        <if test="skuTypeId!=null and skuTypeId!=''">
+            and t.sku_type_id = #{skuTypeId}
+        </if>
+        order by t.grade,t.create_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <insert id="insertRemark" parameterType="domain.Remark" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sp_remark (
+        user_id,
+        order_id,
+        create_at,
+        content,
+        <if test="picture!=null and picture!=''">
+            picture,
+        </if>
+        grade,
+        sku_type,
+        sku_type_id
+        ) VALUES (
+        #{userId},
+        #{orderId},
+        CURRENT_TIMESTAMP(0),
+        #{content},
+        <if test="picture!=null and picture!=''">
+            #{picture},
+        </if>
+        #{grade},
+        #{skuType},
+        #{skuTypeId}
+        )
+    </insert>
+
+    <update id="updateRemark" parameterType="domain.Remark">
+        UPDATE sp_remark SET user_id = user_id
+        <if test="picture!=null and picture!=''">
+            ,picture=#{picture}
+        </if>
+        where 1=1
+        <if test="id!=null and id !=''">
+            and id = #{id}
+        </if>
+        <if test="userId!=null and userId !=''">
+            and user_id = #{userId}
+        </if>
+        <if test="orderId!=null and orderId !=''">
+            and order_id = #{orderId}
+        </if>
+        <if test="skuType!=null and skuType!=''">
             and sku_type = #{skuType}
         </if>
         <if test="skuTypeId!=null and skuTypeId!=''">
             and sku_type_id = #{skuTypeId}
         </if>
-        order by t.grade,t.create_at DESC
-        LIMIT #{pageSize} OFFSET #{offset}
-    </select>
+    </update>
 
 </mapper>

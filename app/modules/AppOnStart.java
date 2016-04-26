@@ -6,7 +6,7 @@ import com.squareup.okhttp.Response;
 import play.Logger;
 import play.api.libs.Codecs;
 
-import static modules.SysParCom.SHOPPING_URL;
+import static util.SysParCom.SHOPPING_URL;
 
 /**
  * 应用启动时调用

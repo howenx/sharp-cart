@@ -23,7 +23,7 @@ public interface ShoppingCartMapper {
 
     Integer updateOrder(Order order) throws Exception;
 
-    List<Cart> getCartByUserSku (Cart cart) throws Exception;
+    List<Cart> getCartByUserSku(Cart cart) throws Exception;
 
     List<CouponVo> getUserCoupon(CouponVo c) throws Exception;
 
@@ -54,16 +54,29 @@ public interface ShoppingCartMapper {
     int deleteCouponF(CouponVo vo) throws Exception;
 
     int insertRefund(Refund refund) throws Exception;
-    List<Refund> selectRefund(Refund refund) throws Exception;
-    int updateRefund(Refund refund) throws  Exception;
 
-    List<Order> getPinOrder(Order order) throws  Exception;
+    List<Refund> selectRefund(Refund refund) throws Exception;
+
+    int updateRefund(Refund refund) throws Exception;
+
+    List<Order> getPinOrder(Order order) throws Exception;
 
     List<Order> getPinUserOrder(Order order) throws Exception;
 
 
-    List<Order> getOrder(Order order) throws  Exception;
-    int insertCollect(Collect collect)throws Exception;
-    List<Collect> selectCollect(Collect collect)throws Exception;
-    int deleteCollect(Collect collect)throws Exception;
+    List<Order> getOrder(Order order) throws Exception;
+
+    int insertCollect(Collect collect) throws Exception;
+
+    List<Collect> selectCollect(Collect collect) throws Exception;
+
+    int deleteCollect(Collect collect) throws Exception;
+
+    List<Remark> selectRemark(Remark remark);
+
+    List<Remark> selectRemarkPaging(Remark remark);
+
+    int insertRemark(Remark remark);
+
+    int updateRemark(Remark remark);
 }

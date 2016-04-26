@@ -1,40 +1,35 @@
 package service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import domain.*;
 import mapper.ShoppingCartMapper;
-import mapper.SkuMapper;
-import play.Logger;
 
 import javax.inject.Inject;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 购物车service实现
  * Created by howen on 15/11/22.
  */
-public class CartServiceImpl  implements CartService{
+public class CartServiceImpl implements CartService {
 
 
     @Inject
     private ShoppingCartMapper shoppingCartMapper;
 
     @Override
-    public List<Cart> getCarts(Cart cart) throws Exception{
+    public List<Cart> getCarts(Cart cart) throws Exception {
 
         return shoppingCartMapper.getCartByID(cart);
     }
 
     @Override
     public Boolean updateCart(Cart cart) throws Exception {
-        return shoppingCartMapper.updateCart(cart)>=0;
+        return shoppingCartMapper.updateCart(cart) >= 0;
     }
 
     @Override
     public Boolean addCart(Cart cart) throws Exception {
-        return shoppingCartMapper.addCart(cart)>=0;
+        return shoppingCartMapper.addCart(cart) >= 0;
     }
 
     @Override
@@ -60,12 +55,12 @@ public class CartServiceImpl  implements CartService{
 
     @Override
     public Boolean insertCoupon(CouponVo c) throws Exception {
-        return shoppingCartMapper.insertCoupon(c)>=0;
+        return shoppingCartMapper.insertCoupon(c) >= 0;
     }
 
     @Override
     public Boolean updateCoupon(CouponVo c) throws Exception {
-        return shoppingCartMapper.updateCoupon(c)>=0;
+        return shoppingCartMapper.updateCoupon(c) >= 0;
     }
 
     @Override
@@ -75,17 +70,17 @@ public class CartServiceImpl  implements CartService{
 
     @Override
     public Boolean updateCouponInvalid(CouponVo c) throws Exception {
-        return shoppingCartMapper.updateCouponInvalid(c)>=0;
+        return shoppingCartMapper.updateCouponInvalid(c) >= 0;
     }
 
     @Override
     public Boolean insertOrderSplit(OrderSplit orderSplit) throws Exception {
-        return shoppingCartMapper.insertOrderSplit(orderSplit)>=0;
+        return shoppingCartMapper.insertOrderSplit(orderSplit) >= 0;
     }
 
     @Override
     public Boolean updateOrderSplit(OrderSplit orderSplit) throws Exception {
-        return shoppingCartMapper.updateOrderSplit(orderSplit)>=0;
+        return shoppingCartMapper.updateOrderSplit(orderSplit) >= 0;
     }
 
     @Override
@@ -95,7 +90,7 @@ public class CartServiceImpl  implements CartService{
 
     @Override
     public Boolean insertOrderLine(OrderLine orderLine) throws Exception {
-        return shoppingCartMapper.insertOrderLine(orderLine)>=0;
+        return shoppingCartMapper.insertOrderLine(orderLine) >= 0;
     }
 
     @Override
@@ -105,7 +100,7 @@ public class CartServiceImpl  implements CartService{
 
     @Override
     public Boolean insertOrderAddress(OrderAddress orderAddress) throws Exception {
-        return shoppingCartMapper.insertOrderAddress(orderAddress)>=0;
+        return shoppingCartMapper.insertOrderAddress(orderAddress) >= 0;
     }
 
     @Override
@@ -115,17 +110,17 @@ public class CartServiceImpl  implements CartService{
 
     @Override
     public Boolean insertOrder(Order order) throws Exception {
-        return shoppingCartMapper.insertOrder(order)>=0;
+        return shoppingCartMapper.insertOrder(order) >= 0;
     }
 
     @Override
     public Boolean deleteCouponF(CouponVo vo) throws Exception {
-        return shoppingCartMapper.deleteCouponF(vo)>=0;
+        return shoppingCartMapper.deleteCouponF(vo) >= 0;
     }
 
     @Override
     public Boolean insertRefund(Refund refund) throws Exception {
-        return shoppingCartMapper.insertRefund(refund)>=0;
+        return shoppingCartMapper.insertRefund(refund) >= 0;
     }
 
     @Override
@@ -135,7 +130,7 @@ public class CartServiceImpl  implements CartService{
 
     @Override
     public Boolean updateRefund(Refund refund) throws Exception {
-        return shoppingCartMapper.updateRefund(refund)>=0;
+        return shoppingCartMapper.updateRefund(refund) >= 0;
     }
 
     @Override
@@ -154,7 +149,7 @@ public class CartServiceImpl  implements CartService{
     }
 
     public Boolean insertCollect(Collect collect) throws Exception {
-        return shoppingCartMapper.insertCollect(collect)>=0;
+        return shoppingCartMapper.insertCollect(collect) >= 0;
     }
 
     @Override
@@ -164,11 +159,31 @@ public class CartServiceImpl  implements CartService{
 
     @Override
     public Boolean deleteCollect(Collect collect) throws Exception {
-        return shoppingCartMapper.deleteCollect(collect)>=0;
+        return shoppingCartMapper.deleteCollect(collect) >= 0;
     }
 
     @Override
     public Integer UpdateCartBy(Cart cart) throws Exception {
         return shoppingCartMapper.UpdateCartBy(cart);
+    }
+
+    @Override
+    public List<Remark> selectRemark(Remark remark) {
+        return shoppingCartMapper.selectRemark(remark);
+    }
+
+    @Override
+    public List<Remark> selectRemarkPaging(Remark remark) {
+        return shoppingCartMapper.selectRemarkPaging(remark);
+    }
+
+    @Override
+    public Boolean insertRemark(Remark remark) {
+        return shoppingCartMapper.insertRemark(remark) >= 0;
+    }
+
+    @Override
+    public Boolean updateRemark(Remark remark) {
+        return shoppingCartMapper.updateRemark(remark) >= 0;
     }
 }

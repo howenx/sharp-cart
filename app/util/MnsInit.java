@@ -5,7 +5,7 @@ import com.aliyun.mns.client.MNSClient;
 
 import javax.inject.Singleton;
 
-import static modules.SysParCom.*;
+import static util.SysParCom.*;
 
 /**
  * 阿里云mns初始化

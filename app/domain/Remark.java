@@ -2,6 +2,7 @@ package domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import play.data.validation.Constraints;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -21,10 +22,15 @@ public class Remark implements Serializable {
     private Long orderId;//订单ID
     @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp createAt;//评价时间
+    @Constraints.MaxLength(500)
+    @Constraints.MinLength(10)
     private String content;//评价内容
     private String picture;//晒图
+    @Constraints.Required
     private Integer grade;//评分1,2,3,4,5
+    @Constraints.Required
     private String skuType;//商品类型
+    @Constraints.Required
     private Long skuTypeId;//商品类型ID
 
     @JsonIgnore

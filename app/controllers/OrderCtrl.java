@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
 import filters.UserAuth;
 import middle.OrderMid;
-import modules.SysParCom;
+import util.SysParCom;
 import org.apache.commons.io.FileUtils;
 import play.Logger;
 import play.data.Form;
@@ -26,7 +26,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static akka.pattern.Patterns.ask;
-import static modules.SysParCom.EXPRESS_URL;
+import static util.SysParCom.EXPRESS_URL;
 import static play.libs.Json.newObject;
 
 /**

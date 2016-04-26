@@ -8,7 +8,7 @@ import domain.Order;
 import domain.OrderSplit;
 import middle.JDPayMid;
 import modules.NewScheduler;
-import modules.SysParCom;
+import util.SysParCom;
 import play.Logger;
 import play.libs.ws.WSClient;
 import scala.concurrent.duration.Duration;

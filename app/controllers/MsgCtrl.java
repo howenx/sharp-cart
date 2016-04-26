@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.MsgTypeEnum;
 import domain.*;
 import filters.UserAuth;
-import modules.SysParCom;
+import util.SysParCom;
 import play.Logger;
 import play.libs.Json;
 import play.mvc.Controller;

@@ -26,7 +26,9 @@ POST        /client/collect/submit                                           con
 GET         /client/collect/get/collect/list                                 controllers.OrderCtrl.getCollect
 GET         /client/collect/del/$collectId<[0-9]+>                           controllers.OrderCtrl.delCollect(collectId:Long)
 
-
+#评论
+POST        /client/comment/add                                              controllers.RemarkCtrl.submitRemark
+GET         /client/comment/center/$orderId<[0-9]+>                          controllers.RemarkCtrl.orderRemarkList(orderId:Long)
 
 GET         /client/pay/order/get/$orderId<[0-9]+>                           controllers.JDPay.cashDesk(orderId:Long)
 POST        /client/pay/jd/back                                              controllers.JDPay.payBackendNotify()

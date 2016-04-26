@@ -8,7 +8,7 @@ import controllers.Application;
 import controllers.MsgCtrl;
 import controllers.PushCtrl;
 import domain.*;
-import modules.SysParCom;
+import util.SysParCom;
 import net.spy.memcached.MemcachedClient;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -27,7 +27,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
 
-import static modules.SysParCom.ERP_PUSH;
+import static util.SysParCom.ERP_PUSH;
 
 /**
  * 京东支付中间层

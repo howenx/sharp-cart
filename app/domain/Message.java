@@ -74,6 +74,9 @@ public class Message implements Serializable{
         ORDER_NOT_DELIVERY("此订单尚未发货",1021),
         CONFIRM_DELIVERY_FAIL("确认收货失败",1022),
 
+        UPLOAD_PICTURE_SIZES_OVER_LIMIT("上传图片张数超限",1023),
+        ORDER_STATUS_EXCEPTION("订单状态不符合",1024),
+
         SKU_AMOUNT_SHORTAGE("亲,此件商品库存不足了", 2001),
         SKU_INVALID("亲,您已经长时间未操作,此商品已经失效,建议您刷新购物车", 2002),
         SKU_STATUS_ERROR("亲,此商品已经失效,请选择其他商品", 2003),

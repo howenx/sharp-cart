@@ -3,7 +3,7 @@ package util;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import static modules.SysParCom.ORDER_OVER_TIME;
+import static util.SysParCom.ORDER_OVER_TIME;
 /**
  * 计算倒计时
  * Created by howen on 15/12/22.

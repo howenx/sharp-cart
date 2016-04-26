@@ -1,6 +1,5 @@
 package service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import domain.*;
 
 import java.util.List;
@@ -21,7 +20,7 @@ public interface CartService {
 
     Boolean updateOrder(Order order) throws Exception;
 
-    List<Cart> getCartByUserSku (Cart cart) throws Exception;
+    List<Cart> getCartByUserSku(Cart cart) throws Exception;
 
     List<CouponVo> getUserCoupon(CouponVo c) throws Exception;
 
@@ -52,19 +51,55 @@ public interface CartService {
     Boolean deleteCouponF(CouponVo vo) throws Exception;
 
     Boolean insertRefund(Refund refund) throws Exception;
+
     List<Refund> selectRefund(Refund refund) throws Exception;
-    Boolean updateRefund(Refund refund) throws  Exception;
 
-    List<Order> getPinOrder(Order order) throws  Exception;
+    Boolean updateRefund(Refund refund) throws Exception;
 
-    List<Order> getOrder(Order order) throws  Exception;
+    List<Order> getPinOrder(Order order) throws Exception;
+
+    List<Order> getOrder(Order order) throws Exception;
 
     List<Order> getPinUserOrder(Order order) throws Exception;
 
 
-    Boolean insertCollect(Collect collect)throws Exception;
-    List<Collect> selectCollect(Collect collect)throws Exception;
-    Boolean deleteCollect(Collect collect)throws Exception;
+    Boolean insertCollect(Collect collect) throws Exception;
+
+    List<Collect> selectCollect(Collect collect) throws Exception;
+
+    Boolean deleteCollect(Collect collect) throws Exception;
 
     Integer UpdateCartBy(Cart cart) throws Exception;
+
+    /**
+     * 查询评价
+     *
+     * @param remark remark
+     * @return List<Remark>
+     */
+    List<Remark> selectRemark(Remark remark);
+
+    /**
+     * 分页查询评价
+     *
+     * @param remark remark
+     * @return List<Remark>
+     */
+    List<Remark> selectRemarkPaging(Remark remark);
+
+    /**
+     * 插入评价信息
+     *
+     * @param remark remark
+     * @return Boolean
+     */
+    Boolean insertRemark(Remark remark);
+
+    /**
+     * 更新评价信息
+     *
+     * @param remark remark
+     * @return Boolean
+     */
+    Boolean updateRemark(Remark remark);
 }

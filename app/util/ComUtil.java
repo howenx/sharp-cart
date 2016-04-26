@@ -2,7 +2,6 @@ package util;
 
 import domain.Sku;
 import domain.SkuVo;
-import modules.SysParCom;
 
 import java.math.BigDecimal;
 

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.Message;
 import domain.Order;
 import middle.JDPayMid;
-import modules.SysParCom;
+import util.SysParCom;
 import net.glxn.qrgen.core.image.ImageType;
 import net.glxn.qrgen.javase.QRCode;
 import net.spy.memcached.MemcachedClient;
@@ -19,8 +19,6 @@ import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import service.CartService;
-import service.IdService;
-import service.PromotionService;
 import util.Crypto;
 
 import javax.inject.Inject;
@@ -36,7 +34,7 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.List;
 
-import static modules.SysParCom.ONE_CENT_PAY;
+import static util.SysParCom.ONE_CENT_PAY;
 import static play.libs.Json.newObject;
 
 /**

@@ -1,4 +1,4 @@
-package modules;
+package util;
 
 import domain.SysParameter;
 import play.Configuration;
@@ -25,6 +25,9 @@ public class SysParCom {
 
     //图片服务器url
     public static String IMAGE_URL;
+
+    //图片处理服务器URL
+    public static String IMG_PROCESS_URL;
 
     //发布服务器url
     public static String DEPLOY_URL;
@@ -138,6 +141,8 @@ public class SysParCom {
         WEIXIN_MCH_ID=configuration.getString("weixin.mch.id");
         WEIXIN_KEY=configuration.getString("weixin.key");
         WEIXIN_PAY_UNIFIEDORDER=configuration.getString("weixin.pay.unifiedorder");
+
+        IMG_PROCESS_URL = configuration.getString("imgprocess.server.url");
     }
 
 }
