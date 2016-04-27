@@ -87,7 +87,7 @@ public class RefundActor extends AbstractActor {
 
         String xmlContent = weiXinCtrl.getRefundParams(refund.getOrderId());
         if (xmlContent != null) {
-            String result = weiXinCtrl.httpConnect(SysParCom.WEIXIN_PAY_REFUND, xmlContent); //接口提供所有微信支付订单的查询
+            String result = weiXinCtrl.refundConnect(SysParCom.WEIXIN_PAY_REFUND, xmlContent); //接口提供所有微信支付订单的查询
             Logger.info("微信支付退款发送内容\n" + xmlContent + "\n返回内容" + result);
 
             if (Objects.equals("", result) || null == result) {

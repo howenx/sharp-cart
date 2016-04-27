@@ -755,7 +755,7 @@ public class WeiXinCtrl extends Controller {
      * @param sendStr
      * @return
      */
-    private String refundConnect(String requestUrl,String sendStr){
+    public String refundConnect(String requestUrl,String sendStr){
         try {
             KeyStore keyStore = KeyStore.getInstance("PKCS12");
             FileInputStream instream = new FileInputStream(new File(SysParCom.WEIXIN_SSL_PATH));
