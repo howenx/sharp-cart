@@ -11,8 +11,6 @@ import play.data.Form;
 import play.libs.Json;
 import play.mvc.*;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 import service.CartService;
 import util.SysParCom;
 
@@ -76,14 +74,18 @@ public class RemarkCtrl extends Controller {
                 remark.setUserId(userId);
                 List<Http.MultipartFormData.FilePart> fileParts = body.getFiles();
 
-                Remark remarkExist =new Remark();
+                Remark remarkExist = new Remark();
                 remarkExist.setUserId(userId);
                 remarkExist.setSkuType(remark.getSkuType());
                 remarkExist.setSkuTypeId(remark.getSkuTypeId());
                 remarkExist.setOrderId(remark.getOrderId());
 
                 List<Remark> remarkList = cartService.selectRemark(remarkExist);
-                if (remarkList.size()>0){
+
+                if (remarkList.size() > 0) {
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.REMARK_EXISTS.getIndex()), Message.ErrorCode.REMARK_EXISTS.getIndex())));
+                    return ok(result);
+                } else {
                     if (cartService.insertRemark(remark)) {
                         if (!fileParts.isEmpty() && fileParts.size() < 6) {
                             Map<String, Object> mapActor = new HashMap<>();
@@ -110,9 +112,6 @@ public class RemarkCtrl extends Controller {
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
                         return ok(result);
                     }
-                }else {
-                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.REMARK_EXISTS.getIndex()), Message.ErrorCode.REMARK_EXISTS.getIndex())));
-                    return ok(result);
                 }
             } catch (Exception ex) {
                 Logger.error("server exception:" + ex.getMessage());
@@ -153,7 +152,7 @@ public class RemarkCtrl extends Controller {
                         List<Remark> remarkList = cartService.selectRemark(remark);
                         if (remarkList != null && remarkList.size() == 1) {
                             remark = remarkList.get(0);
-                            if (remark.getPicture()!=null){
+                            if (remark.getPicture() != null) {
                                 List<String> remarkPics = mapper.readValue(remark.getPicture(), mapper.getTypeFactory().constructCollectionType(List.class, String.class));
                                 remarkPics = remarkPics.stream().map(pic -> SysParCom.IMAGE_URL + pic).collect(Collectors.toList());
                                 remark.setPicture(Json.toJson(remarkPics).toString());
