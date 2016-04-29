@@ -13,15 +13,26 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
+<<<<<<< HEAD
+=======
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
+import org.w3c.dom.NodeList;
+import play.libs.XPath;
+import util.SysParCom;
+import net.glxn.qrgen.core.image.ImageType;
+import net.glxn.qrgen.javase.QRCode;
+import net.spy.memcached.MemcachedClient;
+>>>>>>> 31ef8045cfb02964215553b6c0927499829dcb78
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import play.Logger;
@@ -34,10 +45,13 @@ import util.Crypto;
 import util.SysParCom;
 
 import javax.inject.Inject;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.events.Namespace;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
@@ -47,6 +61,14 @@ import java.security.KeyStore;
 import java.sql.Timestamp;
 import java.util.*;
 
+<<<<<<< HEAD
+=======
+import static play.libs.Json.toJson;
+import static util.SysParCom.M_INDEX;
+import static util.SysParCom.M_ORDERS;
+import static util.SysParCom.ONE_CENT_PAY;
+import static util.SysParCom.*;
+>>>>>>> 31ef8045cfb02964215553b6c0927499829dcb78
 import static play.libs.Json.newObject;
 import static util.SysParCom.*;
 
@@ -282,13 +304,18 @@ public class WeiXinCtrl extends Controller {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(new InputSource(new StringReader(xmlContent)));
-        Element root = doc.getDocumentElement();
-        NodeList books = root.getChildNodes();
+        NodeList books= (NodeList) XPath.selectNode("//*",doc);
         if (books != null) {
             for (int i = 0; i < books.getLength(); i++) {
                 Node book = books.item(i);
+<<<<<<< HEAD
                 resultMap.put(book.getNodeName(), book.getFirstChild().getNodeValue());
                 Logger.error("节点=" + book.getNodeName() + "\ttext=" + book.getFirstChild().getNodeValue());
+=======
+                if(null!=book&&null!=book.getNodeName()&&book.getNodeType() != Node.TEXT_NODE){
+                    resultMap.put(book.getNodeName(), book.getFirstChild()==null?"":book.getFirstChild().getNodeValue());
+                }
+>>>>>>> 31ef8045cfb02964215553b6c0927499829dcb78
             }
         }
         return resultMap;
@@ -401,12 +428,31 @@ public class WeiXinCtrl extends Controller {
      *
      * @return
      */
+<<<<<<< HEAD
     public Result payBackendNotify() {
         TreeMap<String, String> params = new TreeMap<>();
         String content = request().body().asText();
         Logger.info("微信支付回调返回\n" + content);
+=======
+    public Result payBackendNotify(){
+        TreeMap<String,String> params=new TreeMap<>();
+        Document content= request().body().asXml();
+        Logger.info("微信支付回调返回\n"+content+",request().body()="+request().body());
+>>>>>>> 31ef8045cfb02964215553b6c0927499829dcb78
         try {
-            params = xmlToMap(content);
+            Element root = content.getDocumentElement();
+
+            // 得到根元素的所有子节点
+            NodeList books = root.getChildNodes();
+            if (books != null) {
+                for (int i = 0; i < books.getLength(); i++) {
+                    Node book = books.item(i);
+                    if(null!=book&&book.getNodeType() == Node.ELEMENT_NODE){
+                        Logger.error(book+"节点=" + book.getNodeName() + "\ttext===="+book.getFirstChild().getNodeValue());
+                        params.put(book.getNodeName(), book.getFirstChild().getNodeValue());
+                    }
+                }
+            }
 
             if (null == params.get("return_code")) {
                 Logger.error("微信支付回调,返回内容为空");
@@ -665,9 +711,20 @@ public class WeiXinCtrl extends Controller {
                 paramMap.put("nonce_str", UUID.randomUUID().toString().replaceAll("-", ""));
                 paramMap.put("out_trade_no", orderId + "");
                 paramMap.put("out_refund_no", orderId + ""); //商户系统内部的退款单号，商户系统内部唯一，同一退款单号多次请求只退一笔
+<<<<<<< HEAD
                 Integer totalFee = order.getTotalFee().multiply(new BigDecimal(100)).intValue();
                 paramMap.put("total_fee", totalFee + ""); //订单总金额，单位为分，只能为整数，详见支付金额
                 paramMap.put("refund_fee", totalFee + ""); //退款总金额，订单总金额，单位为分，只能为整数，详见支付金额
+=======
+                String totalFee="";
+                if (ONE_CENT_PAY) {
+                    totalFee="1";
+                } else {
+                    totalFee=order.getPayTotal().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString();
+                }
+                paramMap.put("total_fee", totalFee); //订单总金额，单位为分，只能为整数，详见支付金额
+                paramMap.put("refund_fee",totalFee); //退款总金额，订单总金额，单位为分，只能为整数，详见支付金额
+>>>>>>> 31ef8045cfb02964215553b6c0927499829dcb78
                 paramMap.put("refund_fee_type", "CNY");
                 paramMap.put("op_user_id", SysParCom.WEIXIN_MCH_ID);//操作员帐号, 默认为商户号
 
@@ -727,48 +784,34 @@ public class WeiXinCtrl extends Controller {
         return ok(objectNode);
     }
 
-    @SuppressWarnings("unchecked")
-    private String refundConnect(String requestUrl, String sendStr) {
+    /**
+     * 微信退款请求
+     * @param requestUrl
+     * @param sendStr
+     * @return
+     */
+    public String refundConnect(String requestUrl,String sendStr){
         try {
             KeyStore keyStore = KeyStore.getInstance("PKCS12");
             FileInputStream instream = new FileInputStream(new File(SysParCom.WEIXIN_SSL_PATH));
-
-            keyStore.load(instream, "1".toCharArray());
+            keyStore.load(instream, SysParCom.WEIXIN_MCH_ID.toCharArray());
             instream.close();
             SSLContext sslcontext = SSLContexts.custom().loadKeyMaterial(keyStore, SysParCom.WEIXIN_MCH_ID.toCharArray()).build();
 
-//            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext,new String[] { "TLSv1" },null,SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
-            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext,
-                    new String[]{"TLSv1"}, null, new NoopHostnameVerifier());
-            CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
+            SSLConnectionSocketFactory sslsf=new SSLConnectionSocketFactory(sslcontext,SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+            CloseableHttpClient httpclient = HttpClients.custom() .setSSLSocketFactory(sslsf) .build();
             HttpPost httpost = new HttpPost(requestUrl);
-            httpost.addHeader("Connection", "keep-alive");
-            httpost.addHeader("Accept", "*/*");
-            httpost.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-            httpost.addHeader("Host", "api.mch.weixin.qq.com");
-            httpost.addHeader("X-Requested-With", "XMLHttpRequest");
-            httpost.addHeader("Cache-Control", "max-age=0");
-            httpost.addHeader("User-Agent", "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0) ");
+            httpost.addHeader("Content-Type", "text/xml; charset=UTF-8");
             httpost.setEntity(new StringEntity(sendStr, "UTF-8"));
             CloseableHttpResponse response = httpclient.execute(httpost);
             HttpEntity entity = response.getEntity();
             Logger.info("----------------HttpEntity------------------------" + entity);
             String jsonStr = EntityUtils.toString(response.getEntity(), "UTF-8");
-            if (entity != null) {
-                System.out.println("Response content length: " + entity.getContentLength());
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(entity.getContent()));
-                String text;
-                while ((text = bufferedReader.readLine()) != null) {
-                    System.out.println(text);
-                }
-            }
             EntityUtils.consume(entity);
             return jsonStr;
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
         return "";
     }
 
@@ -784,6 +827,5 @@ public class WeiXinCtrl extends Controller {
         }
         return sbu.toString();
     }
-
 
 }
