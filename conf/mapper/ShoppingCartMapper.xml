@@ -1118,7 +1118,7 @@
         <if test="skuTypeId!=null and skuTypeId!=''">
             and t.sku_type_id = #{skuTypeId}
         </if>
-        order by t.grade,t.create_at DESC
+        order by t.picture,t.grade DESC,t.create_at DESC
 
     </select>
 
@@ -1145,7 +1145,7 @@
         <if test="skuTypeId!=null and skuTypeId!=''">
             and t.sku_type_id = #{skuTypeId}
         </if>
-        order by t.grade,t.create_at DESC
+        order by t.picture,t.grade DESC,t.create_at DESC
         LIMIT #{pageSize} OFFSET #{offset}
     </select>
 

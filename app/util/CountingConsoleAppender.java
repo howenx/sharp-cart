@@ -24,9 +24,9 @@ public class CountingConsoleAppender extends AppenderBase<ILoggingEvent> {
     }
 
     public void append(ILoggingEvent event) {
-        LogUtil.sendLog(event);
         try {
             this.encoder.doEncode(event);
+            LogUtil.sendLog(event);
         } catch (IOException ex) {
             ex.printStackTrace();
         }

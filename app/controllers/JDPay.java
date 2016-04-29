@@ -83,7 +83,7 @@ public class JDPay extends Controller {
     }
 
     @Security.Authenticated(UserAuth.class)
-    public Result cashDesk(Long orderId,String paySrc) {
+    public Result cashDesk(Long orderId, String paySrc) {
 
         Map<String, String> params_failed = new HashMap<>();
         params_failed.put("m_index", M_INDEX);
@@ -106,7 +106,7 @@ public class JDPay extends Controller {
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(d.parse(order.getOrderCreateAt()));
                     Map<String, String> params = getParams(calendar.getTimeInMillis(), request().queryString(), request().body().asFormUrlEncoded(), userId, orderId);
-                    return ok(views.html.cashdesk.render(params,order.getQrCodeUrl(),paySrc));
+                    return ok(views.html.cashdesk.render(params, order.getQrCodeUrl(), paySrc));
                 }
             } else return ok(views.html.jdpayfailed.render(params_failed));
         } catch (Exception ex) {
@@ -172,9 +172,9 @@ public class JDPay extends Controller {
             map.put("out_trade_no", orderId.toString());
             map.put("return_params", orderId.toString());//成功支付,或者查询时候,返回订单编号
             map.put("trade_subject", "韩秘美-订单编号" + orderId);
-            if(ONE_CENT_PAY){
+            if (ONE_CENT_PAY) {
                 map.put("trade_amount", "1");
-            }else{
+            } else {
                 map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
             }
 
@@ -267,27 +267,26 @@ public class JDPay extends Controller {
                                 order = orders.get(0);
                                 if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
                                     if (dealPinActivity(params, order) == null) {
-                                        Logger.error("************京东支付异步通知 拼购订单返回处理结果为空************,"+order.getOrderId());
+                                        Logger.error("************京东支付异步通知 拼购订单返回处理结果为空************," + order.getOrderId());
                                         return ok("error");
-                                    }
-                                    else {
-                                        Logger.error("************京东支付异步通知 拼购订单返回成功************,"+order.getOrderId());
+                                    } else {
+                                        Logger.error("************京东支付异步通知 拼购订单返回成功************," + order.getOrderId());
                                         return ok("success");
                                     }
                                 } else {
-                                    Logger.error("************京东支付异步通知 普通订单返回成功************,"+order.getOrderId());
+                                    Logger.error("************京东支付异步通知 普通订单返回成功************," + order.getOrderId());
                                     return ok("success");
                                 }
                             } else {
-                                Logger.error("************京东支付异步通知 订单未找到************,"+order.getOrderId());
+                                Logger.error("************京东支付异步通知 订单未找到************," + order.getOrderId());
                                 return ok("error");
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
                             return ok("error");
                         }
-                    }else {
-                        Logger.error("************京东支付异步通知 异步方法调用返回失败************,"+params.get("out_trade_no"));
+                    } else {
+                        Logger.error("************京东支付异步通知 异步方法调用返回失败************," + params.get("out_trade_no"));
                         return ok("error");
                     }
                 } else {
@@ -374,9 +373,10 @@ public class JDPay extends Controller {
         params.put("out_trade_no", refund.getId().toString());
         params.put("original_out_trade_no", refund.getOrderId().toString());
 
-        if (ONE_CENT_PAY){
+        if (ONE_CENT_PAY) {
             params.put("trade_amount", "1");
-        }else params.put("trade_amount", refund.getPayBackFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
+        } else
+            params.put("trade_amount", refund.getPayBackFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toPlainString());
 
 
         params.put("trade_subject", refund.getReason());
@@ -415,14 +415,14 @@ public class JDPay extends Controller {
 
         if (newCreatePin) {
             if (activity.getJoinPersons().equals(activity.getPersonNum())) {
-                jdPayMid.pinPushMsg(activity,PIN_SUCCESS_MSG,null);
+                jdPayMid.pinPushMsg(activity, PIN_SUCCESS_MSG, null);
             }
             if (pinUsers.size() > 0) {
                 pinUser = pinUsers.get(0);
                 if (pinUser.isOrMaster()) {
                     newScheduler.scheduleOnce(FiniteDuration.create(24, HOURS), pinFailActor, order.getPinActiveId());
-                }else if (activity.getJoinPersons()< activity.getPersonNum()){
-                    jdPayMid.pinPushMsg(activity,PIN_ADD_MSG,pinUser.getId());
+                } else if (activity.getJoinPersons() < activity.getPersonNum()) {
+                    jdPayMid.pinPushMsg(activity, PIN_ADD_MSG, pinUser.getId());
                 }
             }
         }
@@ -432,10 +432,10 @@ public class JDPay extends Controller {
 
             if (pinUser.isOrMaster()) {
                 params.put("pinActivity", SysParCom.PROMOTION_URL + "/promotion/pin/activity/pay/" + order.getPinActiveId() + "/1");
-                params.put("m_pinActivity",M_PIN+order.getPinActiveId()+"/1");
+                params.put("m_pinActivity", M_PIN + order.getPinActiveId() + "/1");
             } else {
                 params.put("pinActivity", SysParCom.PROMOTION_URL + "/promotion/pin/activity/pay/" + order.getPinActiveId() + "/2");
-                params.put("m_pinActivity",M_PIN+order.getPinActiveId()+"/2");
+                params.put("m_pinActivity", M_PIN + order.getPinActiveId() + "/2");
             }
         }
         return params;
@@ -450,7 +450,7 @@ public class JDPay extends Controller {
         } else {
             RedirectCash redirectCash = redirectCashForm.get();
             flash().put("id-token", redirectCash.getToken());
-            return redirect(routes.JDPay.cashDesk(redirectCash.getOrderId(),redirectCash.getPaySrc()));
+            return redirect("/client/pay/order/get/" + redirectCash.getOrderId() + "/" + redirectCash.getPaySrc());
         }
     }
 

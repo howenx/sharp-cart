@@ -3,9 +3,12 @@ package domain;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import play.data.validation.Constraints;
+import play.data.validation.ValidationError;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 用户评价
@@ -20,10 +23,10 @@ public class Remark implements Serializable {
     private Long userId;//用户ID
     @JsonIgnore
     private Long orderId;//订单ID
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Timestamp createAt;//评价时间
-    @Constraints.MaxLength(500)
     @Constraints.MinLength(10)
+    @Constraints.MaxLength(500)
     private String content;//评价内容
     private String picture;//晒图
     @Constraints.Required
@@ -37,6 +40,14 @@ public class Remark implements Serializable {
     private Integer pageSize;
     @JsonIgnore
     private Integer offset;
+
+    public List<ValidationError> validate() {
+        List<ValidationError> errors = new ArrayList<>();
+        if (content.trim().length() < 10 || content.trim().length() > 500) {
+            errors.add(new ValidationError("content", "This content length is wrong"));
+        }
+        return errors.isEmpty() ? null : errors;
+    }
 
     public Remark() {
     }
@@ -54,7 +65,6 @@ public class Remark implements Serializable {
         this.pageSize = pageSize;
         this.offset = offset;
     }
-
 
 
     public static long getSerialVersionUID() {

@@ -27,6 +27,7 @@ public class CartSkuDto implements Serializable {
     private Long skuTypeId;//商品类型ID
     private Long orderId;//订单编号
 
+
     public CartSkuDto() {
     }
 
@@ -43,6 +44,10 @@ public class CartSkuDto implements Serializable {
         this.skuType = skuType;
         this.skuTypeId = skuTypeId;
         this.orderId = orderId;
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
     }
 
     public Long getSkuId() {

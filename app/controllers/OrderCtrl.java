@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
 import filters.UserAuth;
 import middle.OrderMid;
-import util.SysParCom;
 import org.apache.commons.io.FileUtils;
 import play.Logger;
 import play.data.Form;
@@ -19,6 +18,8 @@ import service.CartService;
 import service.PromotionService;
 import service.SkuService;
 import util.CalCountDown;
+import util.ExpressMD5;
+import util.SysParCom;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -26,8 +27,8 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static akka.pattern.Patterns.ask;
-import static util.SysParCom.EXPRESS_URL;
 import static play.libs.Json.newObject;
+import static util.SysParCom.*;
 
 /**
  * 订单相关,提交订单,优惠券
@@ -233,10 +234,20 @@ public class OrderCtrl extends Controller {
                     if (optionalOrderSplitList.isPresent() && optionalOrderSplitList.get().size() > 0) {
                         orderSplit = optionalOrderSplitList.get().get(0);
                         Logger.info("快递编号: " + orderSplit.getExpressNum() + "\n快递名称: " + orderSplit.getExpressNm());
-                        final String expressName =  orderSplit.getExpressNm();
-                        return ws.url(EXPRESS_URL + "&com=" + orderSplit.getExpressCode() + "&nu=" + orderSplit.getExpressNum()).get().map(wsResponse -> {
+                        final String expressName = orderSplit.getExpressNm();
+                        final String expressNum = orderSplit.getExpressNum();
+
+                        ObjectNode obj = Json.newObject();
+                        obj.put("com", orderSplit.getExpressCode());
+                        obj.put("num", orderSplit.getExpressNum());
+
+                        String sign = ExpressMD5.encode(obj.toString() + EXPRESS_KEY + EXPRESS_CUSTOMER);
+
+                        return ws.url(EXPRESS_POST_URL).setQueryParameter("param", obj.toString()).setQueryParameter("sign", sign).setQueryParameter("customer", EXPRESS_CUSTOMER).post("").map(wsResponse -> {
                             JsonNode jsonNode = wsResponse.asJson();
-                            ((ObjectNode)jsonNode).put("expressName",expressName);
+                            Logger.error("快递100返回信息--->" + jsonNode.toString());
+                            ((ObjectNode) jsonNode).put("expressName", expressName);
+                            ((ObjectNode) jsonNode).put("expressNum", expressNum);
                             return ok(jsonNode);
                         });
                     } else {
@@ -378,7 +389,7 @@ public class OrderCtrl extends Controller {
 
         Http.MultipartFormData body = request().body().asMultipartFormData();
 
-        Logger.error("请求数据--->\n"+request().body());
+        Logger.error("请求数据--->\n" + request().body());
 
         Form<Refund> userForm = Form.form(Refund.class).bindFromRequest();
 
@@ -585,7 +596,7 @@ public class OrderCtrl extends Controller {
             collect.setUserId(userId);
             List<CollectDto> collectDtoList = new ArrayList<CollectDto>();
             Optional<List<Collect>> collectList = Optional.ofNullable(cartService.selectCollect(collect));
-            if (collectList.isPresent() && collectList.get().size()>0) {
+            if (collectList.isPresent() && collectList.get().size() > 0) {
                 for (Collect c : collectList.get()) {
                     CollectDto collectDto = new CollectDto();
                     collectDto.setCollectId(c.getCollectId());

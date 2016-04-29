@@ -10,6 +10,9 @@ import play.Logger;
 import play.data.Form;
 import play.libs.Json;
 import play.mvc.*;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import service.CartService;
 import util.SysParCom;
 
@@ -41,6 +44,8 @@ public class RemarkCtrl extends Controller {
 
     private static ObjectMapper mapper = new ObjectMapper();
 
+    @Inject
+    private Jedis jedis;
 
     /**
      * 插入评价信息
@@ -136,9 +141,11 @@ public class RemarkCtrl extends Controller {
                         List<Remark> remarkList = cartService.selectRemark(remark);
                         if (remarkList != null && remarkList.size() == 1) {
                             remark = remarkList.get(0);
-                            List<String> remarkPics = mapper.readValue(remark.getPicture(), mapper.getTypeFactory().constructCollectionType(List.class, String.class));
-                            remarkPics = remarkPics.stream().map(pic -> SysParCom.IMAGE_URL + pic).collect(Collectors.toList());
-                            remark.setPicture(Json.toJson(remarkPics).toString());
+                            if (remark.getPicture()!=null){
+                                List<String> remarkPics = mapper.readValue(remark.getPicture(), mapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                                remarkPics = remarkPics.stream().map(pic -> SysParCom.IMAGE_URL + pic).collect(Collectors.toList());
+                                remark.setPicture(Json.toJson(remarkPics).toString());
+                            }
                             map.put("comment", remark);
                         }
                         CartSkuDto skuDto = new CartSkuDto();
@@ -173,10 +180,18 @@ public class RemarkCtrl extends Controller {
                 return ok(result);
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             Logger.error("server exception:" + ex.getMessage());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
     }
 
+
+    public Result test(){
+        ObjectNode result = newObject();
+        jedis.publish("hmm.style-shopping","cacacaca");
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+        return ok(result);
+    }
 }

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import controllers.Application;
 import controllers.OrderCtrl;
 import domain.*;
-import util.SysParCom;
 import play.Logger;
 import play.libs.Json;
 import service.CartService;
@@ -14,6 +13,7 @@ import service.PromotionService;
 import service.SkuService;
 import util.CalCountDown;
 import util.ComUtil;
+import util.SysParCom;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -522,7 +522,7 @@ public class OrderMid {
                         Map<String, Object> orderI = getIorders(o);
 
                         if (orderI != null) map.putAll(orderI);
-                    }else {
+                    } else {
                         Map<String, Object> orderSplit = getSplitOrders(o);
 
                         if (orderSplit != null) map.putAll(orderSplit);
@@ -530,7 +530,7 @@ public class OrderMid {
                     mapList.add(map);
                 }
                 return mapList;
-            }else return null;
+            } else return null;
         } catch (Exception ex) {
             ex.printStackTrace();
             return null;
@@ -624,7 +624,13 @@ public class OrderMid {
                     skuDto.setSkuTypeId(orl.getSkuTypeId());
                     skuDto.setItemColor(orl.getSkuColor());
                     skuDto.setItemSize(orl.getSkuSize());
+
                     skuDtoList.add(skuDto);
+                }
+
+                if (order.getOrderStatus().equals("R")) {
+                    String remark = remarkComplete(order);
+                    if (remark != null) orderS.setRemark(remark);
                 }
 
                 map.put("order", orderS);
@@ -632,6 +638,32 @@ public class OrderMid {
             }
             return map;
         } else return null;
+    }
+
+
+    private String remarkComplete(Order order) {
+        OrderLine orderLine = new OrderLine();
+        orderLine.setOrderId(order.getOrderId());
+        try {
+            List<OrderLine> orderLineList = cartService.selectOrderLine(orderLine);
+            for (OrderLine ol : orderLineList) {
+                Remark remark = new Remark();
+                remark.setSkuType(ol.getSkuType());
+                remark.setSkuTypeId(ol.getSkuTypeId());
+                remark.setOrderId(order.getOrderId());
+                remark.setUserId(order.getUserId());
+                List<Remark> remarkList = cartService.selectRemark(remark);
+                if (remarkList == null || remarkList.size() == 0) {
+                    return "N";
+                }
+            }
+            return "Y";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
     private Map<String, Object> getOrderAddress(Order order) throws Exception {

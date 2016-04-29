@@ -1,11 +1,15 @@
 package modules;
 
 import com.google.inject.AbstractModule;
+import com.typesafe.config.ConfigFactory;
 import middle.CartMid;
 import middle.JDPayMid;
 import middle.OrderMid;
+import play.Logger;
+import redis.clients.jedis.Jedis;
 import util.LogUtil;
 import util.MnsInit;
+import util.RedisPool;
 import util.SysParCom;
 
 /**
@@ -25,5 +29,7 @@ public class LevelDBModule extends AbstractModule {
         bind(AppOnStart.class).asEagerSingleton();
         bind(MnsInit.class).asEagerSingleton();
         bind(LogUtil.class).asEagerSingleton();
+        bind(RedisPool.class).asEagerSingleton();
+        bind(Jedis.class).toInstance(RedisPool.create());
     }
 }

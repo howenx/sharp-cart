@@ -3,59 +3,62 @@
 # ~~~~
 
 # Home page
-GET         /client/cart/list                                                controllers.Application.cartList()
-GET         /client/cart/del/$cartId<[0-9]+>                                 controllers.Application.delCart(cartId:Long)
-POST        /client/cart                                                     controllers.Application.cart()
-POST        /client/cart/get/sku/list                                        controllers.Application.getCartSku
-POST        /client/cart/nologin/verify/amount                               controllers.Application.verifySkuAmount()
+GET         /client/cart/list                                                             controllers.Application.cartList()
+GET         /client/cart/del/$cartId<[0-9]+>                                              controllers.Application.delCart(cartId:Long)
+POST        /client/cart                                                                  controllers.Application.cart()
+POST        /client/cart/get/sku/list                                                     controllers.Application.getCartSku
+POST        /client/cart/nologin/verify/amount                                            controllers.Application.verifySkuAmount()
 
-POST        /client/settle                                                   controllers.OrderCtrl.settle()
-GET         /client/coupons/list                                             controllers.OrderCtrl.couponsList()
-POST        /client/order/submit                                             controllers.OrderCtrl.submitOrder()
-GET         /client/order/submit                                             controllers.OrderCtrl.submitOrder()
-GET         /client/order/cancel/$orderId<[0-9]+>                            controllers.OrderCtrl.cancelOrder(orderId:Long)
-GET         /client/order                                                    controllers.OrderCtrl.shoppingOrder(orderId: Long ?= 0L)
-GET         /client/order/$orderId<[0-9]+>                                   controllers.OrderCtrl.shoppingOrder(orderId:Long)
-GET         /client/order/verify/$orderId<[0-9]+>                            controllers.OrderCtrl.verifyOrder(orderId:Long)
-GET         /client/order/del/$orderId<[0-9]+>                               controllers.OrderCtrl.delOrder(orderId:Long)
-POST        /client/order/apply/refund                                       controllers.OrderCtrl.refundApply()
-GET         /client/order/express/$orderId<[0-9]+>                           controllers.OrderCtrl.express(orderId:Long)
-GET         /client/order/confirm/delivery/$orderId<[0-9]+>                  controllers.OrderCtrl.confirmDelivery(orderId:Long)
+POST        /client/settle                                                                controllers.OrderCtrl.settle()
+GET         /client/coupons/list                                                          controllers.OrderCtrl.couponsList()
+POST        /client/order/submit                                                          controllers.OrderCtrl.submitOrder()
+GET         /client/order/submit                                                          controllers.OrderCtrl.submitOrder()
+GET         /client/order/cancel/$orderId<[0-9]+>                                         controllers.OrderCtrl.cancelOrder(orderId:Long)
+GET         /client/order                                                                 controllers.OrderCtrl.shoppingOrder(orderId: Long ?= 0L)
+GET         /client/order/$orderId<[0-9]+>                                                controllers.OrderCtrl.shoppingOrder(orderId:Long)
+GET         /client/order/verify/$orderId<[0-9]+>                                         controllers.OrderCtrl.verifyOrder(orderId:Long)
+GET         /client/order/del/$orderId<[0-9]+>                                            controllers.OrderCtrl.delOrder(orderId:Long)
+POST        /client/order/apply/refund                                                    controllers.OrderCtrl.refundApply()
+GET         /client/order/express/$orderId<[0-9]+>                                        controllers.OrderCtrl.express(orderId:Long)
+GET         /client/order/confirm/delivery/$orderId<[0-9]+>                               controllers.OrderCtrl.confirmDelivery(orderId:Long)
 
-POST        /client/collect/submit                                           controllers.OrderCtrl.submitCollect()
-GET         /client/collect/get/collect/list                                 controllers.OrderCtrl.getCollect
-GET         /client/collect/del/$collectId<[0-9]+>                           controllers.OrderCtrl.delCollect(collectId:Long)
+POST        /client/collect/submit                                                        controllers.OrderCtrl.submitCollect()
+GET         /client/collect/get/collect/list                                              controllers.OrderCtrl.getCollect
+GET         /client/collect/del/$collectId<[0-9]+>                                        controllers.OrderCtrl.delCollect(collectId:Long)
 
 #评论
-POST        /client/comment/add                                              controllers.RemarkCtrl.submitRemark
-GET         /client/comment/center/$orderId<[0-9]+>                          controllers.RemarkCtrl.orderRemarkList(orderId:Long)
+POST        /client/comment/add                                                           controllers.RemarkCtrl.submitRemark
+GET         /client/comment/center/$orderId<[0-9]+>                                       controllers.RemarkCtrl.orderRemarkList(orderId:Long)
 
-GET         /client/pay/order/get/$orderId<[0-9]+>                           controllers.JDPay.cashDesk(orderId:Long,paySrc:String ?= "APP")
-GET         /client/pay/order/get/$orderId<[0-9]+>/$paySrc<[a-zA-Z]+>        controllers.JDPay.cashDesk(orderId:Long,paySrc:String)
-POST        /client/pay/jd/back                                              controllers.JDPay.payBackendNotify()
-POST        /client/pay/jd/front                                             controllers.JDPay.payFrontNotify()
+GET         /client/pay/order/get/$orderId<[0-9]+>                                        controllers.JDPay.cashDesk(orderId:Long,paySrc:String ?= "APP")
+GET         /client/pay/order/get/$orderId<[0-9]+>/$paySrc<[a-zA-Z]+>                     controllers.JDPay.cashDesk(orderId:Long,paySrc:String)
+POST        /client/pay/jd/back                                                           controllers.JDPay.payBackendNotify()
+POST        /client/pay/jd/front                                                          controllers.JDPay.payFrontNotify()
 
 #app启动时定时
-GET         /client/schedule/:cipher                                         controllers.Application.getFirstApp(cipher:String)
+GET         /client/schedule/:cipher                                                      controllers.Application.getFirstApp(cipher:String)
 
 
-GET         /assets/*file                                                    controllers.Assets.versioned(path="/public", file: Asset)
-POST        /client/redirect/cash                                            controllers.JDPay.redirectCash()
+GET         /assets/*file                                                                 controllers.Assets.versioned(path="/public", file: Asset)
+POST        /client/redirect/cash                                                         controllers.JDPay.redirectCash()
 
-GET         /client/msg/get/type                                             controllers.MsgCtrl.getAllMsgType
-GET         /client/msg/list/$msgType<[a-zA-Z]+>                             controllers.MsgCtrl.getAllMsgs(msgType:String)
-GET         /client/msg/delMsg/$id<[0-9]+>                                   controllers.MsgCtrl.delMsg(id:Long)
-GET         /client/msg/clean/$msgType<[a-zA-Z]+>                            controllers.MsgCtrl.cleanMsg(msgType:String)
-POST        /client/feedback                                                 controllers.MsgCtrl.feedback()
+GET         /client/msg/get/type                                                          controllers.MsgCtrl.getAllMsgType
+GET         /client/msg/list/$msgType<[a-zA-Z]+>                                          controllers.MsgCtrl.getAllMsgs(msgType:String)
+GET         /client/msg/delMsg/$id<[0-9]+>                                                controllers.MsgCtrl.delMsg(id:Long)
+GET         /client/msg/clean/$msgType<[a-zA-Z]+>                                         controllers.MsgCtrl.cleanMsg(msgType:String)
+POST        /client/feedback                                                              controllers.MsgCtrl.feedback()
 
 #test
-GET         /client/push                                                     controllers.PushCtrl.testPush()
-GET         /client/msg/testMsg                                              controllers.MsgCtrl.testMsg()
+GET         /client/push                                                                  controllers.PushCtrl.testPush()
+GET         /client/msg/testMsg                                                           controllers.MsgCtrl.testMsg()
 
 #微信
-GET        /client/weixin/pay/unifiedorder/$tradeType<[a-zA-Z]+>/$orderId<[0-9]+>   controllers.WeiXinCtrl.payUnifiedorder(tradeType:String,orderId:Long)
-POST        /client/weixin/pay/back                                                 controllers.WeiXinCtrl.payBackendNotify()
-GET        /client/weixin/pay/getQRCode/$qrCodeUrl<[a-zA-Z0-9]+>                    controllers.WeiXinCtrl.getQRCode(qrCodeUrl:String)
-GET        /client/weixin/pay/orderquery/$orderId<[0-9]+>                           controllers.WeiXinCtrl.payOrderquery(orderId:Long)
-GET        /client/weixin/pay/refund/$orderId<[0-9]+>                               controllers.WeiXinCtrl.payRefund(orderId:Long)
-GET        /client/weixin/pay/back/test/$orderId<[0-9]+>                            controllers.WeiXinCtrl.payBackendNotifyTest(orderId:Long)
+GET         /client/weixin/pay/unifiedorder/$tradeType<[a-zA-Z]+>/$orderId<[0-9]+>        controllers.WeiXinCtrl.payUnifiedorder(tradeType:String,orderId:Long)
+POST        /client/weixin/pay/back                                                       controllers.WeiXinCtrl.payBackendNotify()
+GET         /client/weixin/pay/getQRCode/$qrCodeUrl<[a-zA-Z0-9]+>                         controllers.WeiXinCtrl.getQRCode(qrCodeUrl:String)
+GET         /client/weixin/pay/orderquery/$orderId<[0-9]+>                                controllers.WeiXinCtrl.payOrderquery(orderId:Long)
+GET         /client/weixin/pay/refund/$orderId<[0-9]+>                                    controllers.WeiXinCtrl.payRefund(orderId:Long)
+GET         /client/weixin/pay/back/test/$orderId<[0-9]+>                                 controllers.WeiXinCtrl.payBackendNotifyTest(orderId:Long)
+
+
+GET         /test                                                                         controllers.RemarkCtrl.test

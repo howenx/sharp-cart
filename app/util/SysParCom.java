@@ -80,7 +80,6 @@ public class SysParCom {
     public static String WEIXIN_SSL_PATH;
 
 
-
     public static String ALIPAY_SERVICE;
     public static String ALIPAY_PAYMENT_TYPE;
     public static String ALIPAY_PARTNER;
@@ -89,6 +88,16 @@ public class SysParCom {
     public static String ALIPAY_NOTITY_URL;
     public static String ALIPAY_RETURN_URL;
     public static String ALIPAY_GATEWAY;
+
+    public static String EXPRESS_POST_URL;
+    public static String EXPRESS_KEY;
+    public static String EXPRESS_CUSTOMER;
+
+    public static String REDIS_URL;
+    public static String REDIS_PASSWORD;
+    public static Integer REDIS_PORT;
+    public static String REDIS_CHANNEL;
+
 
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
@@ -138,40 +147,48 @@ public class SysParCom {
         JD_REFUND_URL = configuration.getString("jd_refund_url");
 
         PIN_SUCCESS_MSG = configuration.getString("pin_success_msg");
-        PIN_ADD_MSG  = configuration.getString("pin_add_msg");
+        PIN_ADD_MSG = configuration.getString("pin_add_msg");
         M_PIN = configuration.getString("m.jump.pin");
 
         ERP_PUSH = configuration.getString("erp.order.push");
 
-        EXPRESS_URL=configuration.getString("express.url");
+        EXPRESS_URL = configuration.getString("express.url");
 
         ONE_CENT_PAY = configuration.getBoolean("one.cent.pay");
 
-        MNS_ENDPOINT= configuration.getString("mns.accountendpoint");
-        MNS_KEY= configuration.getString("mns.accesskeyid");
-        MNS_SECRET= configuration.getString("mns.accesskeysecret");
+        MNS_ENDPOINT = configuration.getString("mns.accountendpoint");
+        MNS_KEY = configuration.getString("mns.accesskeyid");
+        MNS_SECRET = configuration.getString("mns.accesskeysecret");
 
-        WEIXIN_APP_ID=configuration.getString("weixin.app.id");
-        WEIXIN_MCH_ID=configuration.getString("weixin.mch.id");
-        WEIXIN_KEY=configuration.getString("weixin.key");
-        WEIXIN_PAY_UNIFIEDORDER=configuration.getString("weixin.pay.unifiedorder");
+        WEIXIN_APP_ID = configuration.getString("weixin.app.id");
+        WEIXIN_MCH_ID = configuration.getString("weixin.mch.id");
+        WEIXIN_KEY = configuration.getString("weixin.key");
+        WEIXIN_PAY_UNIFIEDORDER = configuration.getString("weixin.pay.unifiedorder");
 
         IMG_PROCESS_URL = configuration.getString("imgprocess.server.url");
-        WEIXIN_PAY_ORDERQUERY=configuration.getString("weixin.pay.orderquery");
-        WEIXIN_PAY_REFUND=configuration.getString("weixin.pay.refund");
-        WEIXIN_SSL_PATH=configuration.getString("weixin.ssl.path");
+        WEIXIN_PAY_ORDERQUERY = configuration.getString("weixin.pay.orderquery");
+        WEIXIN_PAY_REFUND = configuration.getString("weixin.pay.refund");
+        WEIXIN_SSL_PATH = configuration.getString("weixin.ssl.path");
 
 
         //支付宝
-        ALIPAY_SERVICE=configuration.getString("alipay.service");
-        ALIPAY_PAYMENT_TYPE=configuration.getString("alipay.service");
-        ALIPAY_PARTNER=configuration.getString("alipay.service");
-        ALIPAY_SELLER_ID=configuration.getString("alipay.seller.id");
-        ALIPAY_KEY=configuration.getString("alipay.key");
-        ALIPAY_NOTITY_URL=configuration.getString("alipay.notify.url");
-        ALIPAY_RETURN_URL=configuration.getString("alipay.return.url");
-        ALIPAY_GATEWAY=configuration.getString("alipay.gateway");
+        ALIPAY_SERVICE = configuration.getString("alipay.service");
+        ALIPAY_PAYMENT_TYPE = configuration.getString("alipay.service");
+        ALIPAY_PARTNER = configuration.getString("alipay.service");
+        ALIPAY_SELLER_ID = configuration.getString("alipay.seller.id");
+        ALIPAY_KEY = configuration.getString("alipay.key");
+        ALIPAY_NOTITY_URL = configuration.getString("alipay.notify.url");
+        ALIPAY_RETURN_URL = configuration.getString("alipay.return.url");
+        ALIPAY_GATEWAY = configuration.getString("alipay.gateway");
+
+        EXPRESS_POST_URL = configuration.getString("express.post.url");
+        EXPRESS_KEY = configuration.getString("express.key");
+        EXPRESS_CUSTOMER = configuration.getString("express.customer");
+
+        REDIS_URL = configuration.getString("redis.host");
+        REDIS_PASSWORD = configuration.getString("redis.password");
+        REDIS_PORT = configuration.getInt("redis.port");
+        REDIS_CHANNEL = configuration.getString("redis.channel");
 
     }
-
 }

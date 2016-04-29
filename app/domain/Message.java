@@ -47,9 +47,9 @@ public class Message implements Serializable{
 
         SUCCESS("成功", 200),
         FAILURE("失败", 400),
-        FAILURE_REQUEST_ERROR("失败", 441),
-        FAILURE_REQUEST_HANDLER_NOT_FOUND("失败", 442),
-        FAILURE_BAD_REQUEST("失败", 443),
+        FAILURE_REQUEST_ERROR("请求出错", 441),
+        FAILURE_REQUEST_HANDLER_NOT_FOUND("请求未找到", 442),
+        FAILURE_BAD_REQUEST("非法请求", 443),
 
         ERROR("内部发生错误", 1001),
         SERVER_EXCEPTION("服务器异常", 1002),
@@ -84,7 +84,7 @@ public class Message implements Serializable{
 
         PURCHASE_QUANTITY_LIMIT("亲,您购买数量超过我们的限制了", 3001),
         PURCHASE_QUANTITY_SUM_PRICE("海关规定单次报关物品价值不能超过1000元", 3002),
-        
+
 
         PASSWORD_ERROR_TOO_MANY("密码错误次数过多", 4001),
 
