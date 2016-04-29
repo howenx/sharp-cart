@@ -46,6 +46,9 @@ public class Remark implements Serializable {
         if (content.trim().length() < 10 || content.trim().length() > 500) {
             errors.add(new ValidationError("content", "This content length is wrong"));
         }
+        if (grade!=1 && grade!=2 && grade!=3 && grade!=4  && grade!=5 ) {
+            errors.add(new ValidationError("grade", "This grade is wrong"));
+        }
         return errors.isEmpty() ? null : errors;
     }
 
