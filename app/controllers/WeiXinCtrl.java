@@ -11,25 +11,15 @@ import net.spy.memcached.MemcachedClient;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
-<<<<<<< HEAD
-=======
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
 import org.w3c.dom.NodeList;
 import play.libs.XPath;
 import util.SysParCom;
-import net.glxn.qrgen.core.image.ImageType;
-import net.glxn.qrgen.javase.QRCode;
-import net.spy.memcached.MemcachedClient;
->>>>>>> 31ef8045cfb02964215553b6c0927499829dcb78
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -42,16 +32,12 @@ import play.mvc.Result;
 import service.CartService;
 import service.PromotionService;
 import util.Crypto;
-import util.SysParCom;
 
 import javax.inject.Inject;
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.events.Namespace;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
@@ -61,16 +47,11 @@ import java.security.KeyStore;
 import java.sql.Timestamp;
 import java.util.*;
 
-<<<<<<< HEAD
-=======
-import static play.libs.Json.toJson;
 import static util.SysParCom.M_INDEX;
 import static util.SysParCom.M_ORDERS;
 import static util.SysParCom.ONE_CENT_PAY;
 import static util.SysParCom.*;
->>>>>>> 31ef8045cfb02964215553b6c0927499829dcb78
 import static play.libs.Json.newObject;
-import static util.SysParCom.*;
 
 /**
  * 微信支付
@@ -308,14 +289,9 @@ public class WeiXinCtrl extends Controller {
         if (books != null) {
             for (int i = 0; i < books.getLength(); i++) {
                 Node book = books.item(i);
-<<<<<<< HEAD
-                resultMap.put(book.getNodeName(), book.getFirstChild().getNodeValue());
-                Logger.error("节点=" + book.getNodeName() + "\ttext=" + book.getFirstChild().getNodeValue());
-=======
                 if(null!=book&&null!=book.getNodeName()&&book.getNodeType() != Node.TEXT_NODE){
                     resultMap.put(book.getNodeName(), book.getFirstChild()==null?"":book.getFirstChild().getNodeValue());
                 }
->>>>>>> 31ef8045cfb02964215553b6c0927499829dcb78
             }
         }
         return resultMap;
@@ -428,20 +404,12 @@ public class WeiXinCtrl extends Controller {
      *
      * @return
      */
-<<<<<<< HEAD
     public Result payBackendNotify() {
-        TreeMap<String, String> params = new TreeMap<>();
-        String content = request().body().asText();
-        Logger.info("微信支付回调返回\n" + content);
-=======
-    public Result payBackendNotify(){
         TreeMap<String,String> params=new TreeMap<>();
         Document content= request().body().asXml();
         Logger.info("微信支付回调返回\n"+content+",request().body()="+request().body());
->>>>>>> 31ef8045cfb02964215553b6c0927499829dcb78
         try {
             Element root = content.getDocumentElement();
-
             // 得到根元素的所有子节点
             NodeList books = root.getChildNodes();
             if (books != null) {
@@ -711,11 +679,7 @@ public class WeiXinCtrl extends Controller {
                 paramMap.put("nonce_str", UUID.randomUUID().toString().replaceAll("-", ""));
                 paramMap.put("out_trade_no", orderId + "");
                 paramMap.put("out_refund_no", orderId + ""); //商户系统内部的退款单号，商户系统内部唯一，同一退款单号多次请求只退一笔
-<<<<<<< HEAD
-                Integer totalFee = order.getTotalFee().multiply(new BigDecimal(100)).intValue();
-                paramMap.put("total_fee", totalFee + ""); //订单总金额，单位为分，只能为整数，详见支付金额
-                paramMap.put("refund_fee", totalFee + ""); //退款总金额，订单总金额，单位为分，只能为整数，详见支付金额
-=======
+
                 String totalFee="";
                 if (ONE_CENT_PAY) {
                     totalFee="1";
@@ -724,7 +688,6 @@ public class WeiXinCtrl extends Controller {
                 }
                 paramMap.put("total_fee", totalFee); //订单总金额，单位为分，只能为整数，详见支付金额
                 paramMap.put("refund_fee",totalFee); //退款总金额，订单总金额，单位为分，只能为整数，详见支付金额
->>>>>>> 31ef8045cfb02964215553b6c0927499829dcb78
                 paramMap.put("refund_fee_type", "CNY");
                 paramMap.put("op_user_id", SysParCom.WEIXIN_MCH_ID);//操作员帐号, 默认为商户号
 
