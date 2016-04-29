@@ -76,30 +76,42 @@ public class RemarkCtrl extends Controller {
                 remark.setUserId(userId);
                 List<Http.MultipartFormData.FilePart> fileParts = body.getFiles();
 
-                if (cartService.insertRemark(remark)) {
-                    if (!fileParts.isEmpty() && fileParts.size() < 6) {
-                        Map<String, Object> mapActor = new HashMap<>();
-                        List<byte[]> files = new ArrayList<>();
-                        mapActor.put("remarkId", remark.getId());
-                        for (Http.MultipartFormData.FilePart filePart : fileParts) {
-                            if (!"image/jpeg".equalsIgnoreCase(filePart.getContentType()) && !"image/png".equalsIgnoreCase(filePart.getContentType())) {
-                                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FILE_TYPE_NOT_SUPPORTED.getIndex()), Message.ErrorCode.FILE_TYPE_NOT_SUPPORTED.getIndex())));
-                                return ok(result);
-                            } else {
-                                files.add(FileUtils.readFileToByteArray(filePart.getFile()));
+                Remark remarkExist =new Remark();
+                remarkExist.setUserId(userId);
+                remarkExist.setSkuType(remark.getSkuType());
+                remarkExist.setSkuTypeId(remark.getSkuTypeId());
+                remarkExist.setOrderId(remark.getOrderId());
+
+                List<Remark> remarkList = cartService.selectRemark(remarkExist);
+                if (remarkList.size()>0){
+                    if (cartService.insertRemark(remark)) {
+                        if (!fileParts.isEmpty() && fileParts.size() < 6) {
+                            Map<String, Object> mapActor = new HashMap<>();
+                            List<byte[]> files = new ArrayList<>();
+                            mapActor.put("remarkId", remark.getId());
+                            for (Http.MultipartFormData.FilePart filePart : fileParts) {
+                                if (!"image/jpeg".equalsIgnoreCase(filePart.getContentType()) && !"image/png".equalsIgnoreCase(filePart.getContentType())) {
+                                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FILE_TYPE_NOT_SUPPORTED.getIndex()), Message.ErrorCode.FILE_TYPE_NOT_SUPPORTED.getIndex())));
+                                    return ok(result);
+                                } else {
+                                    files.add(FileUtils.readFileToByteArray(filePart.getFile()));
+                                }
                             }
+                            mapActor.put("files", files);
+                            mapActor.put("url", SysParCom.IMG_PROCESS_URL);
+                            uploadImagesActor.tell(mapActor, ActorRef.noSender());
+                        } else if (fileParts.size() > 5) {
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.UPLOAD_PICTURE_SIZES_OVER_LIMIT.getIndex()), Message.ErrorCode.UPLOAD_PICTURE_SIZES_OVER_LIMIT.getIndex())));
+                            return ok(result);
                         }
-                        mapActor.put("files", files);
-                        mapActor.put("url", SysParCom.IMG_PROCESS_URL);
-                        uploadImagesActor.tell(mapActor, ActorRef.noSender());
-                    } else if (fileParts.size() > 5) {
-                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.UPLOAD_PICTURE_SIZES_OVER_LIMIT.getIndex()), Message.ErrorCode.UPLOAD_PICTURE_SIZES_OVER_LIMIT.getIndex())));
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                        return ok(result);
+                    } else {
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
                         return ok(result);
                     }
-                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-                    return ok(result);
-                } else {
-                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
+                }else {
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.REMARK_EXISTS.getIndex()), Message.ErrorCode.REMARK_EXISTS.getIndex())));
                     return ok(result);
                 }
             } catch (Exception ex) {
@@ -185,13 +197,5 @@ public class RemarkCtrl extends Controller {
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
-    }
-
-
-    public Result test(){
-        ObjectNode result = newObject();
-        jedis.publish("hmm.style-shopping","cacacaca");
-        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-        return ok(result);
     }
 }

@@ -6,7 +6,7 @@ import ch.qos.logback.core.AppenderBase;
 
 import java.io.IOException;
 
-public class CountingConsoleAppender extends AppenderBase<ILoggingEvent> {
+public class CustomAppender extends AppenderBase<ILoggingEvent> {
 
     PatternLayoutEncoder encoder;
 

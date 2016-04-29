@@ -60,5 +60,3 @@ GET         /client/weixin/pay/orderquery/$orderId<[0-9]+>                      
 GET         /client/weixin/pay/refund/$orderId<[0-9]+>                                    controllers.WeiXinCtrl.payRefund(orderId:Long)
 GET         /client/weixin/pay/back/test/$orderId<[0-9]+>                                 controllers.WeiXinCtrl.payBackendNotifyTest(orderId:Long)
 
-
-GET         /test                                                                         controllers.RemarkCtrl.test

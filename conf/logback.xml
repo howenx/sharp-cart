@@ -38,7 +38,7 @@
     </appender>
 
 
-    <appender name="CUSTOM" class="util.CountingConsoleAppender">
+    <appender name="CUSTOM" class="util.CustomAppender">
         <encoder>
             <pattern>%coloredLevel - %date - %logger - %thread - %n%message%n%xException%n</pattern>
         </encoder>

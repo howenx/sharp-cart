@@ -3,15 +3,9 @@ package actor;
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.aliyun.mns.client.CloudQueue;
-import com.aliyun.mns.client.CloudTopic;
-import com.aliyun.mns.common.ClientException;
-import com.aliyun.mns.common.ServiceException;
-import com.aliyun.mns.model.*;
 import play.Logger;
 import play.libs.Json;
 import redis.clients.jedis.Jedis;
-import util.MnsInit;
 
 import javax.inject.Inject;
 

@@ -77,6 +77,8 @@ public class Message implements Serializable{
         UPLOAD_PICTURE_SIZES_OVER_LIMIT("上传图片张数超限",1023),
         ORDER_STATUS_EXCEPTION("订单状态不符合",1024),
 
+        REMARK_EXISTS("此订单中的商品已经评价过",1025),
+
         SKU_AMOUNT_SHORTAGE("亲,此件商品库存不足了", 2001),
         SKU_INVALID("亲,您已经长时间未操作,此商品已经失效,建议您刷新购物车", 2002),
         SKU_STATUS_ERROR("亲,此商品已经失效,请选择其他商品", 2003),
