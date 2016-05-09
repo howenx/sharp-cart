@@ -1,4 +1,11 @@
 
+var appId = "";
+var timeStamp = "";
+var nonceStr = "";
+var pg = "";
+var signType = "";
+var paySign = "";
+
 //微信统一下单
 function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
     var d = new Date();
@@ -45,7 +52,13 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
                                document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
                            }
                         }else{
-                           onBridgeReady(data.paramMap);
+                            appId=data.paramMap.appId;
+                            timeStamp=data.paramMap.timeStamp,         //时间戳，自1970年以来的秒数
+                            nonceStr=data.paramMap.nonceStr, //随机串
+                            package=data.paramMap.package,
+                            signType=data.paramMap.signType,         //微信签名方式：
+                            paySign=data.paramMap.paySign  //微信签名
+                            onBridgeReady();
                         }
 
                     }else{
@@ -65,15 +78,16 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
 
 };
 
-function onBridgeReady(paramMap){
+function onBridgeReady(){
+console.log("appId="+appId+",timeStamp="+timeStamp+",nonceStr="+nonceStr+",package="+package+",signType="+signType+",paySign="+paySign)
    WeixinJSBridge.invoke(
        'getBrandWCPayRequest', {
-              "appId":paramMap.appId,     //公众号名称，由商户传入
-              "timeStamp":paramMap.timeStamp,         //时间戳，自1970年以来的秒数
-              "nonceStr":paramMap.nonceStr, //随机串
-              "package":paramMap.package,
-              "signType":paramMap.signType,         //微信签名方式：
-              "paySign":paramMap.paySign  //微信签名
+              "appId":appId,     //公众号名称，由商户传入
+              "timeStamp":timeStamp,         //时间戳，自1970年以来的秒数
+              "nonceStr":nonceStr, //随机串
+              "package":package,
+              "signType":signType,         //微信签名方式：
+              "paySign":paySign  //微信签名
 
 //           "appId" ： "wx2421b1c4370ec43b",     //公众号名称，由商户传入
 //           "timeStamp"：" 1395712654",         //时间戳，自1970年以来的秒数
