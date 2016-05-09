@@ -1,36 +1,23 @@
 package controllers;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSelection;
-import akka.actor.ActorSystem;
-import akka.util.Timeout;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import domain.*;
 import filters.UserAuth;
 import middle.CartMid;
-import modules.LevelFactory;
-import modules.NewScheduler;
 import play.Logger;
-import play.api.libs.Codecs;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
 import service.CartService;
 import service.SkuService;
 import util.ComUtil;
 
 import javax.inject.Inject;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 public class Application extends Controller {
 
@@ -43,22 +30,12 @@ public class Application extends Controller {
     @Inject
     private CartMid cartMid;
 
-    @Inject
-    private ActorSystem system;
-
-    @Inject
-    private NewScheduler newScheduler;
-
-    @Inject
-    private LevelFactory levelFactory;
 
     @Inject
     private ComUtil comUtil;
 
     //将Json串转换成List
     public final static ObjectMapper mapper = new ObjectMapper();
-
-    public static final Timeout TIMEOUT = new Timeout(1000, TimeUnit.MILLISECONDS);
 
 
     /**
@@ -91,14 +68,13 @@ public class Application extends Controller {
                     }
                 }
 
-                Optional<List<CartItemDTO>> cartItemDTOList=cartMid.getCarts(userId);
+                Optional<List<CartItemDTO>> cartItemDTOList = cartMid.getCarts(userId);
 
-                if (cartItemDTOList.isPresent()&& cartItemDTOList.get().size()>0){
+                if (cartItemDTOList.isPresent() && cartItemDTOList.get().size() > 0) {
                     result.putPOJO("cartList", Json.toJson(cartItemDTOList.get()));
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                     return ok(result);
-                }
-                else{
+                } else {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex()), Message.ErrorCode.CART_LIST_NULL_EXCEPTION.getIndex())));
                     return ok(result);
                 }
@@ -205,7 +181,7 @@ public class Application extends Controller {
 
         try {
             if (json.isPresent() && json.get().size() > 0) {
-                CartDto cartDto =mapper.convertValue(json.get(), mapper.getTypeFactory().constructType(CartDto.class));
+                CartDto cartDto = mapper.convertValue(json.get(), mapper.getTypeFactory().constructType(CartDto.class));
                 SkuVo skuVo = new SkuVo();
                 skuVo.setSkuTypeId(cartDto.getSkuTypeId());
                 skuVo.setSkuType(cartDto.getSkuType());
@@ -226,10 +202,10 @@ public class Application extends Controller {
                         return ok(result);
                     } else if (cartDto.getSkuType().equals("vary")) {
                         Integer varyAmount = validateVary(skuVo.getSkuTypeId(), cartDto.getAmount());
-                        if (varyAmount==null || varyAmount<0){
+                        if (varyAmount == null || varyAmount < 0) {
                             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.VARY_OVER_LIMIT.getIndex()), Message.ErrorCode.VARY_OVER_LIMIT.getIndex())));
                             return ok(result);
-                        }else {
+                        } else {
                             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                             return ok(result);
                         }
@@ -261,55 +237,14 @@ public class Application extends Controller {
      * @param amount amount
      * @return Boolean
      */
-    public  Integer validateVary(Long varyId, Integer amount) {
+    public Integer validateVary(Long varyId, Integer amount) {
         VaryPrice varyPrice = new VaryPrice();
         varyPrice.setId(varyId);
         List<VaryPrice> varyPriceList = skuService.getVaryPriceBy(varyPrice);
         if (varyPriceList.size() > 0) {
             varyPrice = varyPriceList.get(0);
-            return varyPrice.getLimitAmount()-(varyPrice.getSoldAmount() + amount)  ;
+            return varyPrice.getLimitAmount() - (varyPrice.getSoldAmount() + amount);
         }
         return null;
-    }
-
-    /**
-     * 处理系统启动时候去做第一次请求,完成对定时任务的执行
-     *
-     * @return string
-     */
-    public Result getFirstApp(String cipher) {
-        if (Codecs.md5("hmm-100901".getBytes()).equals(cipher)) {
-            List<Persist> persists;
-            try {
-                persists = levelFactory.iterator();
-                if (persists != null && persists.size() > 0) {
-                    Logger.info("遍历所有持久化schedule---->\n" + persists);
-                    for (Persist p : persists) {
-
-                        ActorSelection sel = system.actorSelection(p.getActorPath());
-                        Future<ActorRef> fut = sel.resolveOne(TIMEOUT);
-                        ActorRef ref = Await.result(fut, TIMEOUT.duration());
-
-                        if (p.getType().equals("scheduleOnce")) {
-                            Long time = p.getDelay() - (new Date().getTime() - p.getCreateAt().getTime());
-                            Logger.info("重启后scheduleOnce执行时间---> " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(new Date().getTime() + time)));
-                            if (time > 0) {
-                                newScheduler.scheduleOnce(Duration.create(time, TimeUnit.MILLISECONDS), ref, p.getMessage());
-                            } else {
-                                levelFactory.delete(p.getMessage());
-                                system.actorSelection(p.getActorPath()).tell(p.getMessage(), ActorRef.noSender());
-                            }
-                        } else if (p.getType().equals("schedule")) {
-                            newScheduler.schedule(Duration.create(p.getInitialDelay(), TimeUnit.MILLISECONDS), Duration.create(p.getDelay(), TimeUnit.MILLISECONDS), ref, p.getMessage());
-                            Logger.info("重启后schedule执行---> 每隔 " + Duration.create(p.getDelay(), TimeUnit.MILLISECONDS).toHours() + " 小时执行一次");
-                        }
-                    }
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return notFound("error");
-            }
-            return ok("success");
-        } else throw new NullPointerException(cipher);
     }
 }
