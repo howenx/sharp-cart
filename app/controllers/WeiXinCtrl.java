@@ -126,6 +126,7 @@ public class WeiXinCtrl extends Controller {
         return sb.toString();
     }
 
+
     /**
      * 获取微信签名
      *
