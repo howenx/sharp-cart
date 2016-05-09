@@ -44,6 +44,13 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
 
                     }else if("JSAPI"==tradeType){ //微信公众号支付
 
+                            appId=data.paramMap.appId;
+                            timeStamp=data.paramMap.timeStamp,         //时间戳，自1970年以来的秒数
+                            nonceStr=data.paramMap.nonceStr, //随机串
+                            package=data.paramMap.package,
+                            signType=data.paramMap.signType,         //微信签名方式：
+                            paySign=data.paramMap.paySign  //微信签名
+
                         if (typeof WeixinJSBridge == "undefined"){
                            if( document.addEventListener ){
                                document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
@@ -52,12 +59,7 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
                                document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
                            }
                         }else{
-                            appId=data.paramMap.appId;
-                            timeStamp=data.paramMap.timeStamp,         //时间戳，自1970年以来的秒数
-                            nonceStr=data.paramMap.nonceStr, //随机串
-                            package=data.paramMap.package,
-                            signType=data.paramMap.signType,         //微信签名方式：
-                            paySign=data.paramMap.paySign  //微信签名
+
                             onBridgeReady();
                         }
 
