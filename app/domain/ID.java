@@ -34,6 +34,7 @@ public class ID {
     private Date birthday;         //生日
     private String photoUrl;       //头像
     private String realName;       //真实姓名
+    private String openId;
 
     public ID() {
     }
@@ -221,6 +222,14 @@ public class ID {
         this.realName = realName;
     }
 
+    public String getOpenId() {
+        return openId;
+    }
+
+    public void setOpenId(String openId) {
+        this.openId = openId;
+    }
+
     @Override
     public String toString() {
         return "ID{" +
@@ -244,6 +253,7 @@ public class ID {
                 ", birthday=" + birthday +
                 ", photoUrl='" + photoUrl + '\'' +
                 ", realName='" + realName + '\'' +
+                ", openId='" + openId + '\'' +
                 '}';
     }
 }

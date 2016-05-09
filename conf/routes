@@ -53,10 +53,13 @@ GET         /client/push                                                        
 GET         /client/msg/testMsg                                                           controllers.MsgCtrl.testMsg()
 
 #微信
+POST        /client/weixin/pay/unifiedorder/redirect                                      controllers.WeiXinCtrl.redirectPayUnifiedorder()
 GET         /client/weixin/pay/unifiedorder/$tradeType<[a-zA-Z]+>/$orderId<[0-9]+>        controllers.WeiXinCtrl.payUnifiedorder(tradeType:String,orderId:Long)
 POST        /client/weixin/pay/back                                                       controllers.WeiXinCtrl.payBackendNotify()
 GET         /client/weixin/pay/getQRCode/$qrCodeUrl<[a-zA-Z0-9]+>                         controllers.WeiXinCtrl.getQRCode(qrCodeUrl:String)
+POST        /client/weixin/pay/orderquery/redirect                                        controllers.WeiXinCtrl.redirectPayOrderquery()
 GET         /client/weixin/pay/orderquery/$orderId<[0-9]+>                                controllers.WeiXinCtrl.payOrderquery(orderId:Long)
-GET         /client/weixin/pay/refund/$orderId<[0-9]+>                                    controllers.WeiXinCtrl.payRefund(orderId:Long)
-GET         /client/weixin/pay/back/test/$orderId<[0-9]+>                                 controllers.WeiXinCtrl.payBackendNotifyTest(orderId:Long)
+
+#GET         /client/weixin/pay/refund/$orderId<[0-9]+>                                    controllers.WeiXinCtrl.payRefund(orderId:Long)
+#GET         /client/weixin/pay/back/test/$orderId<[0-9]+>                                 controllers.WeiXinCtrl.payBackendNotifyTest(orderId:Long)
 

@@ -29,6 +29,7 @@ import util.Crypto;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -106,7 +107,15 @@ public class JDPay extends Controller {
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(d.parse(order.getOrderCreateAt()));
                     Map<String, String> params = getParams(calendar.getTimeInMillis(), request().queryString(), request().body().asFormUrlEncoded(), userId, orderId);
-                    return ok(views.html.cashdesk.render(params, order.getQrCodeUrl(), paySrc));
+                    String userType="JD";
+                    if (ctx().request().getHeader("User-Agent").contains("MicroMessenger")) {
+                        userType="WEIXIN"; //微信公众号支付
+                    }
+                    String token= (String) ctx().flash().get("id-token");
+
+                    String securityCode=orderSecurityCode(orderId+"",token);
+
+                    return ok(views.html.cashdesk.render(params, paySrc,userType,token,securityCode));
                 }
             } else return ok(views.html.jdpayfailed.render(params_failed));
         } catch (Exception ex) {
@@ -114,6 +123,25 @@ public class JDPay extends Controller {
             ex.printStackTrace();
             return ok(views.html.jdpayfailed.render(params_failed));
         }
+    }
+
+    /**
+     * 订单加密
+     *
+     * @param orderId
+     * @param token
+     * @return
+     */
+    public String orderSecurityCode(String orderId, String token) {
+        Map<String, String> map = new TreeMap<>();
+        map.put("orderId", orderId);
+        map.put("token", token);
+        try {
+            return Crypto.getSignature(map, "HMM");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     /**

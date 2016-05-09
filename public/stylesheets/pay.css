@@ -193,3 +193,30 @@ h1,h2,h3,h4,h5,h6{
     border: 0;outline: none;
     font-size: 24px;color: #fff;
 }
+
+
+/*支付扫二维码*/
+
+.e-box{
+    /*display: none;*/
+}
+.e-box img{
+    margin: 0 auto;
+}
+
+.success div{
+    width: 200px;
+    margin: 10px auto;
+
+}
+
+.success a{
+    color: #333;
+}
+.success .succeed{
+    float: left;
+}
+.success .see{
+    float: right;
+
+}

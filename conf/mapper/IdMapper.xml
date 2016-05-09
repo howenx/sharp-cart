@@ -86,7 +86,8 @@
         ${alias}.alter_dt,
         ${alias}.lastlogin_dt,
         ${alias}.lastlogin_ip ::text,
-        ${alias}.status
+        ${alias}.status,
+        ${alias}.open_id
     </sql>
 
     <!-- 获取一条用户信息 -->
