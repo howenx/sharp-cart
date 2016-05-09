@@ -1,9 +1,8 @@
 package controllers;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import domain.Message;
-import domain.Order;
-import domain.PinUser;
+import domain.*;
+import filters.UserAuth;
 import middle.JDPayMid;
 import net.glxn.qrgen.core.image.ImageType;
 import net.glxn.qrgen.javase.QRCode;
@@ -18,7 +17,10 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.w3c.dom.NodeList;
+import play.data.Form;
 import play.libs.XPath;
+import play.mvc.Security;
+import service.IdService;
 import util.SysParCom;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -61,6 +63,7 @@ public class WeiXinCtrl extends Controller {
 
     private CartService cartService;
     private PromotionService promotionService;
+    private IdService idService;
 
 
     @Inject
@@ -73,12 +76,13 @@ public class WeiXinCtrl extends Controller {
     private JDPay jdPay;
 
     @Inject
-    public WeiXinCtrl(CartService cartService, PromotionService promotionService) {
+    public WeiXinCtrl(CartService cartService, PromotionService promotionService,IdService idService) {
         this.cartService = cartService;
         this.promotionService = promotionService;
+        this.idService=idService;
     }
 
-    public String getPayUnifiedorderParams(Order order, String tradeType) throws Exception {
+    public String getPayUnifiedorderParams(Order order, String tradeType,String openid) throws Exception {
 
         TreeMap<String, String> paramMap = new TreeMap<>();
 
@@ -87,10 +91,11 @@ public class WeiXinCtrl extends Controller {
         paramMap.put("appid", SysParCom.WEIXIN_APP_ID); //应用ID
         paramMap.put("mch_id", SysParCom.WEIXIN_MCH_ID);
         paramMap.put("nonce_str", UUID.randomUUID().toString().replaceAll("-", ""));
-        paramMap.put("body", "韩秘美-订单编号" + orderId); //URLEncoder.encode
+        paramMap.put("body", "韩秘美-订单编号" + orderId);
         paramMap.put("notify_url", SysParCom.SHOPPING_URL + "/client/weixin/pay/back");
         paramMap.put("out_trade_no", orderId.toString());
-        paramMap.put("spbill_create_ip", "127.0.0.1");
+        paramMap.put("fee_type","CNY");
+        paramMap.put("spbill_create_ip", "127.0.0.1"); //TODO ...
         paramMap.put("trade_type", tradeType);
         paramMap.put("attach", orderId.toString());//附加数据，在查询API和支付通知中原样返回，该字段主要用于商户携带订单的自定义数据
 
@@ -98,6 +103,10 @@ public class WeiXinCtrl extends Controller {
             paramMap.put("total_fee", "1");
         } else {
             paramMap.put("total_fee", order.getPayTotal().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
+        }
+
+        if("JSAPI".equals(tradeType)){
+            paramMap.put("openid",openid);
         }
 
         String sign = getWeiXinSign(paramMap);
@@ -137,9 +146,7 @@ public class WeiXinCtrl extends Controller {
         }
         String key = SysParCom.WEIXIN_KEY; //秘钥
         String stringSignTemp = stringA + "&key=" + key;
-        Logger.info("=stringSignTemp===" + stringSignTemp);
         String sign = Crypto.md5(stringSignTemp).toUpperCase();//生成签名
-        Logger.info("=sign===" + sign);
         return sign;
 
     }
@@ -186,11 +193,23 @@ public class WeiXinCtrl extends Controller {
      * @param orderId
      * @return
      */
+    @Security.Authenticated(UserAuth.class)
     public Result payUnifiedorder(String tradeType, Long orderId) {
         ObjectNode objectNode = newObject();
-        // Long userId = (Long) ctx().args.get("userId");
-        // userId=1000242L;
+        Long userId = (Long) ctx().args.get("userId");
+        Logger.info("===微信统一下单==userId=="+userId+"==request="+ctx().request().getHeader("id-token")+"==flash="+ctx().flash().get("id-token")+"=token="+(String) ctx().args.get("id-token")+"==token="+(String) ctx().args.get("id-token"));
         try {
+            String openid="";
+            if("JSAPI".equals(tradeType)){
+                ID user=idService.getID(userId);
+                if(null!=user&&null!=user.getOpenId()&&!"".equals(user.getOpenId())){
+                    openid=user.getOpenId();
+                }else{
+                    objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
+                    return ok(objectNode);
+                }
+            }
+
             Order order = new Order();
             order.setOrderId(orderId);
             Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
@@ -204,7 +223,7 @@ public class WeiXinCtrl extends Controller {
             //获取响应内容
             try {
 
-                String sendStr = getPayUnifiedorderParams(order, tradeType);
+                String sendStr = getPayUnifiedorderParams(order, tradeType,openid);
 
                 String result = httpConnect(SysParCom.WEIXIN_PAY_UNIFIEDORDER, sendStr);
                 Logger.info("微信统一下单请求内容\n" + sendStr + "返回内容\n" + result);
@@ -234,13 +253,26 @@ public class WeiXinCtrl extends Controller {
                     }
                     //生成二维码图片
                     ByteArrayOutputStream qrOut = createQrGen(code_url);
-
                     String qrCodeUrl = UUID.randomUUID().toString().replaceAll("-", "");
                     cache.add(qrCodeUrl, 2 * 60 * 60, qrOut.toByteArray());
                     objectNode.put("qr_code_url", qrCodeUrl); //二维码地址
                     order.setQrCodeAt(new Timestamp(System.currentTimeMillis()));
                     order.setQrCodeUrl(qrCodeUrl);
                     cartService.updateOrder(order);
+
+
+                }  if ("JSAPI".equals(tradeType)) { //微信公众号支付
+
+                    String prepay_id = resultMap.get("prepay_id");
+                    TreeMap<String,String> map=new TreeMap<>();
+                    map.put("appId",SysParCom.WEIXIN_APP_ID);
+                    map.put("timeStamp",(System.currentTimeMillis()/1000)+"");
+                    map.put("nonceStr", UUID.randomUUID().toString().replaceAll("-", ""));
+                    map.put("package","prepay_id="+prepay_id);
+                    map.put("signType","MD5");
+                    String sign=getWeiXinSign(map);
+                    map.put("paySign",sign);
+                    objectNode.putPOJO("paramMap", Json.toJson(map));
 
 
                 } else {
@@ -297,107 +329,107 @@ public class WeiXinCtrl extends Controller {
         return resultMap;
     }
 
-    /**
-     * 支付回调测试
-     *
-     * @return
-     */
-    public Result payBackendNotifyTest(Long orderId) {
-        Logger.info("==payBackendNotifyTest===" + orderId);
-        Map<String, String> params = new TreeMap<>();
-        String test = "<xml>" +
-                "<appid><![CDATA[wx2421b1c4370ec43b]]></appid>" +
-                "<attach><![CDATA[支付测试]]></attach>" +
-                "<bank_type><![CDATA[CFT]]></bank_type>" +
-                "<fee_type><![CDATA[CNY]]></fee_type>" +
-                "<is_subscribe><![CDATA[Y]]></is_subscribe>" +
-                "<mch_id><![CDATA[10000100]]></mch_id>" +
-                "<nonce_str><![CDATA[5d2b6c2a8db53831f7eda20af46e531c]]></nonce_str>" +
-                "<openid><![CDATA[oUpF8uMEb4qRXf22hE3X68TekukE]]></openid>" +
-                "<out_trade_no><![CDATA[" + orderId + "]]></out_trade_no>" +
-                "<result_code><![CDATA[SUCCESS]]></result_code>" +
-                "<return_code><![CDATA[SUCCESS]]></return_code>" +
-                "<sign><![CDATA[B552ED6B279343CB493C5DD0D78AB241]]></sign>" +
-                "<sub_mch_id><![CDATA[10000100]]></sub_mch_id>" +
-                "<time_end><![CDATA[20140903131540]]></time_end>" +
-                "<total_fee>1</total_fee>" +
-                "<trade_type><![CDATA[JSAPI]]></trade_type>" +
-                "<transaction_id><![CDATA[1004400740201409030005092168]]></transaction_id>" +
-                "</xml>";
-        try {
-            params = xmlToMap(test);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        }
-
-
-        if (null == params.get("return_code")) {
-            Logger.error("微信支付回调,返回内容为空");
-            return ok(weixinNotifyResponse("FAIL", "param is null"));
-        }
-        if (!"SUCCESS".equals(params.get("return_code"))) { //失败
-            Logger.error("微信支付回调return_code=" + params.get("return_code") + ",return_msg=" + params.get("return_msg"));
-            return ok(weixinNotifyResponse("FAIL", "return_code"));
-        }
-
-//        String weixinSign=params.get("sign"); //微信发来的签名
-//        String sign=getWeiXinSign(params);//我方签名
-//        if(!weixinSign.equals(sign)){
-//            Logger.error("微信支付回调,签名不一致我方="+sign+",微信="+weixinSign);
-//            return ok(weixinNotifyResponse("FAIL","SIGN ERROR"));
+//    /**
+//     * 支付回调测试
+//     *
+//     * @return
+//     */
+//    public Result payBackendNotifyTest(Long orderId) {
+//        Logger.info("==payBackendNotifyTest===" + orderId);
+//        Map<String, String> params = new TreeMap<>();
+//        String test = "<xml>" +
+//                "<appid><![CDATA[wx2421b1c4370ec43b]]></appid>" +
+//                "<attach><![CDATA[支付测试]]></attach>" +
+//                "<bank_type><![CDATA[CFT]]></bank_type>" +
+//                "<fee_type><![CDATA[CNY]]></fee_type>" +
+//                "<is_subscribe><![CDATA[Y]]></is_subscribe>" +
+//                "<mch_id><![CDATA[10000100]]></mch_id>" +
+//                "<nonce_str><![CDATA[5d2b6c2a8db53831f7eda20af46e531c]]></nonce_str>" +
+//                "<openid><![CDATA[oUpF8uMEb4qRXf22hE3X68TekukE]]></openid>" +
+//                "<out_trade_no><![CDATA[" + orderId + "]]></out_trade_no>" +
+//                "<result_code><![CDATA[SUCCESS]]></result_code>" +
+//                "<return_code><![CDATA[SUCCESS]]></return_code>" +
+//                "<sign><![CDATA[B552ED6B279343CB493C5DD0D78AB241]]></sign>" +
+//                "<sub_mch_id><![CDATA[10000100]]></sub_mch_id>" +
+//                "<time_end><![CDATA[20140903131540]]></time_end>" +
+//                "<total_fee>1</total_fee>" +
+//                "<trade_type><![CDATA[JSAPI]]></trade_type>" +
+//                "<transaction_id><![CDATA[1004400740201409030005092168]]></transaction_id>" +
+//                "</xml>";
+//        try {
+//            params = xmlToMap(test);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } catch (SAXException e) {
+//            e.printStackTrace();
+//        } catch (ParserConfigurationException e) {
+//            e.printStackTrace();
 //        }
-
-        if (!"SUCCESS".equals(params.get("result_code"))) { //支付失败,返回支付失败的界面 TODO ...
-            Logger.error("微信支付回调result_code=" + params.get("result_code") + ",err_code=" + params.get("err_code") + ",err_code_des=" + params.get("err_code_des"));
-            return ok(weixinNotifyResponse("FAIL", "")); //TODO
-        }
-
-        if ("SUCCESS".equals(params.get("result_code"))) {
-
-            Order order = new Order();
-            order.setOrderId(Long.valueOf(params.get("out_trade_no")));
-            order.setPayMethod("WEIXIN");
-            order.setErrorStr(params.get("err_code"));
-            order.setPgTradeNo(params.get("transaction_id"));
-
-            if (jdPayMid.asynPay(order).equals("success")) {
-                Logger.error("################微信支付异步通知 异步方法调用返回成功################," + params.get("out_trade_no"));
-                try {
-                    List<Order> orders = cartService.getOrder(order);
-                    if (orders.size() > 0) {
-                        order = orders.get(0);
-                        if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
-                            if (jdPay.dealPinActivity(params, order) == null) {
-                                Logger.error("################微信支付异步通知 拼购订单返回处理结果为空################," + order.getOrderId());
-                                return ok(weixinNotifyResponse("FAIL", "order deal fail"));
-                            } else {
-                                Logger.error("################微信支付异步通知 拼购订单返回成功################," + order.getOrderId());
-                                return ok(weixinNotifyResponse("SUCCESS", "OK"));
-                            }
-                        } else {
-                            Logger.error("################微信支付异步通知 普通订单返回成功################," + order.getOrderId());
-                            return ok(weixinNotifyResponse("SUCCESS", "OK"));
-                        }
-                    } else {
-                        Logger.error("################微信支付异步通知 订单未找到################," + order.getOrderId());
-                        return ok(weixinNotifyResponse("FAIL", "order not found"));
-                    }
-                } catch (Exception e) {
-                    Logger.error("################微信支付异步通知 出现异常################," + order.getOrderId());
-                    e.printStackTrace();
-                    return ok(weixinNotifyResponse("FAIL", e.getMessage()));
-                }
-            } else {
-                Logger.error("################微信支付异步通知 异步方法调用返回失败################," + params.get("out_trade_no"));
-                return ok(weixinNotifyResponse("FAIL", "asynPayWeixin error"));
-            }
-        }
-        return ok(weixinNotifyResponse("SUCCESS", "OK"));
-    }
+//
+//
+//        if (null == params.get("return_code")) {
+//            Logger.error("微信支付回调,返回内容为空");
+//            return ok(weixinNotifyResponse("FAIL", "param is null"));
+//        }
+//        if (!"SUCCESS".equals(params.get("return_code"))) { //失败
+//            Logger.error("微信支付回调return_code=" + params.get("return_code") + ",return_msg=" + params.get("return_msg"));
+//            return ok(weixinNotifyResponse("FAIL", "return_code"));
+//        }
+//
+////        String weixinSign=params.get("sign"); //微信发来的签名
+////        String sign=getWeiXinSign(params);//我方签名
+////        if(!weixinSign.equals(sign)){
+////            Logger.error("微信支付回调,签名不一致我方="+sign+",微信="+weixinSign);
+////            return ok(weixinNotifyResponse("FAIL","SIGN ERROR"));
+////        }
+//
+//        if (!"SUCCESS".equals(params.get("result_code"))) { //支付失败,返回支付失败的界面 TODO ...
+//            Logger.error("微信支付回调result_code=" + params.get("result_code") + ",err_code=" + params.get("err_code") + ",err_code_des=" + params.get("err_code_des"));
+//            return ok(weixinNotifyResponse("FAIL", "")); //TODO
+//        }
+//
+//        if ("SUCCESS".equals(params.get("result_code"))) {
+//
+//            Order order = new Order();
+//            order.setOrderId(Long.valueOf(params.get("out_trade_no")));
+//            order.setPayMethod("WEIXIN");
+//            order.setErrorStr(params.get("err_code"));
+//            order.setPgTradeNo(params.get("transaction_id"));
+//
+//            if (jdPayMid.asynPay(order).equals("success")) {
+//                Logger.error("################微信支付异步通知 异步方法调用返回成功################," + params.get("out_trade_no"));
+//                try {
+//                    List<Order> orders = cartService.getOrder(order);
+//                    if (orders.size() > 0) {
+//                        order = orders.get(0);
+//                        if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
+//                            if (jdPay.dealPinActivity(params, order) == null) {
+//                                Logger.error("################微信支付异步通知 拼购订单返回处理结果为空################," + order.getOrderId());
+//                                return ok(weixinNotifyResponse("FAIL", "order deal fail"));
+//                            } else {
+//                                Logger.error("################微信支付异步通知 拼购订单返回成功################," + order.getOrderId());
+//                                return ok(weixinNotifyResponse("SUCCESS", "OK"));
+//                            }
+//                        } else {
+//                            Logger.error("################微信支付异步通知 普通订单返回成功################," + order.getOrderId());
+//                            return ok(weixinNotifyResponse("SUCCESS", "OK"));
+//                        }
+//                    } else {
+//                        Logger.error("################微信支付异步通知 订单未找到################," + order.getOrderId());
+//                        return ok(weixinNotifyResponse("FAIL", "order not found"));
+//                    }
+//                } catch (Exception e) {
+//                    Logger.error("################微信支付异步通知 出现异常################," + order.getOrderId());
+//                    e.printStackTrace();
+//                    return ok(weixinNotifyResponse("FAIL", e.getMessage()));
+//                }
+//            } else {
+//                Logger.error("################微信支付异步通知 异步方法调用返回失败################," + params.get("out_trade_no"));
+//                return ok(weixinNotifyResponse("FAIL", "asynPayWeixin error"));
+//            }
+//        }
+//        return ok(weixinNotifyResponse("SUCCESS", "OK"));
+//    }
 
     /**
      * 支付回调
@@ -438,9 +470,9 @@ public class WeiXinCtrl extends Controller {
                 return ok(weixinNotifyResponse("FAIL", "SIGN ERROR"));
             }
 
-            if (!"SUCCESS".equals(params.get("result_code"))) { //支付失败,返回支付失败的界面 TODO ...
+            if (!"SUCCESS".equals(params.get("result_code"))) { //支付失败,返回支付失败的界面
                 Logger.error("微信支付回调result_code=" + params.get("result_code") + ",err_code=" + params.get("err_code") + ",err_code_des=" + params.get("err_code_des"));
-                return ok(weixinNotifyResponse("FAIL", "")); //TODO
+                return ok(weixinNotifyResponse("FAIL", ""));
             }
 
             if ("SUCCESS".equals(params.get("result_code"))) {
@@ -571,6 +603,7 @@ public class WeiXinCtrl extends Controller {
      * @param orderId
      * @return
      */
+    @Security.Authenticated(UserAuth.class)
     public Result payOrderquery(Long orderId) {
         ObjectNode objectNode = newObject();
         //I:初始化即未支付状态
@@ -666,6 +699,11 @@ public class WeiXinCtrl extends Controller {
         }
     }
 
+    /**
+     * 获取退款参数
+     * @param orderId
+     * @return
+     */
     public String getRefundParams(Long orderId) {
         try {
             Order order = new Order();
@@ -701,51 +739,51 @@ public class WeiXinCtrl extends Controller {
         }
     }
 
-    /**
-     * 微信支付退款
-     *
-     * @param orderId
-     * @return
-     */
-    public Result payRefund(Long orderId) {
-        ObjectNode objectNode = newObject();
-        try {
-            String xmlContent = getRefundParams(orderId);
-            try {
-                String result = refundConnect(SysParCom.WEIXIN_PAY_REFUND, xmlContent); //接口提供所有微信支付订单的查询
-                Logger.info("微信支付退款发送内容\n" + xmlContent + "\n返回内容" + result);
-                if ("" == result || null == result) {
-                    objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
-                    return ok(objectNode);
-                }
-                Map<String, String> resultMap = xmlToMap(result);
-                if (null == resultMap || resultMap.size() <= 0) {
-                    objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
-                    return ok(objectNode);
-                }
-                if (!"SUCCESS".equals(resultMap.get("return_code"))) { //返回状态码  SUCCESS/FAIL 此字段是通信标识，非交易标识，交易是否成功需要查看result_code来判断
-                    objectNode.putPOJO("message", Json.toJson(new domain.Message(resultMap.get("return_msg"), domain.Message.ErrorCode.FAILURE.getIndex())));
-                    return ok(objectNode);
-                }
-                if (!"SUCCESS".equals(resultMap.get("result_code"))) { //业务结果
-                    objectNode.putPOJO("message", Json.toJson(new domain.Message(resultMap.get("err_code_des"), domain.Message.ErrorCode.FAILURE.getIndex())));
-                    return ok(objectNode);
-                }
-
-                //退款成功//TODO 退款逻辑
-                objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-                return ok(objectNode);
-
-            } catch (Exception e) {
-                Logger.error(e.getMessage());
-            }
-
-        } catch (Exception e) {
-            Logger.error(e.getMessage());
-        }
-        objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
-        return ok(objectNode);
-    }
+//    /**
+//     * 微信支付退款
+//     *
+//     * @param orderId
+//     * @return
+//     */
+//    public Result payRefund(Long orderId) {
+//        ObjectNode objectNode = newObject();
+//        try {
+//            String xmlContent = getRefundParams(orderId);
+//            try {
+//                String result = refundConnect(SysParCom.WEIXIN_PAY_REFUND, xmlContent); //接口提供所有微信支付订单的查询
+//                Logger.info("微信支付退款发送内容\n" + xmlContent + "\n返回内容" + result);
+//                if ("" == result || null == result) {
+//                    objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
+//                    return ok(objectNode);
+//                }
+//                Map<String, String> resultMap = xmlToMap(result);
+//                if (null == resultMap || resultMap.size() <= 0) {
+//                    objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
+//                    return ok(objectNode);
+//                }
+//                if (!"SUCCESS".equals(resultMap.get("return_code"))) { //返回状态码  SUCCESS/FAIL 此字段是通信标识，非交易标识，交易是否成功需要查看result_code来判断
+//                    objectNode.putPOJO("message", Json.toJson(new domain.Message(resultMap.get("return_msg"), domain.Message.ErrorCode.FAILURE.getIndex())));
+//                    return ok(objectNode);
+//                }
+//                if (!"SUCCESS".equals(resultMap.get("result_code"))) { //业务结果
+//                    objectNode.putPOJO("message", Json.toJson(new domain.Message(resultMap.get("err_code_des"), domain.Message.ErrorCode.FAILURE.getIndex())));
+//                    return ok(objectNode);
+//                }
+//
+//                //退款成功//TODO 退款逻辑
+//                objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+//                return ok(objectNode);
+//
+//            } catch (Exception e) {
+//                Logger.error(e.getMessage());
+//            }
+//
+//        } catch (Exception e) {
+//            Logger.error(e.getMessage());
+//        }
+//        objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
+//        return ok(objectNode);
+//    }
 
     /**
      * 微信退款请求
@@ -778,17 +816,39 @@ public class WeiXinCtrl extends Controller {
         return "";
     }
 
-    public static String stringToAscii(String value) {
-        StringBuffer sbu = new StringBuffer();
-        char[] chars = value.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            if (i != chars.length - 1) {
-                sbu.append((int) chars[i]).append(",");
-            } else {
-                sbu.append((int) chars[i]);
-            }
+    /**
+     * 跳转统一下单
+     * @return
+     */
+    public Result redirectPayUnifiedorder() {
+        Form<RedirectWeiXin> redirectCashForm = Form.form(RedirectWeiXin.class).bindFromRequest();
+        if (redirectCashForm.hasErrors()) {
+            ObjectNode objectNode = newObject();
+            objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
+            return ok(objectNode);
+        } else {
+            RedirectWeiXin redirectCash = redirectCashForm.get();
+            flash().put("id-token", redirectCash.getToken());
+            return redirect("/client/weixin/pay/unifiedorder/" + redirectCash.getTradeType()+ "/" + redirectCash.getOrderId());
         }
-        return sbu.toString();
     }
+
+    /**
+     * 跳转查询下单
+     * @return
+     */
+    public Result redirectPayOrderquery() {
+        Form<RedirectWeiXin> redirectCashForm = Form.form(RedirectWeiXin.class).bindFromRequest();
+        if (redirectCashForm.hasErrors()) {
+            ObjectNode objectNode = newObject();
+            objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
+            return ok(objectNode);
+        } else {
+            RedirectWeiXin redirectCash = redirectCashForm.get();
+            flash().put("id-token", redirectCash.getToken());
+            return redirect("/client/weixin/pay/orderquery/" + redirectCash.getOrderId());
+        }
+    }
+
 
 }

@@ -1,4 +1,4 @@
-@(params:java.util.Map[String,String],qr_code_url:String,paySrc:String)
+@(params:java.util.Map[String,String],paySrc:String,userType:String,token:String,securityCode:String)
 
 <!DOCTYPE html>
 <html lang="en">
@@ -24,27 +24,47 @@
 
             <div class="right-icon"></div>
         </div>
-        <hr>
+
         @if("M"==paySrc){
-            <div class="weixin pay"  style="display:none" onclick="payUnifiedorder('APP',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1)" >
+            <hr>
+            <div class="weixin pay" onclick="payUnifiedorder('JSAPI',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')" >
                 <span>微信支付</span>
                 <em>仅安装微信6.0.2及以上版本客户端使用</em>
                 <div class="right-icon"></div>
             </div>
 
-            <div class="weixin pay" onclick="payUnifiedorder('NATIVE',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1)">
+            @if("WEIXIN"==userType){
+                <hr>
+                <div class="weixin pay" onclick="payUnifiedorder('JSAPI',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')" >
+                    <span>微信支付</span>
+                    <em>仅安装微信6.0.2及以上版本客户端使用</em>
+                    <div class="right-icon"></div>
+                </div>
+             }
+
+            <hr>
+            <div class="weixin pay" onclick="payUnifiedorder('NATIVE',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')">
                 <span>微信扫码支付</span>
                 <em>仅安装微信6.0.2及以上版本客户端使用</em>
                 <div class="right-icon"></div>
             </div>
-            <div id="codeImageDiv" style="display:none">
-                <img src="" id="codeImageUrl"/>
+
+            <div id="codeImageDiv" class="e-box" style="display:none">
                 <div>
+                    <img src="" id="codeImageUrl"/>
+                </div>
+            </div>
+
+            <div id="paySucDiv" class="success" style="display:none">
+                <div>
+                    <a href="javascript:;" class="succeed" onclick="payOrderquery(@params.get("""out_trade_no"""),'@token','@securityCode')">支付成功查看订单</a>
+                    <!--<a href="" class="see">查看订单</a>-->
                     <a href="/client/weixin/pay/back/test/@params.get("""out_trade_no""")" style="display:none">支付通知测试</a>
-                    <a href="/client/weixin/pay/orderquery/@params.get("""out_trade_no""")">支付成功查看订单</a>
                     <a href="/client/weixin/pay/refund/@params.get("""out_trade_no""")" style="display:none">退款</a>
                 </div>
             </div>
+
+
         }
 
         <div style="display:none">
