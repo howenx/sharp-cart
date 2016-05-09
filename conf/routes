@@ -35,9 +35,6 @@ GET         /client/pay/order/get/$orderId<[0-9]+>/$paySrc<[a-zA-Z]+>           
 POST        /client/pay/jd/back                                                           controllers.JDPay.payBackendNotify()
 POST        /client/pay/jd/front                                                          controllers.JDPay.payFrontNotify()
 
-#app启动时定时
-GET         /client/schedule/:cipher                                                      controllers.Application.getFirstApp(cipher:String)
-
 
 GET         /assets/*file                                                                 controllers.Assets.versioned(path="/public", file: Asset)
 POST        /client/redirect/cash                                                         controllers.JDPay.redirectCash()

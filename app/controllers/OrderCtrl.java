@@ -217,6 +217,11 @@ public class OrderCtrl extends Controller {
         }
     }
 
+    /**
+     * 查看物流信息
+     * @param orderId orderId
+     * @return Result
+     */
     @Security.Authenticated(UserAuth.class)
     public F.Promise<Result> express(Long orderId) {
         ObjectNode result = newObject();
