@@ -27,7 +27,7 @@
 
         @if("M"==paySrc){
 
-            <div class="weixin pay"   onclick="payUnifiedorder('JSAPI',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')" >
+            <div class="weixin pay"  style="display:none" onclick="payUnifiedorder('JSAPI',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')" >
                 <span>微信支付</span>
                 <em>仅安装微信6.0.2及以上版本客户端使用</em>
                 <div class="right-icon"></div>
@@ -51,16 +51,13 @@
                 </div>
 
                 <div id="codeImageDiv" class="e-box" style="display:none">
-                    <div>
-                        <img src="" id="codeImageUrl"/>
+                    <div class="pos">
+                        <img src="/assets/images/erweima.png" id="codeImageUrl">
+                        <a href="javascript:;" class="succeed" id="cancelPaySpan">取消扫码</a>
+                        <a href="javascript:;" class="succeed" onclick="payOrderquery(@params.get("""out_trade_no"""),'@token','@securityCode')" >查看订单</a>
                     </div>
                 </div>
 
-                <div id="paySucDiv" class="success" style="display:none">
-                    <div>
-                        <a href="javascript:;" class="succeed" onclick="payOrderquery(@params.get("""out_trade_no"""),'@token','@securityCode')">支付成功查看订单</a>
-                    </div>
-                </div>
             }
 
 
