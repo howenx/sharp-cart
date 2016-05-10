@@ -230,8 +230,12 @@ public class JDPay extends Controller {
                     orderLine.setSplitId(orderSp.getSplitId());
                     subOrderMap.put("sub_order_no", orderSp.getSplitId().toString());
                     subOrderMap.put("sub_order_name", "韩秘美-子订单号" + orderSp.getSplitId());
-//                    subOrderMap.put("sub_order_amount", orderSp.getTotalPayFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
-                    subOrderMap.put("sub_order_amount", String.valueOf(1));
+
+                    if (ONE_CENT_PAY) {
+                        subOrderMap.put("sub_order_amount", String.valueOf(1));
+                    } else {
+                        subOrderMap.put("sub_order_amount", orderSp.getTotalPayFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
+                    }
 
                     subInfo.add(subOrderMap);
                 }
