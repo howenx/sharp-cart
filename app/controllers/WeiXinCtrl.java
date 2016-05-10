@@ -748,5 +748,17 @@ public class WeiXinCtrl extends Controller {
         }
     }
 
+    public Result payJsApi(){
+        Form<WeiXinJsApi> redirectCashForm = Form.form(WeiXinJsApi.class).bindFromRequest();
+        Map<String, String> params_failed = new HashMap<>();
+        params_failed.put("m_index", M_INDEX);
+        if (redirectCashForm.hasErrors()) {
+            return ok(views.html.jdpayfailed.render(params_failed));
+        } else {
+            WeiXinJsApi weiXinJsApi = redirectCashForm.get();
+            return ok(views.html.weixin.render(weiXinJsApi));
+        }
+    }
+
 
 }

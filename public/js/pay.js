@@ -51,17 +51,15 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
                             signType=data.paramMap.signType,         //微信签名方式：
                             paySign=data.paramMap.paySign  //微信签名
 
-                        if (typeof WeixinJSBridge == "undefined"){
-                           if( document.addEventListener ){
-                               document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
-                           }else if (document.attachEvent){
-                               document.attachEvent('WeixinJSBridgeReady', onBridgeReady);
-                               document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
-                           }
-                        }else{
-
-                            onBridgeReady();
-                        }
+                        var weixinJsApiForm = $('<form action="/client/weixin/pay/jsapi" method="post">' +
+                            '<input type="hidden" name="appId" value="'+appId+'"/>' +
+                            '<input type="hidden" name="timeStamp" value="'+timeStamp+'"/>' +
+                            '<input type="hidden" name="nonceStr" value="'+nonceStr+'"/>' +
+                            '<input type="hidden" name="pg" value="'+package+'"/>' +
+                            '<input type="hidden" name="signType" value="'+signType+'"/>' +
+                            '<input type="hidden" name="paySign" value="'+paySign+'"/>' +
+                            '</form>');
+                            weixinJsApiForm.submit();
 
                     }else{
                         //弹出微信支付界面
@@ -80,6 +78,28 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
 
 };
 
+//调用微信H5支付
+function callpay(app,ts,ns,pg,st,ps){
+    appId=app;
+    timeStamp=ts;         //时间戳，自1970年以来的秒数
+    nonceStr=ns; //随机串
+    package=pg;
+    signType=st;        //微信签名方式：
+    paySign=ps; //微信签名
+    
+    if (typeof WeixinJSBridge == "undefined"){
+       if( document.addEventListener ){
+           document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
+       }else if (document.attachEvent){
+           document.attachEvent('WeixinJSBridgeReady', onBridgeReady);
+           document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
+       }
+    }else{
+        onBridgeReady();
+    }
+}
+
+
 function onBridgeReady(){
 console.log("appId="+appId+",timeStamp="+timeStamp+",nonceStr="+nonceStr+",package="+package+",signType="+signType+",paySign="+paySign)
 alert("appId="+appId+",timeStamp="+timeStamp+",nonceStr="+nonceStr+",package="+package+",signType="+signType+",paySign="+paySign)
@@ -91,13 +111,6 @@ alert("appId="+appId+",timeStamp="+timeStamp+",nonceStr="+nonceStr+",package="+p
               "package":package,
               "signType":signType,         //微信签名方式：
               "paySign":paySign  //微信签名
-
-//           "appId" ： "wx2421b1c4370ec43b",     //公众号名称，由商户传入
-//           "timeStamp"：" 1395712654",         //时间戳，自1970年以来的秒数
-//           "nonceStr" ： "e61463f8efa94090b1f366cccfbbb444", //随机串
-//           "package" ： "prepay_id=u802345jgfjsdfgsdg888",
-//           "signType" ： "MD5",         //微信签名方式：
-//           "paySign" ： "70EA570631E4BB79628FBCA90534C63FF7FADD89" //微信签名
        },
        function(res){
        console.log(res.err_msg);
