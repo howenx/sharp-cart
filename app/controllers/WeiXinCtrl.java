@@ -198,7 +198,6 @@ public class WeiXinCtrl extends Controller {
     public Result payUnifiedorder(String tradeType, Long orderId) {
         ObjectNode objectNode = newObject();
         Long userId = (Long) ctx().args.get("userId");
-        Logger.info("===微信统一下单==userId=="+userId+"==request="+ctx().request().getHeader("id-token")+"==flash="+ctx().flash().get("id-token")+"=token="+(String) ctx().args.get("id-token")+"==token="+(String) ctx().args.get("id-token"));
         try {
             String openid="";
             if("JSAPI".equals(tradeType)){
