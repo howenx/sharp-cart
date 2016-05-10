@@ -1,5 +1,7 @@
 package domain;
 
+import play.data.validation.Constraints;
+
 import java.io.Serializable;
 
 /**
@@ -7,13 +9,24 @@ import java.io.Serializable;
  * Created by sibyl.sun on 16/5/10.
  */
 public class WeiXinJsApi implements Serializable {
-
+    @Constraints.Required
     private String appId;
+    @Constraints.Required
     private String timeStamp ;
+    @Constraints.Required
     private String nonceStr ;
+    @Constraints.Required
     private String pg;
+    @Constraints.Required
     private String signType ;
+    @Constraints.Required
     private String paySign ;
+    @Constraints.Required
+    private Long orderId;
+    @Constraints.Required
+    private String token;
+    @Constraints.Required
+    private String securityCode; //md5(orderId+token+'HMM')
 
     public String getAppId() {
         return appId;
@@ -61,5 +74,29 @@ public class WeiXinJsApi implements Serializable {
 
     public void setPg(String pg) {
         this.pg = pg;
+    }
+
+    public Long getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public String getSecurityCode() {
+        return securityCode;
+    }
+
+    public void setSecurityCode(String securityCode) {
+        this.securityCode = securityCode;
     }
 }

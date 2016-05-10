@@ -12,9 +12,11 @@
         <script src="/assets/js/jquery-1.11.1.min.js"></script>
         <script src="/assets/js/pay.js"></script>
     </head>
-    <body>
+    <body onload="callpay('@weiXinJsApi.getAppId()','@weiXinJsApi.getTimeStamp()','@weiXinJsApi.getNonceStr()','@weiXinJsApi.getPg()',
+        '@weiXinJsApi.getSignType()','@weiXinJsApi.getPaySign()','@weiXinJsApi.getOrderId()','@weiXinJsApi.getToken()','@weiXinJsApi.getSecurityCode()')">
     <div>
-        <a href="javascript:;" onclick="callpay('@weiXinJsApi.getAppId()','@weiXinJsApi.getTimeStamp()','@weiXinJsApi.getNonceStr()','@weiXinJsApi.getPg()','@weiXinJsApi.getSignType()','@weiXinJsApi.getPaySign()')">立即支付</a>
+        <a href="javascript:;" onclick="callpay('@weiXinJsApi.getAppId()','@weiXinJsApi.getTimeStamp()','@weiXinJsApi.getNonceStr()','@weiXinJsApi.getPg()',
+        '@weiXinJsApi.getSignType()','@weiXinJsApi.getPaySign()','@weiXinJsApi.getOrderId()','@weiXinJsApi.getToken()','@weiXinJsApi.getSecurityCode()')">立即支付</a>
     </div>
     </body>
 </html>

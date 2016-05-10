@@ -27,7 +27,7 @@
 
         @if("M"==paySrc){
 
-            <div class="weixin pay"  style="display:none" onclick="payUnifiedorder('JSAPI',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')" >
+            <div class="weixin pay"   onclick="payUnifiedorder('JSAPI',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')" >
                 <span>微信支付</span>
                 <em>仅安装微信6.0.2及以上版本客户端使用</em>
                 <div class="right-icon"></div>
