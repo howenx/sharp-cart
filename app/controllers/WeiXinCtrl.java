@@ -240,10 +240,10 @@ public class WeiXinCtrl extends Controller {
                 return ok(objectNode);
             }
             order = listOptional.get().get(0);
-            if (!order.getOrderStatus().equals("I")){ //初始状态
-                objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_STATUS_EXCEPTION.getIndex()), Message.ErrorCode.ORDER_STATUS_EXCEPTION.getIndex())));
-                return ok(objectNode);
-            }
+//            if (!order.getOrderStatus().equals("I")){ //初始状态
+//                objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_STATUS_EXCEPTION.getIndex()), Message.ErrorCode.ORDER_STATUS_EXCEPTION.getIndex())));
+//                return ok(objectNode);
+//            }
 
 
             WeiXinTradeType tradeType=WeiXinTradeType.getWeiXinTradeType(tType);
