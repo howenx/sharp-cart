@@ -124,7 +124,7 @@ function onBridgeReady(){
          //  alert(res.err_msg);
            if(res.err_msg == "get_brand_wcpay_request:ok" ) {// 使用以上方式判断前端返回,微信团队郑重提示：res.err_msg将在用户支付成功后返回    ok，但并不保证它绝对可靠。
               //查询支付结果
-              payOrderquery(orderId,token,securityCode);
+              payOrderquery("JSAPI",orderId,token,securityCode);
            }else{
               history.back();
            }
@@ -134,11 +134,12 @@ function onBridgeReady(){
 };
 
 //订单查询
-function payOrderquery(orderId,token,securityCode){
+function payOrderquery(tradeType,orderId,token,securityCode){
     var form = $('<form action="/client/weixin/pay/orderquery/redirect" method="post">' +
                 '<input type="hidden" name="orderId" value="'+orderId+'"/>' +
                 '<input type="hidden" name="token" value="'+token+'"/>' +
                 '<input type="hidden" name="securityCode" value="'+securityCode+'"/>' +
+                '<input type="hidden" name="tradeType" value="'+tradeType+'"/>' +
                 '</form>');
    form.submit();
 }
