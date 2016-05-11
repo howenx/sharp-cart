@@ -126,7 +126,11 @@ function onBridgeReady(){
               //查询支付结果
               payOrderquery("JSAPI",orderId,token,securityCode);
            }else{
-              history.back();
+               if (navigator.userAgent.match(/MicroMessenger/i)||navigator.userAgent.match(/android/i)) {
+                  history.back();
+               }else{
+pay                 payOrderquery("JSAPI",orderId,token,securityCode); //ios浏览器返回会重新加载所以不返回跳查订单界面
+               }
            }
 
        }
