@@ -16,6 +16,14 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
         alert("您的订单已经超时自动取消");
         return ;
     }
+    if("NATIVE"==tradeType){
+        if(1==$("#codeImgHidden").val()){
+            $("#codeImageDiv").show();
+            return false;
+        }
+
+    }
+
      //去支付
     var form = $('<form action="/client/weixin/pay/unifiedorder/redirect" method="post">' +
                 '<input type="hidden" name="orderId" value="'+orderId+'"/>' +
@@ -31,7 +39,7 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
         dataType: 'json',
         error : function(request) {
             console.log("data="+request);
-            alert("支付失败,请重新尝试");
+          //  alert("支付失败,请重新尝试");
          },
         success: function(data) {
             console.log("data="+data);
@@ -41,8 +49,7 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
                     if("NATIVE"==tradeType){ //扫码支付
                         $("#codeImageDiv").show();
                         $("#codeImageUrl").attr("src", "/client/weixin/pay/getQRCode/" + data.qr_code_url);
-
-                        $("#paySucDiv").show();
+                        $("#codeImgHidden").val(1);
 
                     }else if("JSAPI"==tradeType){ //微信公众号支付
 
