@@ -22,6 +22,8 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
             return false;
         }
 
+    }else{
+        $("#codeImgHidden").val(0);
     }
      //去支付
     var form = $('<form action="/client/weixin/pay/unifiedorder/redirect" method="post">' +
