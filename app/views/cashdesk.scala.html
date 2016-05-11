@@ -96,6 +96,7 @@
                 if(n-createAt>=86400000){
                     alert("您的订单已经超时自动取消");
                 }else{
+                    $("#codeImgHidden").val(0);
                     $('#jdsubmit').submit();
                 }
             })
