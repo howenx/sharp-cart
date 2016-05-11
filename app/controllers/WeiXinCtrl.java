@@ -294,9 +294,6 @@ public class WeiXinCtrl extends Controller {
                     String qrCodeUrl = UUID.randomUUID().toString().replaceAll("-", "");
                     cache.add(qrCodeUrl, 2 * 60 * 60, qrOut.toByteArray());
                     objectNode.put("qr_code_url", qrCodeUrl); //二维码地址
-                    order.setQrCodeAt(new Timestamp(System.currentTimeMillis()));
-                    order.setQrCodeUrl(qrCodeUrl);
-                    cartService.updateOrder(order);
 
                 } else if (WeiXinTradeType.JSAPI==tradeType) { //微信公众号支付
 

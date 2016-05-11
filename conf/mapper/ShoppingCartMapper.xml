@@ -44,9 +44,7 @@
         ${alias}.postal_fee           ,
         to_char(${alias}.confirm_receive_at, 'YYYY-MM-DD HH24:MI:SS') confirm_receive_at,
         ${alias}.pin_active_id         ,
-        ${alias}.order_type,
-        ${alias}.qr_code_url,
-        ${alias}.qr_code_at
+        ${alias}.order_type
     </sql>
 
     <!---  获取用户购物车,以用户ID或者CartID    -->
@@ -356,9 +354,6 @@
         </if>
         <if test="pinActiveId!=null and pinActiveId !=''">
             pin_active_id = #{pinActiveId},
-        </if>
-        <if test="qrCodeUrl!=null and qrCodeUrl !=''">
-            qr_code_url = #{qrCodeUrl},
         </if>
         <if test="payMethod!=null and payMethod !=''">
             pay_method = #{payMethod},
