@@ -196,27 +196,38 @@ h1,h2,h3,h4,h5,h6{
 
 
 /*支付扫二维码*/
+.e-box {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    position: fixed;
+    top:0;
+}
+.e-box .pos{
+    position: absolute;
+    top:50%;
+    left: 50%;
+    -webkit-transform: translate(-50%,-50%);
+    -moz-transform: translate(-50%,-50%);
+    text-align: center;
+}
 
-.e-box{
-    /*display: none;*/
-}
-.e-box img{
-    margin: 0 auto;
+
+.examine,.succeed{
+    display:block;
+    margin:20px 0;
+    width:100%;
+    height: 33px;
+    line-height:33px;
+    border-radius: 20px;
+    border: 1px solid #ff5359;
+    color: #fff;
+
+
 }
 
-.success div{
-    width: 200px;
-    margin: 10px auto;
-
-}
-
-.success a{
-    color: #333;
-}
-.success .succeed{
-    float: left;
-}
-.success .see{
-    float: right;
+.examine{
+    border: 1px solid #ff5359;
+    background-color: #ff5359;
 
 }

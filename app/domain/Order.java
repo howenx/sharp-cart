@@ -53,10 +53,6 @@ public class Order implements Serializable {
     private Integer             orderType;//订单类型
     @JsonIgnore
     private Long                pinActiveId;       //拼购活动ID
-    @JsonIgnore
-    private String              qrCodeUrl;//二维码图片地址
-    @JsonIgnore
-    private Timestamp           qrCodeAt;//二维码创建时间
     private String              remark;//是否评价完成,Y评价完成,N未评价完成,null空
 
 
@@ -64,7 +60,7 @@ public class Order implements Serializable {
     public Order() {
     }
 
-    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId, Long countDown, Integer orderType, Long pinActiveId, String qrCodeUrl, Timestamp qrCodeAt, String remark) {
+    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId, Long countDown, Integer orderType, Long pinActiveId, String remark) {
         this.orderId = orderId;
         this.userId = userId;
         this.payTotal = payTotal;
@@ -90,8 +86,6 @@ public class Order implements Serializable {
         this.countDown = countDown;
         this.orderType = orderType;
         this.pinActiveId = pinActiveId;
-        this.qrCodeUrl = qrCodeUrl;
-        this.qrCodeAt = qrCodeAt;
         this.remark = remark;
     }
 
@@ -295,22 +289,6 @@ public class Order implements Serializable {
         this.pinActiveId = pinActiveId;
     }
 
-    public String getQrCodeUrl() {
-        return qrCodeUrl;
-    }
-
-    public void setQrCodeUrl(String qrCodeUrl) {
-        this.qrCodeUrl = qrCodeUrl;
-    }
-
-    public Timestamp getQrCodeAt() {
-        return qrCodeAt;
-    }
-
-    public void setQrCodeAt(Timestamp qrCodeAt) {
-        this.qrCodeAt = qrCodeAt;
-    }
-
     public String getRemark() {
         return remark;
     }
@@ -347,8 +325,6 @@ public class Order implements Serializable {
                 ", countDown=" + countDown +
                 ", orderType=" + orderType +
                 ", pinActiveId=" + pinActiveId +
-                ", qrCodeUrl='" + qrCodeUrl + '\'' +
-                ", qrCodeAt=" + qrCodeAt +
                 ", remark='" + remark + '\'' +
                 '}';
     }

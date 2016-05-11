@@ -11,7 +11,22 @@
         <link rel="stylesheet" href="/assets/stylesheets/pay.css">
         <script src="/assets/js/jquery-1.11.1.min.js"></script>
         <script src="/assets/js/pay.js"></script>
-        <script src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+        <script>
+
+           $(function () {
+               // var orderId='@params.get("""out_trade_no""")';
+                var wsUri = "@routes.WeiXinCtrl.weixinsocket(params.get("""out_trade_no""")).webSocketURL()";
+               // var wsUri="ws://"
+                var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
+                var dateSocket = new WS(wsUri);
+                dateSocket.onmessage = function (event) {
+                    if(event.data=="SUCCESS"){
+                         payOrderquery("NATIVE",'@params.get("""out_trade_no""")','@token','@securityCode');
+                    }
+                }
+           });
+
+        </script>
     </head>
     <body>
         <div class="pay-change">
@@ -43,26 +58,24 @@
                 </div>
              }
 
-            @if("WEIXIN"!=userType){
-                <hr>
-                <div class="weixin pay" onclick="payUnifiedorder('NATIVE',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')">
-                    <span>微信扫码支付</span>
-                    <em>仅安装微信6.0.2及以上版本客户端使用</em>
-                    <div class="right-icon"></div>
-                </div>
 
-                <div id="codeImageDiv" class="e-box" style="display:none">
-                    <div>
-                        <img src="" id="codeImageUrl"/>
-                    </div>
-                </div>
+            <hr>
+            <div class="weixin pay" onclick="payUnifiedorder('NATIVE',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')">
+                <span>微信扫码支付</span>
+                <em>仅安装微信6.0.2及以上版本客户端使用</em>
+                <div class="right-icon"></div>
+            </div>
 
-                <div id="paySucDiv" class="success" style="display:none">
-                    <div>
-                        <a href="javascript:;" class="succeed" onclick="payOrderquery(@params.get("""out_trade_no"""),'@token','@securityCode')">支付成功查看订单</a>
-                    </div>
+            <div id="codeImageDiv" class="e-box" style="display:none">
+                <div class="pos clearfix">
+                    <img src="" id="codeImageUrl">
+                    <input type="hidden" id="codeImgHidden" value="0">
+                    <a href="javascript:;" class="succeed" id="cancelPaySpan">取消扫码</a>
+                    <a href="javascript:;" class="examine" onclick="payOrderquery('NATIVE',@params.get("""out_trade_no"""),'@token','@securityCode')" >查看订单</a>
                 </div>
-            }
+            </div>
+
+
 
 
         }
@@ -83,6 +96,7 @@
                 if(n-createAt>=86400000){
                     alert("您的订单已经超时自动取消");
                 }else{
+                    $("#codeImgHidden").val(0);
                     $('#jdsubmit').submit();
                 }
             })
