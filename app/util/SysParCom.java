@@ -2,10 +2,13 @@ package util;
 
 import domain.SysParameter;
 import play.Configuration;
+import play.mvc.WebSocket;
 import service.SkuService;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 查询参数表中的参数项
@@ -98,6 +101,9 @@ public class SysParCom {
     public static Integer REDIS_PORT;
     public static String REDIS_CHANNEL;
 
+    //微信扫码支付
+    public static Map<String,WebSocket.Out<String>> WEIXIN_SOCKET;
+
 
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
@@ -189,6 +195,8 @@ public class SysParCom {
         REDIS_PASSWORD = configuration.getString("redis.password");
         REDIS_PORT = configuration.getInt("redis.port");
         REDIS_CHANNEL = configuration.getString("redis.channel");
+
+        WEIXIN_SOCKET=new HashMap<>();
 
     }
 }

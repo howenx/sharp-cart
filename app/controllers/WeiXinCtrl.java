@@ -1,5 +1,7 @@
 package controllers;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.WeiXinTradeType;
 import domain.*;
@@ -19,8 +21,10 @@ import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.w3c.dom.NodeList;
 import play.data.Form;
+import play.libs.Akka;
 import play.libs.XPath;
 import play.mvc.Security;
+import play.mvc.WebSocket;
 import service.IdService;
 import util.SysParCom;
 import org.w3c.dom.Document;
@@ -227,6 +231,21 @@ public class WeiXinCtrl extends Controller {
         ObjectNode objectNode = newObject();
         Long userId = (Long) ctx().args.get("userId");
         try {
+
+            Order order = new Order();
+            order.setOrderId(orderId);
+            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
+            if (!listOptional.isPresent() || listOptional.get().size() <= 0 ) {
+                objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
+                return ok(objectNode);
+            }
+            order = listOptional.get().get(0);
+            if (!order.getOrderStatus().equals("I")){ //初始状态
+                objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_STATUS_EXCEPTION.getIndex()), Message.ErrorCode.ORDER_STATUS_EXCEPTION.getIndex())));
+                return ok(objectNode);
+            }
+
+
             WeiXinTradeType tradeType=WeiXinTradeType.getWeiXinTradeType(tType);
             String openid="";
             if(WeiXinTradeType.JSAPI==tradeType){
@@ -238,16 +257,6 @@ public class WeiXinCtrl extends Controller {
                     return ok(objectNode);
                 }
             }
-
-            Order order = new Order();
-            order.setOrderId(orderId);
-            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
-            if (!listOptional.isPresent() || listOptional.get().size() <= 0) {
-                objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
-                return ok(objectNode);
-            }
-
-            order = listOptional.get().get(0);
 
             //获取响应内容
             try {
@@ -414,6 +423,12 @@ public class WeiXinCtrl extends Controller {
                         List<Order> orders = cartService.getOrder(order);
                         if (orders.size() > 0) {
                             order = orders.get(0);
+                            if(WeiXinTradeType.NATIVE==weiXinTradeType){
+                                WebSocket.Out<String> out=WEIXIN_SOCKET.get(orderId+"");
+                                if(null!=out){ //扫码
+                                    out.write("SUCCESS");
+                                }
+                            }
                             if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
                                 if (jdPay.dealPinActivity(params, order) == null) {
                                     Logger.error("################微信支付异步通知 拼购订单返回处理结果为空################," + order.getOrderId());
@@ -790,6 +805,13 @@ public class WeiXinCtrl extends Controller {
             WeiXinJsApi weiXinJsApi = redirectCashForm.get();
             return ok(views.html.weixin.render(weiXinJsApi));
         }
+    }
+
+    public WebSocket<String> weixinsocket(String orderId) {
+
+        return WebSocket.whenReady((in, out) -> {
+            WEIXIN_SOCKET.put(orderId,out);
+        });
     }
 
 

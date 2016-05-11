@@ -23,7 +23,6 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
         }
 
     }
-
      //去支付
     var form = $('<form action="/client/weixin/pay/unifiedorder/redirect" method="post">' +
                 '<input type="hidden" name="orderId" value="'+orderId+'"/>' +
