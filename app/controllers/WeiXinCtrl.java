@@ -151,7 +151,7 @@ public class WeiXinCtrl extends Controller {
      * @return
      */
     private Long fromWeiXinOrderId(String weixinOrderId, WeiXinTradeType tradeType){
-        return Long.valueOf(weixinOrderId.substring(0,weixinOrderId.length()-tradeType.getOrderSuffix().length()-1));
+        return Long.valueOf(weixinOrderId.substring(0,weixinOrderId.length()-tradeType.getOrderSuffix().length()));
     }
 
 
@@ -373,7 +373,7 @@ public class WeiXinCtrl extends Controller {
                 for (int i = 0; i < books.getLength(); i++) {
                     Node book = books.item(i);
                     if(null!=book&&book.getNodeType() == Node.ELEMENT_NODE){
-                        Logger.error(book+"节点=" + book.getNodeName() + "\ttext===="+book.getFirstChild().getNodeValue());
+                     //   Logger.error(book+"节点=" + book.getNodeName() + "\ttext===="+book.getFirstChild().getNodeValue());
                         params.put(book.getNodeName(), book.getFirstChild().getNodeValue());
                     }
                 }
