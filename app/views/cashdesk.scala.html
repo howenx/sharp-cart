@@ -29,6 +29,17 @@
         </script>
     </head>
     <body>
+        @if("M"==paySrc){
+            <header class="head">
+                <a href="@params.get("""m_index""")" class="back">
+                    <i></i>
+                    <b></b>
+                </a>
+                <h1>订单</h1>
+            </header>
+        <div class="pay-change-padding"></div>
+
+        }
         <div class="pay-change">
             <span>请选择支付方式</span>
             <em>@params.get("all_fee")元</em>
