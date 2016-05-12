@@ -7,7 +7,6 @@ import domain.*;
 import filters.UserAuth;
 import middle.JDPayMid;
 import modules.NewScheduler;
-import util.SysParCom;
 import net.spy.memcached.MemcachedClient;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -26,6 +25,7 @@ import service.IdService;
 import service.PromotionService;
 import util.CalCountDown;
 import util.Crypto;
+import util.SysParCom;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,7 +36,6 @@ import java.util.*;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static util.SysParCom.*;
-import static play.libs.F.Promise.promise;
 
 /**
  * Created by handy on 15/12/16.
@@ -107,15 +106,15 @@ public class JDPay extends Controller {
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(d.parse(order.getOrderCreateAt()));
                     Map<String, String> params = getParams(calendar.getTimeInMillis(), request().queryString(), request().body().asFormUrlEncoded(), userId, orderId);
-                    String userType="JD";
+                    String userType = "JD";
                     if (ctx().request().getHeader("User-Agent").contains("MicroMessenger")) {
-                        userType="WEIXIN"; //微信公众号支付
+                        userType = "WEIXIN"; //微信公众号支付
                     }
-                    String token= (String) ctx().flash().get("id-token");
+                    String token = (String) ctx().flash().get("id-token");
 
-                    String securityCode=orderSecurityCode(orderId+"",token);
+                    String securityCode = orderSecurityCode(orderId + "", token);
 
-                    return ok(views.html.cashdesk.render(params, paySrc,userType,token,securityCode));
+                    return ok(views.html.cashdesk.render(params, paySrc, userType, token, securityCode));
                 }
             } else return ok(views.html.jdpayfailed.render(params_failed));
         } catch (Exception ex) {
@@ -206,6 +205,9 @@ public class JDPay extends Controller {
                 map.put("trade_amount", order.getPayTotal().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
             }
 
+            Logger.error("总订单金额为——-->" + map.get("trade_amount"));
+
+
             //自用字断
             map.put("all_fee", order.getPayTotal().stripTrailingZeros().toPlainString());
             if (idPlusOptional.isPresent() && idPlusOptional.get().getPayJdToken() != null) {
@@ -221,9 +223,15 @@ public class JDPay extends Controller {
             OrderSplit orderSplit = new OrderSplit();
             orderSplit.setOrderId(orderId);
             Optional<List<OrderSplit>> orderSplitList = Optional.ofNullable(cartService.selectOrderSplit(orderSplit));
+
+            BigDecimal allSubFee = BigDecimal.ZERO;
+
             if (orderSplitList.isPresent()) {
                 List<Map<String, String>> subInfo = new ArrayList<>();
-                for (OrderSplit orderSp : orderSplitList.get()) {
+                for (int i = 0; i < orderSplitList.get().size(); i++) {
+                    OrderSplit orderSp = orderSplitList.get().get(i);
+
+
                     Map<String, String> subOrderMap = new HashMap<>();
                     OrderLine orderLine = new OrderLine();
                     orderLine.setOrderId(orderId);
@@ -235,7 +243,14 @@ public class JDPay extends Controller {
                         subOrderMap.put("sub_order_amount", String.valueOf(1));
                     } else {
                         subOrderMap.put("sub_order_amount", orderSp.getTotalPayFee().multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
+                        if (i == orderSplitList.get().size() - 1) {
+                            subOrderMap.put("sub_order_amount", order.getPayTotal().subtract(allSubFee).multiply(new BigDecimal(100)).setScale(0, BigDecimal.ROUND_DOWN).toPlainString());
+                        }
+
+                        allSubFee = allSubFee.add(orderSp.getTotalPayFee());
                     }
+
+                    Logger.error("子订单金额为——-->" + subOrderMap.get("sub_order_amount"));
 
                     subInfo.add(subOrderMap);
                 }
