@@ -12,6 +12,9 @@ h1,h2,h3,h4,h5,h6{
     margin: 0;
 }
 /************ pay-style ***********/
+.pay-change-padding{
+padding:44px 0 0 0;
+}
 .pay-change span{
     display: inline-block;
     margin: 10px 0 10px 10px;
@@ -230,4 +233,43 @@ h1,h2,h3,h4,h5,h6{
     border: 1px solid #ff5359;
     background-color: #ff5359;
 
+}
+
+.head {
+    position:fixed;
+    width: 100%;
+    height:44px;
+    line-height:44px;
+    background-color:#ff5359;
+    z-index: 998;
+}
+
+h1 {
+    width:100%;
+    text-align: center;
+    font-size:20px;
+    color:#fff;
+}
+
+.back{
+    position: absolute;
+    top:12px;
+    left:0;
+    width:20px;
+    height:20px;
+}
+
+
+.back i,.back b{
+    position: absolute;
+    left:0;
+    width:0;
+    height:0;
+    border-width:10px;
+    border-style:dashed solid dashed dashed ;
+    border-color:transparent #fff transparent transparent ;
+}
+.back b{
+    border-color:transparent #ff5359 transparent transparent ;
+    left:2px;
 }
