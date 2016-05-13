@@ -422,6 +422,7 @@ public class WeiXinCtrl extends Controller {
                             order = orders.get(0);
                             if(WeiXinTradeType.NATIVE==weiXinTradeType){
                                 WebSocket.Out<String> out=WEIXIN_SOCKET.get(orderId+"");
+                                WEIXIN_SOCKET.remove(orderId+"");
                                 if(null!=out){ //扫码
                                     out.write("SUCCESS");
                                 }
@@ -807,6 +808,7 @@ public class WeiXinCtrl extends Controller {
     public WebSocket<String> weixinsocket(String orderId) {
 
         return WebSocket.whenReady((in, out) -> {
+            in.onClose(out::close);
             WEIXIN_SOCKET.put(orderId,out);
         });
     }
