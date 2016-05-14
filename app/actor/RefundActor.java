@@ -119,7 +119,7 @@ public class RefundActor extends AbstractActor {
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
-                Logger.error("微信退款出现异常," + Throwables.getStackTraceAsString(e));
+                Logger.error("微信退款出现异常," + Throwables.getStackTraceAsString(ex));
             }
         }
     }
