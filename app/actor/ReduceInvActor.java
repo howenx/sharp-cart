@@ -2,6 +2,7 @@ package actor;
 
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
+import com.google.common.base.Throwables;
 import domain.*;
 import play.Logger;
 import service.SkuService;
@@ -28,7 +29,7 @@ public class ReduceInvActor extends AbstractActor {
                     try {
                         sku = skuService.getInv(sku);
                     } catch (Exception e) {
-                        Logger.error("ReduceInvActor Sku Select Error:" + e.getMessage());
+                        Logger.error("ReduceInvActor Sku Select Error:" + Throwables.getStackTraceAsString(e));
                         e.printStackTrace();
                     }
 
@@ -57,7 +58,7 @@ public class ReduceInvActor extends AbstractActor {
                         if (skuService.updateInv(sku))
                             Logger.debug("需要被减的库存ID: " + sku.getId() + " 减库存的数量: " + cartDto.getAmount());
                     } catch (Exception e) {
-                        Logger.error("ReduceInvActor Error:" + e.getMessage());
+                        Logger.error("ReduceInvActor Error:" +Throwables.getStackTraceAsString(e));
                         e.printStackTrace();
                     }
                 });

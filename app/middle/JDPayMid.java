@@ -3,6 +3,7 @@ package middle;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Throwables;
 import common.MsgTypeEnum;
 import controllers.Application;
 import controllers.MsgCtrl;
@@ -123,7 +124,7 @@ public class JDPayMid {
                 }
             }
         } catch (Exception e) {
-            Logger.error("asynPay支付回调订单出错: " + e.getMessage());
+            Logger.error("asynPay支付回调订单出错: " + Throwables.getStackTraceAsString(e));
             e.printStackTrace();
             return "error";
         }
@@ -160,7 +161,7 @@ public class JDPayMid {
                 }
             }
         } catch (Exception e) {
-            Logger.error("asynPayWeixin支付回调订单出错: " + e.getMessage());
+            Logger.error("asynPayWeixin支付回调订单出错: " + Throwables.getStackTraceAsString(e));
             e.printStackTrace();
             return "error";
         }
@@ -290,7 +291,7 @@ public class JDPayMid {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Logger.error("refundBack update exception " + e.getMessage());
+            Logger.error("refundBack update exception " + Throwables.getStackTraceAsString(e));
             return "error";
         }
     }
@@ -340,7 +341,7 @@ public class JDPayMid {
             if (orders.size() > 0) ordersplit = orders.get(0);
         } catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error(ex.getMessage());
+            Logger.error(Throwables.getStackTraceAsString(ex));
         }
 
         Map<String, String> params = new HashMap<>();
@@ -385,7 +386,7 @@ public class JDPayMid {
             if (orders.size() > 0) ordersplit = orders.get(0);
         } catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error(ex.getMessage());
+            Logger.error(Throwables.getStackTraceAsString(ex));
         }
 
         Map<String, String> params = new HashMap<>();

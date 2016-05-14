@@ -1,6 +1,7 @@
 package filters;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Throwables;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -36,6 +37,7 @@ public class Global extends GlobalSettings {
         Logger.error("请求出错: " + request.host() + request.uri() + " " + request.remoteAddress() + " " + request.getHeader("User-Agent"));
         ObjectNode result = Json.newObject();
         t.printStackTrace();
+        Logger.error(Throwables.getStackTraceAsString(t));
         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE_REQUEST_ERROR.getIndex()), Message.ErrorCode.FAILURE_REQUEST_ERROR.getIndex())));
         return F.Promise.pure(notFound(result));
     }

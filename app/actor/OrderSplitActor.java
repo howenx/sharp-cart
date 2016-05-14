@@ -3,6 +3,7 @@ package actor;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.japi.pf.ReceiveBuilder;
+import com.google.common.base.Throwables;
 import domain.OrderSplit;
 import domain.SettleFeeVo;
 import domain.SettleVo;
@@ -50,6 +51,7 @@ public class OrderSplitActor extends AbstractActor {
                         if (cartService.insertOrderSplit(orderSplit)) Logger.debug("子订单ID: " + orderSplit.getSplitId());
                     } catch (Exception e) {
                         e.printStackTrace();
+                        Logger.error(Throwables.getStackTraceAsString(e));
                     }
                     c.setSplitId(orderSplit.getSplitId());
                     return c;
@@ -75,7 +77,7 @@ public class OrderSplitActor extends AbstractActor {
                 newScheduler.scheduleOnce(FiniteDuration.create(ORDER_OVER_TIME, MILLISECONDS), cancelOrderActor, settleVo.getOrderId());
 
             } catch (Exception e) {
-                Logger.error("OrderSplitActor Error:" + e.getMessage());
+                Logger.error("OrderSplitActor Error:" + Throwables.getStackTraceAsString(e));
                 e.printStackTrace();
             }
         }).matchAny(s -> Logger.error("OrderSplitActor received messages not matched: {}", s.toString())).build());

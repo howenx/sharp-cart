@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.util.Timeout;
+import com.google.common.base.Throwables;
 import domain.Persist;
 import modules.LevelFactory;
 import modules.NewScheduler;
@@ -59,6 +60,7 @@ public class LeveldbLoad {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(ex));
         }
     }
 

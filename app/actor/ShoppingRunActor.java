@@ -2,6 +2,7 @@ package actor;
 
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
+import com.google.common.base.Throwables;
 import domain.VersionVo;
 import play.Configuration;
 import play.Logger;
@@ -60,7 +61,7 @@ public class ShoppingRunActor extends AbstractActor {
 
                         return file;
                     } catch (IOException e) {
-                        Logger.error(e.getMessage());
+                        Logger.error(Throwables.getStackTraceAsString(e));
                         e.printStackTrace();
                         return null;
                     } finally {
@@ -96,7 +97,7 @@ public class ShoppingRunActor extends AbstractActor {
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-            Logger.error(e.getMessage());
+            Logger.error(Throwables.getStackTraceAsString(e));
         }
         Logger.error("压缩---->\n" + output);
         Logger.error("执行脚本---->\n" + output2);
@@ -128,6 +129,7 @@ public class ShoppingRunActor extends AbstractActor {
             return output.toString();
         } catch (IOException e) {
             e.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(e));
             return null;
         } finally {
             reader.close();

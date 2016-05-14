@@ -2,6 +2,7 @@ package actor;
 
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
+import com.google.common.base.Throwables;
 import domain.CouponVo;
 import domain.SettleFeeVo;
 import domain.SettleVo;
@@ -50,7 +51,7 @@ public class PublicFreeShipActor extends AbstractActor {
                     try {
                         if (cartService.insertCoupon(couponVo)) Logger.debug("发放的免邮券ID: "+couponVo.getCoupId());
                     } catch (Exception e) {
-                        Logger.error("PublicFreeShipActor error: "+e.getMessage());
+                        Logger.error("PublicFreeShipActor error: "+ Throwables.getStackTraceAsString(e));
                         e.printStackTrace();
                     }
                 }

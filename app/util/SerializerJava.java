@@ -1,5 +1,8 @@
 package util;
 
+import com.google.common.base.Throwables;
+import play.Logger;
+
 import java.io.*;
 /**
  *
@@ -23,6 +26,7 @@ public class SerializerJava{
         }
         catch (IOException e) {
             e.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(e));
             throw new IllegalArgumentException("Could not serialize object " + obj, e);
         }
 
@@ -39,6 +43,7 @@ public class SerializerJava{
         }
         catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(e));
             throw new IllegalArgumentException("Could not deserialize", e);
         }
 

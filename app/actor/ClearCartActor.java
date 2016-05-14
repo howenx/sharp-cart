@@ -3,6 +3,7 @@ package actor;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.japi.pf.ReceiveBuilder;
+import com.google.common.base.Throwables;
 import domain.Cart;
 import domain.CartDto;
 import domain.SettleFeeVo;
@@ -42,7 +43,8 @@ public class ClearCartActor extends AbstractActor {
                             if (cartService.updateCart(cart)) Logger.debug("清空购物车ID: "+cart.getCartId());
                         } catch (Exception e) {
                             e.printStackTrace();
-                            Logger.error("ClearCartActor 更新购物车异常"+e.getMessage());
+                            Logger.error("ClearCartActor 更新购物车异常" + Throwables.getStackTraceAsString(e));
+
                             context().system().scheduler().scheduleOnce(FiniteDuration.create(5, TimeUnit.MILLISECONDS),self(),settleVo,context().dispatcher(), ActorRef.noSender());
                         }
                     });

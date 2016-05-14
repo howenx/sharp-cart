@@ -3,6 +3,7 @@ package controllers;
 import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Throwables;
 import domain.*;
 import filters.UserAuth;
 import org.apache.commons.io.FileUtils;
@@ -192,7 +193,7 @@ public class RemarkCtrl extends Controller {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:" + Throwables.getStackTraceAsString(ex));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }

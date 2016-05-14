@@ -1,5 +1,8 @@
 package util;
 
+import com.google.common.base.Throwables;
+import play.Logger;
+
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -22,6 +25,7 @@ public class CalCountDown {
 
         }catch (Exception ex){
             ex.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(ex));
             return null;
         }
     }
@@ -38,6 +42,7 @@ public class CalCountDown {
 
         }catch (Exception ex){
             ex.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(ex));
             return null;
         }
     }

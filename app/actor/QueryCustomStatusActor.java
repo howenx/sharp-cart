@@ -3,6 +3,7 @@ package actor;
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Throwables;
 import domain.Order;
 import domain.OrderSplit;
 import domain.Persist;
@@ -107,7 +108,7 @@ public class QueryCustomStatusActor extends AbstractActor {
                     }
                 }
             } catch (Exception ex) {
-                Logger.error("Connection error. Should retry later. ", ex);
+                Logger.error("Connection error. Should retry later. ", Throwables.getStackTraceAsString(ex));
                 ex.printStackTrace();
             }
         }).matchAny(s -> Logger.error("PushActor received messages not matched: {}", s.toString())).build());

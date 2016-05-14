@@ -2,6 +2,7 @@ package actor;
 
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
+import com.google.common.base.Throwables;
 import domain.*;
 import play.Logger;
 import service.CartService;
@@ -35,7 +36,7 @@ public class OrderLineActor extends AbstractActor {
                     try {
                         sku=skuService.getInv(sku);
                     } catch (Exception e) {
-                        Logger.error("Sku Select Error:" + e.getMessage());
+                        Logger.error("Sku Select Error:" + Throwables.getStackTraceAsString(e));
                         e.printStackTrace();
                     }
                     OrderLine orderLine = new OrderLine();
@@ -88,7 +89,7 @@ public class OrderLineActor extends AbstractActor {
                     try {
                         if(cartService.insertOrderLine(orderLine)) Logger.debug("订单明细ID: "+orderLine.getLineId());
                     } catch (Exception e) {
-                        Logger.error("OrderLineActor Error:" + e.getMessage());
+                        Logger.error("OrderLineActor Error:" + Throwables.getStackTraceAsString(e));
                         e.printStackTrace();
                     }
                 });

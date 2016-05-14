@@ -3,6 +3,7 @@ package actor;
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Throwables;
 import controllers.JDPay;
 import controllers.WeiXinCtrl;
 import domain.Order;
@@ -118,7 +119,7 @@ public class RefundActor extends AbstractActor {
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
-                Logger.error("微信退款出现异常," + ex.getMessage());
+                Logger.error("微信退款出现异常," + Throwables.getStackTraceAsString(e));
             }
         }
     }

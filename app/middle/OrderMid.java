@@ -2,6 +2,7 @@ package middle;
 
 import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Throwables;
 import controllers.Application;
 import controllers.OrderCtrl;
 import domain.*;
@@ -533,6 +534,7 @@ public class OrderMid {
             } else return null;
         } catch (Exception ex) {
             ex.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(ex));
             return null;
         }
     }
@@ -661,6 +663,7 @@ public class OrderMid {
 
         } catch (Exception e) {
             e.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(e));
             return null;
         }
 

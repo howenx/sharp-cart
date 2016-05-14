@@ -2,6 +2,7 @@ package controllers;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import com.google.common.base.Throwables;
 import com.google.inject.Singleton;
 import domain.*;
 import filters.UserAuth;
@@ -118,7 +119,7 @@ public class JDPay extends Controller {
                 }
             } else return ok(views.html.jdpayfailed.render(params_failed));
         } catch (Exception ex) {
-            Logger.error("settle: " + ex.getMessage());
+            Logger.error("settle: " + Throwables.getStackTraceAsString(ex));
             ex.printStackTrace();
             return ok(views.html.jdpayfailed.render(params_failed));
         }
@@ -139,6 +140,7 @@ public class JDPay extends Controller {
             return Crypto.getSignature(map, "HMM");
         } catch (IOException e) {
             e.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(e));
         }
         return "";
     }
@@ -330,6 +332,7 @@ public class JDPay extends Controller {
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
+                            Logger.error(Throwables.getStackTraceAsString(e));
                             return ok("error");
                         }
                     } else {
@@ -394,6 +397,7 @@ public class JDPay extends Controller {
                         } else return ok(views.html.jdpayfailed.render(params));
                     } catch (Exception e) {
                         e.printStackTrace();
+                        Logger.error(Throwables.getStackTraceAsString(e));
                         return ok(views.html.jdpayfailed.render(params));
                     }
                 } else return ok(views.html.jdpayfailed.render(params));

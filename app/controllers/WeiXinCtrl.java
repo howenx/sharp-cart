@@ -3,6 +3,7 @@ package controllers;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Throwables;
 import common.WeiXinTradeType;
 import domain.*;
 import filters.UserAuth;
@@ -318,12 +319,12 @@ public class WeiXinCtrl extends Controller {
                 objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 return ok(objectNode);
 
-            } catch (IOException e) {
-                e.printStackTrace();
             } catch (Exception e) {
+                Logger.error(Throwables.getStackTraceAsString(e));
                 e.printStackTrace();
             }
         } catch (Exception e) {
+            Logger.error(Throwables.getStackTraceAsString(e));
             e.printStackTrace();
         }
 
@@ -444,7 +445,7 @@ public class WeiXinCtrl extends Controller {
                             return ok(weixinNotifyResponse("FAIL", "order not found"));
                         }
                     } catch (Exception e) {
-                        Logger.error("################微信支付异步通知 出现异常################," + order.getOrderId());
+                        Logger.error("################微信支付异步通知 出现异常################," + order.getOrderId() +"\nerror:"+Throwables.getStackTraceAsString(e));
                         e.printStackTrace();
                         return ok(weixinNotifyResponse("FAIL", e.getMessage()));
                     }
@@ -529,7 +530,7 @@ public class WeiXinCtrl extends Controller {
             return buffer.toString();
 
         } catch (Exception e) {
-            Logger.error(e.getMessage());
+            Logger.error(Throwables.getStackTraceAsString(e));
             e.printStackTrace();
 
         }
@@ -599,11 +600,12 @@ public class WeiXinCtrl extends Controller {
                 }
 
             } catch (Exception e) {
-                Logger.error(e.getMessage());
+                Logger.error(Throwables.getStackTraceAsString(e));
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(e));
         }
 
         return ok(views.html.jdpayfailed.render(returnMap));
@@ -678,6 +680,7 @@ public class WeiXinCtrl extends Controller {
             } else return null;
         } catch (Exception ex) {
             ex.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(ex));
             return null;
         }
     }
@@ -755,6 +758,7 @@ public class WeiXinCtrl extends Controller {
             return jsonStr;
         } catch (Exception e) {
             e.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(e));
         }
         return "";
     }

@@ -3,6 +3,7 @@ package controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Throwables;
 import domain.*;
 import filters.UserAuth;
 import middle.CartMid;
@@ -84,7 +85,7 @@ public class Application extends Controller {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:" + Throwables.getStackTraceAsString(ex));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
@@ -109,7 +110,7 @@ public class Application extends Controller {
             return ok(result);
         } catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:" + Throwables.getStackTraceAsString(ex));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
@@ -162,7 +163,7 @@ public class Application extends Controller {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:" + Throwables.getStackTraceAsString(ex));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
@@ -223,7 +224,7 @@ public class Application extends Controller {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:" + Throwables.getStackTraceAsString(ex));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }

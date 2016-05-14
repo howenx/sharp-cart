@@ -1,5 +1,8 @@
 package util;
 
+import com.google.common.base.Throwables;
+import play.Logger;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -13,6 +16,7 @@ public class ExpressMD5 {
 				_mdInst = MessageDigest.getInstance("MD5");
 			} catch (NoSuchAlgorithmException e) {
 				e.printStackTrace();
+				Logger.error(Throwables.getStackTraceAsString(e));
 			}
 		}
 		return _mdInst;
@@ -37,6 +41,7 @@ public class ExpressMD5 {
 			return new String(str);
 		} catch (Exception e) {
 			e.printStackTrace();
+			Logger.error(Throwables.getStackTraceAsString(e));
 			return null;
 		}
 	}

@@ -2,6 +2,7 @@ package actor;
 
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
+import com.google.common.base.Throwables;
 import domain.Address;
 import domain.OrderAddress;
 import domain.SettleVo;
@@ -32,7 +33,7 @@ public class OrderAddressActor extends AbstractActor {
                 orderAddress.setDeliveryAddress(address.getDeliveryDetail());
                 if (cartService.insertOrderAddress(orderAddress)) Logger.debug("订单地址信息ID: "+orderAddress.getShipId());
             } catch (Exception e) {
-                Logger.error("OrderAddressActor Error:" + e.getMessage());
+                Logger.error("OrderAddressActor Error:" + Throwables.getStackTraceAsString(e));
                 e.printStackTrace();
             }
         }).matchAny(s -> Logger.error("OrderAddressActor received messages not matched: {}", s.toString())).build());

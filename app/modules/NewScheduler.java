@@ -3,6 +3,7 @@ package modules;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Cancellable;
+import com.google.common.base.Throwables;
 import domain.Persist;
 import play.Logger;
 import scala.concurrent.duration.Duration;
@@ -81,6 +82,7 @@ public class NewScheduler {
             cancellable.cancel();
             del.cancel();
             ex.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(ex));
             return null;
         }
 
@@ -126,6 +128,7 @@ public class NewScheduler {
         } catch (Exception ex) {
             cancellable.cancel();
             ex.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(ex));
             return null;
         }
 
@@ -155,6 +158,7 @@ class CancelScheduler {
             return cancellable.cancel();
         } catch (Exception e) {
             e.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(e));
             return false;
         }
     }

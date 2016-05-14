@@ -3,6 +3,7 @@ package actor;
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Throwables;
 import controllers.JDPay;
 import domain.*;
 import play.Logger;
@@ -98,7 +99,7 @@ public class PinFailActor extends AbstractActor {
                             }
                         }
                     } catch (Exception e) {
-                        Logger.error("拼购失败自动退款出现错误: " + e.getMessage());
+                        Logger.error("拼购失败自动退款出现错误: " + Throwables.getStackTraceAsString(e));
                         e.printStackTrace();
                     }
                 }

@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Throwables;
 import domain.*;
 import filters.UserAuth;
 import middle.OrderMid;
@@ -93,7 +94,7 @@ public class OrderCtrl extends Controller {
                 return ok(result);
             }
         } catch (Exception ex) {
-            Logger.error("settle: " + ex.getMessage());
+            Logger.error("settle: " + Throwables.getStackTraceAsString(ex));
             ex.printStackTrace();
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
             return ok(result);
@@ -128,7 +129,7 @@ public class OrderCtrl extends Controller {
                 return ok(result);
             }
         } catch (Exception ex) {
-            Logger.error("submitOrder " + ex.getMessage());
+            Logger.error("submitOrder " + Throwables.getStackTraceAsString(ex));
             ex.printStackTrace();
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
             return ok(result);
@@ -211,7 +212,7 @@ public class OrderCtrl extends Controller {
             return ok(result);
         } catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:" + Throwables.getStackTraceAsString(ex));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }
@@ -269,7 +270,7 @@ public class OrderCtrl extends Controller {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:" + Throwables.getStackTraceAsString(ex));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return F.Promise.promise(() -> ok(result));
         }
@@ -486,7 +487,7 @@ public class OrderCtrl extends Controller {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error("server exception:" + ex.getMessage());
+            Logger.error("server exception:" + Throwables.getStackTraceAsString(ex));
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
             return ok(result);
         }

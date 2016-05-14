@@ -2,6 +2,7 @@ package actor;
 
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
+import com.google.common.base.Throwables;
 import domain.CouponVo;
 import domain.Order;
 import domain.OrderLine;
@@ -49,7 +50,7 @@ public class CancelOrderActor extends AbstractActor {
                             try {
                                 sku = skuService.getInv(sku);
                             } catch (Exception e) {
-                                Logger.error("CancelOrderActor Sku Select Error:" + e.getMessage());
+                                Logger.error("CancelOrderActor Sku Select Error:" + Throwables.getStackTraceAsString(e));
                                 e.printStackTrace();
                             }
                             switch (sku.getState()) {
@@ -71,7 +72,7 @@ public class CancelOrderActor extends AbstractActor {
                                 if (skuService.updateInv(sku))
                                     Logger.debug("恢复库存ID: " + sku.getId()+" 需要恢复的数量: "+ordL.getAmount());
                             } catch (Exception e) {
-                                Logger.error("CancelOrderActor Error:" + e.getMessage());
+                                Logger.error("CancelOrderActor Error:" + Throwables.getStackTraceAsString(e));
                                 sender().tell(500,self());
                                 e.printStackTrace();
                             }
@@ -80,10 +81,10 @@ public class CancelOrderActor extends AbstractActor {
                         order.setOrderStatus("C");
                         try {
                             if (cartService.updateOrder(order))
-                                Logger.debug("取消订单,更新订单状态,订单ID: " + order.getOrderId());
+                                Logger.error("取消订单,更新订单状态,订单ID: " + order.getOrderId());
                         } catch (Exception e) {
                             sender().tell(500,self());
-                            Logger.error("CancelOrderActor 更新订单状态 Error:" + e.getMessage());
+                            Logger.error("CancelOrderActor 更新订单状态 Error:" + Throwables.getStackTraceAsString(e));
                             e.printStackTrace();
                         }
 
@@ -96,10 +97,10 @@ public class CancelOrderActor extends AbstractActor {
                             couponVo = couponVoList.get().get(0);
                             try {
                                 if (cartService.deleteCouponF(couponVo))
-                                    Logger.debug("取消订单,删除免邮券ID: " + couponVo.getCoupId());
+                                    Logger.error("取消订单,删除免邮券ID: " + couponVo.getCoupId());
                             } catch (Exception e) {
                                 sender().tell(500,self());
-                                Logger.error("CancelOrderActor 删除免邮券 Error:" + e.getMessage());
+                                Logger.error("CancelOrderActor 删除免邮券 Error:" + Throwables.getStackTraceAsString(e));
                                 e.printStackTrace();
                             }
                         }
@@ -114,10 +115,11 @@ public class CancelOrderActor extends AbstractActor {
                                 couponVo1.setOrderId(((Integer) 0).longValue());
                                 try {
                                     if (cartService.updateCoupon(couponVo1))
-                                        Logger.debug("取消订单,更新优惠券ID: " + couponVo1.getCoupId());
+                                        Logger.error("取消订单,更新优惠券ID: " + couponVo1.getCoupId());
                                 } catch (Exception e) {
                                     sender().tell(500,self());
                                     e.printStackTrace();
+                                    Logger.error("取消订单,更新优惠券ID: Error:" + Throwables.getStackTraceAsString(e));
                                 }
                             });
                         }

@@ -2,6 +2,7 @@ package actor;
 
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
+import com.google.common.base.Throwables;
 import domain.CouponVo;
 import domain.Order;
 import domain.OrderLine;
@@ -52,7 +53,7 @@ public class ResumeInvActor extends AbstractActor {
                             try {
                                 sku = skuService.getInv(sku);
                             } catch (Exception e) {
-                                Logger.error("ResumeInvActor Sku Select Error:" + e.getMessage());
+                                Logger.error("ResumeInvActor Sku Select Error:" + Throwables.getStackTraceAsString(e));
                                 e.printStackTrace();
                             }
                             switch (sku.getState()) {
@@ -72,9 +73,9 @@ public class ResumeInvActor extends AbstractActor {
                             }
                             try {
                                 if (skuService.updateInv(sku))
-                                    Logger.debug("恢复库存ID: " + sku.getId()+" 需要恢复的数量: "+ordL.getAmount());
+                                    Logger.error("恢复库存ID: " + sku.getId()+" 需要恢复的数量: "+ordL.getAmount());
                             } catch (Exception e) {
-                                Logger.error("ResumeInvActor Error:" + e.getMessage());
+                                Logger.error("ResumeInvActor Error:" + Throwables.getStackTraceAsString(e));
                                 sender().tell(500,self());
                                 e.printStackTrace();
                             }
@@ -86,7 +87,7 @@ public class ResumeInvActor extends AbstractActor {
                                 Logger.info("更新订单退款状态,订单ID: " + order.getOrderId());
                         } catch (Exception e) {
                             sender().tell(500,self());
-                            Logger.error("ResumeInvActor 更新订单状态 Error:" + e.getMessage());
+                            Logger.error("ResumeInvActor 更新订单状态 Error:" + Throwables.getStackTraceAsString(e));
                             e.printStackTrace();
                         }
 
@@ -99,10 +100,10 @@ public class ResumeInvActor extends AbstractActor {
                             couponVo = couponVoList.get().get(0);
                             try {
                                 if (cartService.deleteCouponF(couponVo))
-                                    Logger.debug("恢复库存,删除免邮券ID: " + couponVo.getCoupId());
+                                    Logger.error("恢复库存,删除免邮券ID: " + couponVo.getCoupId());
                             } catch (Exception e) {
                                 sender().tell(500,self());
-                                Logger.error("ResumeInvActor 删除免邮券 Error:" + e.getMessage());
+                                Logger.error("ResumeInvActor 删除免邮券 Error:" + Throwables.getStackTraceAsString(e));
                                 e.printStackTrace();
                             }
                         }
@@ -117,10 +118,11 @@ public class ResumeInvActor extends AbstractActor {
                                 couponVo1.setOrderId(((Integer) 0).longValue());
                                 try {
                                     if (cartService.updateCoupon(couponVo1))
-                                        Logger.debug("恢复库存,更新优惠券ID: " + couponVo1.getCoupId());
+                                        Logger.error("恢复库存,更新优惠券ID: " + couponVo1.getCoupId());
                                 } catch (Exception e) {
                                     sender().tell(500,self());
                                     e.printStackTrace();
+                                    Logger.error(Throwables.getStackTraceAsString(e));
                                 }
                             });
                         }
