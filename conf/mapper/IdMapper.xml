@@ -99,4 +99,21 @@
         from "ID" t where user_id=${value}
     </select>
 
+    <sql id="idThreeColumns">
+        ${alias}.id,
+        ${alias}.user_id,
+        ${alias}.open_id,
+        ${alias}.id_type,
+        ${alias}.union_id
+    </sql>
+
+    <!-- 获取一条用户第三方登录信息 -->
+    <select id="getIdThree" resultType="domain.IdThree" parameterType="java.lang.Integer">
+        select
+        <include refid="idThreeColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from id_three t where user_id=${value}
+    </select>
+
 </mapper>

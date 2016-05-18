@@ -3,6 +3,7 @@ package mapper;
 import domain.Address;
 import domain.ID;
 import domain.IdPlus;
+import domain.IdThree;
 
 /**
  * Id库
@@ -18,4 +19,7 @@ public interface IdMapper {
     int updateIdPlus(IdPlus idPlus) throws Exception;
 
     ID getID(Long userId) throws Exception;
+
+    //第三方登录数据
+    IdThree getIdThree(Long userId) throws Exception;
 }

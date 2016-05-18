@@ -250,7 +250,7 @@ public class WeiXinCtrl extends Controller {
             WeiXinTradeType tradeType=WeiXinTradeType.getWeiXinTradeType(tType);
             String openid="";
             if(WeiXinTradeType.JSAPI==tradeType){
-                ID user=idService.getID(userId);
+                IdThree user=idService.getIdThree(userId);
                 if(null!=user&&null!=user.getOpenId()&&!"".equals(user.getOpenId())){
                     openid=user.getOpenId();
                 }else{
