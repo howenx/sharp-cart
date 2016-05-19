@@ -81,6 +81,9 @@ public class SysParCom {
     public static String WEIXIN_PAY_ORDERQUERY;
     public static String WEIXIN_PAY_REFUND;
     public static String WEIXIN_SSL_PATH;
+    public static String WEIXIN_APP_ID_APP;
+    public static String WEIXIN_MCH_ID_APP;
+    public static String WEIXIN_KEY_APP;
 
 
     public static String ALIPAY_SERVICE;
@@ -175,6 +178,10 @@ public class SysParCom {
         WEIXIN_PAY_ORDERQUERY = configuration.getString("weixin.pay.orderquery");
         WEIXIN_PAY_REFUND = configuration.getString("weixin.pay.refund");
         WEIXIN_SSL_PATH = configuration.getString("weixin.ssl.path");
+
+        WEIXIN_APP_ID_APP = configuration.getString("weixin.app.idapp");
+        WEIXIN_MCH_ID_APP = configuration.getString("weixin.mch.idapp");
+        WEIXIN_KEY_APP = configuration.getString("weixin.keyapp");
 
 
         //支付宝

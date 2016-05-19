@@ -54,13 +54,15 @@ public class Order implements Serializable {
     @JsonIgnore
     private Long                pinActiveId;       //拼购活动ID
     private String              remark;//是否评价完成,Y评价完成,N未评价完成,null空
+    @JsonIgnore
+    private String              payMethodSub;//子支付方式，如微信JSAPI,NATIVE,APP
 
 
 
     public Order() {
     }
 
-    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId, Long countDown, Integer orderType, Long pinActiveId, String remark) {
+    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId, Long countDown, Integer orderType, Long pinActiveId, String remark,String payMethodSub) {
         this.orderId = orderId;
         this.userId = userId;
         this.payTotal = payTotal;
@@ -87,6 +89,7 @@ public class Order implements Serializable {
         this.orderType = orderType;
         this.pinActiveId = pinActiveId;
         this.remark = remark;
+        this.payMethodSub=payMethodSub;
     }
 
     public Long getOrderId() {
@@ -297,6 +300,14 @@ public class Order implements Serializable {
         this.remark = remark;
     }
 
+    public String getPayMethodSub() {
+        return payMethodSub;
+    }
+
+    public void setPayMethodSub(String payMethodSub) {
+        this.payMethodSub = payMethodSub;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -326,6 +337,7 @@ public class Order implements Serializable {
                 ", orderType=" + orderType +
                 ", pinActiveId=" + pinActiveId +
                 ", remark='" + remark + '\'' +
+                ", payMethodSub='" + payMethodSub + '\'' +
                 '}';
     }
 }

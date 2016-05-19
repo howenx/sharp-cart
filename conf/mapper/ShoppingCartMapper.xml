@@ -44,7 +44,8 @@
         ${alias}.postal_fee           ,
         to_char(${alias}.confirm_receive_at, 'YYYY-MM-DD HH24:MI:SS') confirm_receive_at,
         ${alias}.pin_active_id         ,
-        ${alias}.order_type
+        ${alias}.order_type            ,
+        ${alias}.pay_method_sub
     </sql>
 
     <!---  获取用户购物车,以用户ID或者CartID    -->
@@ -357,6 +358,9 @@
         </if>
         <if test="payMethod!=null and payMethod !=''">
             pay_method = #{payMethod},
+        </if>
+        <if test="payMethodSub!=null and payMethodSub !=''">
+            pay_method_sub = #{payMethodSub},
         </if>
 
         updated_at = CURRENT_TIMESTAMP(0)

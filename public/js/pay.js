@@ -10,6 +10,7 @@ var token="";
 var securityCode="";
 //微信统一下单
 function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
+alert("微信统一下单");
     var d = new Date();
     var n = d.getTime();
     if(n-orderCreateAt>=86400000){
@@ -77,9 +78,7 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
                     }else{
                         //弹出微信支付界面
                         console.log("prepay_id="+data.prepay_id);
-                        console.log("deeplink="+data.deeplink);
-                        //window.location = data.deeplink;
-                        alert("prepay_id="+data.prepay_id+"\n"+"deeplink="+data.deeplink);
+
                     }
 
                 }else{
@@ -90,6 +89,7 @@ function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
     });
 
 };
+
 
 //调用微信H5支付
 function callpay(app,ts,ns,pg,st,ps,o,t,sc){

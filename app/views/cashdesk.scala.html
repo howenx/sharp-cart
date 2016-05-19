@@ -51,10 +51,19 @@
 
             <div class="right-icon"></div>
         </div>
+        @if("M"!=paySrc){
+            <hr>
+            <div class="weixin pay"   onclick="payUnifiedorderApp('APP',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')" >
+                <span>微信支付</span>
+                <em>仅安装微信6.0.2及以上版本客户端使用</em>
+                <div class="right-icon"></div>
+            </div>
+
+        }
 
         @if("M"==paySrc){
 
-            <div class="weixin pay"  style="display:none" onclick="payUnifiedorder('JSAPI',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')" >
+            <div class="weixin pay"  style="display:none" onclick="payUnifiedorder('APP',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')" >
                 <span>微信支付</span>
                 <em>仅安装微信6.0.2及以上版本客户端使用</em>
                 <div class="right-icon"></div>
@@ -68,8 +77,6 @@
                     <div class="right-icon"></div>
                 </div>
              }
-
-
             <hr>
             <div class="weixin pay" onclick="payUnifiedorder('NATIVE',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')">
                 <span>微信扫码支付</span>
@@ -85,9 +92,6 @@
                     <a href="javascript:;" class="examine" onclick="payOrderquery('NATIVE',@params.get("""out_trade_no"""),'@token','@securityCode')" style="display:none">查看订单</a>
                 </div>
             </div>
-
-
-
 
         }
 
@@ -112,6 +116,26 @@
                 }
             })
         })
+
+
+
+//微信APP统一下单
+function payUnifiedorderApp(tradeType,orderId,orderCreateAt,token,securityCode){
+    var d = new Date();
+    var n = d.getTime();
+    if(n-orderCreateAt>=86400000){
+        alert("您的订单已经超时自动取消");
+        return ;
+    }
+    var weixinAppForm = $('<form action="/client/weixin/pay/app" method="post">' +
+                        <!--'<input type="hidden" name="prepayid" value="'+data.prepay_id+'"/>' +-->
+                        '<input type="hidden" name="tradeType" value="'+tradeType+'"/>' +
+                        '<input type="hidden" name="orderId" value="'+orderId+'"/>' +
+                        '<input type="hidden" name="token" value="'+token+'"/>' +
+                        '<input type="hidden" name="securityCode" value="'+securityCode+'"/>' +
+                        '</form>');
+     weixinAppForm.submit();
+};
     </script>
         </div>
     </body>

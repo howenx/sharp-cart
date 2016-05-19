@@ -58,6 +58,7 @@ POST        /client/weixin/pay/orderquery/redirect                              
 GET         /client/weixin/pay/orderquery/$tradeType<[a-zA-Z]+>/$orderId<[0-9]+>          controllers.WeiXinCtrl.payOrderquery(tradeType:String,orderId:Long)
 POST        /client/weixin/pay/jsapi                                                      controllers.WeiXinCtrl.payJsApi()
 GET         /client/weixin/pay/socket/$orderId<[0-9]+>                                    controllers.WeiXinCtrl.weixinsocket(orderId:String)
+POST        /client/weixin/pay/app                                                        controllers.WeiXinCtrl.payApp()
 
 #GET         /client/weixin/pay/refund/$orderId<[0-9]+>                                    controllers.WeiXinCtrl.payRefund(orderId:Long)
 
