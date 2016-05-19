@@ -17,9 +17,9 @@
                 $(window).load(function () {
                     setTimeout(function () {
                         try {
-                            weixinpay("\@params.get("""appid""")","\@params.get("""partnerid""")","\@params.get("""prepayid""")","\@params.get("""package""")","\@params.get("""noncestr""")","\@params.get("""timestamp""")","\@params.get("""sign""")");
+                            weixinpay("@params.get("""appid""")","@params.get("""partnerid""")","@params.get("""prepayid""")","@params.get("""package""")","@params.get("""noncestr""")","@params.get("""timestamp""")","@params.get("""sign""")");
                         } catch (err) {
-                            window.handler.weixinpay("\@params.get("""appid""")","\@params.get("""partnerid""")","\@params.get("""prepayid""")","\@params.get("""package""")","\@params.get("""noncestr""")","\@params.get("""timestamp""")","\@params.get("""sign""")");
+                            window.handler.weixinpay("@params.get("""appid""")","@params.get("""partnerid""")","@params.get("""prepayid""")","@params.get("""package""")","@params.get("""noncestr""")","@params.get("""timestamp""")","@params.get("""sign""")");
                         } finally {
                             <!--setTimeout(function () {-->
                                 <!--window.location = "@params.get("""m_pinActivity""")";-->

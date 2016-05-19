@@ -871,7 +871,6 @@ public class WeiXinCtrl extends Controller {
             return ok(views.html.jdpayfailed.render(params_failed));
         } else {
             WeiXinApp redirectCash = redirectCashForm.get();
-            Logger.info("=redirectCash.getToken()=="+redirectCash.getToken()+"");
             flash().put("id-token", redirectCash.getToken());
             return redirect("/client/weixin/pay/unifiedorder/" + redirectCash.getTradeType()+ "/" + redirectCash.getOrderId());
         }
