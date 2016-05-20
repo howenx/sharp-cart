@@ -28,17 +28,19 @@ public class UserAuth extends Security.Authenticator {
         Optional<String> flashHeader = Optional.ofNullable(ctx.flash().get("id-token"));
         if (requestHeader.isPresent() || flashHeader.isPresent()) {
             String header = requestHeader.isPresent()?requestHeader.get():(flashHeader.isPresent()?flashHeader.get():null);
-            Optional<Object> token = Optional.ofNullable(cache.get(header));
-            if (token.isPresent()) {
-                JsonNode userJson = Json.parse(token.get().toString());
-                Long userId = Long.valueOf(userJson.findValue("id").asText());
-                String  username = userJson.findValue("name").toString();
-                ctx.args.put("userId",userId);
-                ctx.args.put("username",username);
-                ctx.args.put("userPhoto",userJson.findValue("photo").toString().trim());
-                return username;
-            }
-            else return null;
+            if (header!=null){
+                Optional<Object> token = Optional.ofNullable(cache.get(header));
+                if (token.isPresent()) {
+                    JsonNode userJson = Json.parse(token.get().toString());
+                    Long userId = Long.valueOf(userJson.findValue("id").asText());
+                    String  username = userJson.findValue("name").toString();
+                    ctx.args.put("userId",userId);
+                    ctx.args.put("username",username);
+                    ctx.args.put("userPhoto",userJson.findValue("photo").toString().trim());
+                    return username;
+                }
+                else return null;
+            }else return null;
         }else return null;
     }
 
