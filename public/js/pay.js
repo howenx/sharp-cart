@@ -10,7 +10,6 @@ var token="";
 var securityCode="";
 //微信统一下单
 function payUnifiedorder(tradeType,orderId,orderCreateAt,token,securityCode){
-alert("微信统一下单");
     var d = new Date();
     var n = d.getTime();
     if(n-orderCreateAt>=86400000){
