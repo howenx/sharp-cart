@@ -112,6 +112,9 @@ public class JDPay extends Controller {
                         userType = "WEIXIN"; //微信公众号支付
                     }
                     String token = (String) ctx().flash().get("id-token");
+                    if(null==token||"".equals(token)){
+                        token=ctx().request().getHeader("id-token");
+                    }
 
                     String securityCode = orderSecurityCode(orderId + "", token);
 

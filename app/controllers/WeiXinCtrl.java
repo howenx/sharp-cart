@@ -817,7 +817,6 @@ public class WeiXinCtrl extends Controller {
         Form<RedirectWeiXin> redirectCashForm = Form.form(RedirectWeiXin.class).bindFromRequest();
         if (redirectCashForm.hasErrors()) {
             ObjectNode objectNode = newObject();
-            Logger.info("====跳转统一下单==="+redirectCashForm);
             objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
             return ok(objectNode);
         } else {
