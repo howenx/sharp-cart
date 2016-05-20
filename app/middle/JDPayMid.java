@@ -144,6 +144,9 @@ public class JDPayMid {
             } else {
                 order.setOrderStatus("S");
                 order.setPayMethod(orderParams.getPayMethod());
+                if(null!=orderParams.getPayMethodSub()){
+                    order.setPayMethodSub(orderParams.getPayMethodSub());
+                }
                 order.setErrorStr(orderParams.getErrorStr());
                 order.setPgTradeNo(orderParams.getPgTradeNo());
 
