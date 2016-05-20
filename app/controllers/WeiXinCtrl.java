@@ -354,6 +354,13 @@ public class WeiXinCtrl extends Controller {
                     String sign=getWeiXinSign(map,tradeType);
                     map.put("sign",sign);
                     map.put("orderId",orderId+"");
+                    String token = (String) ctx().flash().get("id-token");
+                    if(null==token||"".equals(token)){
+                        token=ctx().request().getHeader("id-token");
+                    }
+                    map.put("token",token);
+                    String securityCode = jdPay.orderSecurityCode(orderId + "", token);
+                    map.put("securityCode",securityCode);
                     Logger.info("app支付跳转回传参数"+toJson(map));
                     return ok(views.html.weixinapp.render(map)); //跳转页面
                 }

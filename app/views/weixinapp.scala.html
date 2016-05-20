@@ -25,7 +25,7 @@
                 var dateSocket = new WS(wsUri);
                 dateSocket.onmessage = function (event) {
                     if(event.data=="SUCCESS"){
-                         payOrderquery("APP",'@params.get("""orderId""")','','');
+                         payOrderquery("APP",'@params.get("""orderId""")','@params.get("""token""")','@params.get("""securityCode""")');
 
                     }
                 }
