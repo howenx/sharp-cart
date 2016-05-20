@@ -13,7 +13,7 @@ public class RedirectWeiXin implements Serializable {
     private Long orderId;
    // @Constraints.Required
     private String token;
-    @Constraints.Required
+  //  @Constraints.Required
     private String securityCode; //md5(orderId+token+'HMM')
     @Constraints.Required
     private String tradeType;

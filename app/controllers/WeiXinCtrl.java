@@ -353,6 +353,7 @@ public class WeiXinCtrl extends Controller {
                     map.put("timestamp",(System.currentTimeMillis()/1000)+"");
                     String sign=getWeiXinSign(map,tradeType);
                     map.put("sign",sign);
+                    map.put("orderId",orderId+"");
                     Logger.info("app支付跳转回传参数"+toJson(map));
                     return ok(views.html.weixinapp.render(map)); //跳转页面
                 }
@@ -462,7 +463,7 @@ public class WeiXinCtrl extends Controller {
                         List<Order> orders = cartService.getOrder(order);
                         if (orders.size() > 0) {
                             order = orders.get(0);
-                            if(WeiXinTradeType.NATIVE==weiXinTradeType){
+                            if(WeiXinTradeType.NATIVE==weiXinTradeType||WeiXinTradeType.APP==weiXinTradeType){
                                 WebSocket.Out<String> out=WEIXIN_SOCKET.get(orderId+"");
                                 WEIXIN_SOCKET.remove(orderId+"");
                                 if(null!=out){ //扫码

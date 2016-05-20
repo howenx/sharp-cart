@@ -8,6 +8,30 @@
     <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.ico">
     <link rel="stylesheet" href="/assets/stylesheets/pay.css">
     <script src="/assets/js/jquery-1.11.1.min.js"></script>
+    <script>
+         //订单查询
+            function payOrderquery(tradeType,orderId,token,securityCode){
+                var form = $('<form action="/client/weixin/pay/orderquery/redirect" method="post">' +
+                            '<input type="hidden" name="orderId" value="'+orderId+'"/>' +
+                            '<input type="hidden" name="token" value="'+token+'"/>' +
+                            '<input type="hidden" name="securityCode" value="'+securityCode+'"/>' +
+                            '<input type="hidden" name="tradeType" value="'+tradeType+'"/>' +
+                            '</form>');
+               form.submit();
+            }
+           $(function () {
+                var wsUri = "@routes.WeiXinCtrl.weixinsocket(params.get("""orderId""")).webSocketURL()";
+                var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
+                var dateSocket = new WS(wsUri);
+                dateSocket.onmessage = function (event) {
+                    if(event.data=="SUCCESS"){
+                         payOrderquery("APP",'@params.get("""orderId""")','','');
+
+                    }
+                }
+           });
+
+        </script>
 
 </head>
 <body>
