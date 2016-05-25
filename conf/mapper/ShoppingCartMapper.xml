@@ -275,6 +275,9 @@
         <if test="orderId!=null and orderId !=''">
             and t.order_id = #{orderId}
         </if>
+        <if test="pgTradeNo!=null and pgTradeNo !=''">
+            and t.pg_trade_no = #{pgTradeNo}
+        </if>
         and order_status !='N' and order_status !='PI' and order_status !='PS' and order_status !='PF'
         order by t.order_create_at DESC
     </select>
@@ -291,6 +294,9 @@
         </if>
         <if test="orderId!=null and orderId !=''">
             and t.order_id = #{orderId}
+        </if>
+        <if test="pgTradeNo!=null and pgTradeNo !=''">
+            and t.pg_trade_no = #{pgTradeNo}
         </if>
         and order_status !='N'
         order by t.order_create_at DESC
@@ -312,6 +318,10 @@
         <if test="pinActiveId!=null and pinActiveId !=''">
             and t.pin_active_id = #{pinActiveId}
         </if>
+        <if test="pgTradeNo!=null and pgTradeNo !=''">
+            and t.pg_trade_no = #{pgTradeNo}
+        </if>
+
         and order_status ='PS'
         order by t.order_create_at DESC
     </select>

@@ -54,6 +54,9 @@ padding:44px 0 0 0;
 .jingdong{
     background: url("/assets/images/home-pay-icon.png") no-repeat 10px -70px;background-size: 35px;
 }
+.alipay{
+    background: url("/assets/images/alipayicon.png") no-repeat 10px ;background-size: 35px;
+}
 /************ pay-result1 ***************/
 .pay-result{
     width: 100%;height: auto;

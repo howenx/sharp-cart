@@ -1,5 +1,6 @@
 package util;
 
+import com.squareup.okhttp.MediaType;
 import domain.SysParameter;
 import play.Configuration;
 import play.mvc.WebSocket;
@@ -86,14 +87,14 @@ public class SysParCom {
     public static String WEIXIN_KEY_APP;
 
 
-    public static String ALIPAY_SERVICE;
     public static String ALIPAY_PAYMENT_TYPE;
     public static String ALIPAY_PARTNER;
     public static String ALIPAY_SELLER_ID;
     public static String ALIPAY_KEY;
-    public static String ALIPAY_NOTITY_URL;
-    public static String ALIPAY_RETURN_URL;
     public static String ALIPAY_GATEWAY;
+    public static String ALIPAY_RSA_PRIVATE_KEY;
+    public static String ALIPAY_RSA_PUBLIC_KEY;
+
 
     public static String EXPRESS_POST_URL;
     public static String EXPRESS_KEY;
@@ -106,6 +107,8 @@ public class SysParCom {
 
     //微信扫码支付
     public static Map<String,WebSocket.Out<String>> WEIXIN_SOCKET;
+
+    public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
 
 
     @Inject
@@ -185,14 +188,15 @@ public class SysParCom {
 
 
         //支付宝
-        ALIPAY_SERVICE = configuration.getString("alipay.service");
-        ALIPAY_PAYMENT_TYPE = configuration.getString("alipay.service");
-        ALIPAY_PARTNER = configuration.getString("alipay.service");
+        ALIPAY_PAYMENT_TYPE = configuration.getString("alipay.payment.type");
+        ALIPAY_PARTNER = configuration.getString("alipay.partner");
         ALIPAY_SELLER_ID = configuration.getString("alipay.seller.id");
         ALIPAY_KEY = configuration.getString("alipay.key");
-        ALIPAY_NOTITY_URL = configuration.getString("alipay.notify.url");
-        ALIPAY_RETURN_URL = configuration.getString("alipay.return.url");
         ALIPAY_GATEWAY = configuration.getString("alipay.gateway");
+        ALIPAY_RSA_PRIVATE_KEY=configuration.getString("alipay.rsa.private.key");
+        ALIPAY_RSA_PUBLIC_KEY=configuration.getString("alipay.rsa.public.key");
+
+
 
         EXPRESS_POST_URL = configuration.getString("express.post.url");
         EXPRESS_KEY = configuration.getString("express.key");

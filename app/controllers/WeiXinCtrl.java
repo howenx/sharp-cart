@@ -156,7 +156,7 @@ public class WeiXinCtrl extends Controller {
      * @param tradeType
      * @return
      */
-    private Long fromWeiXinOrderId(String weixinOrderId, WeiXinTradeType tradeType){
+    public Long fromWeiXinOrderId(String weixinOrderId, WeiXinTradeType tradeType){
         return Long.valueOf(weixinOrderId.substring(0,weixinOrderId.length()-tradeType.getOrderSuffix().length()));
     }
 
@@ -667,7 +667,7 @@ public class WeiXinCtrl extends Controller {
      * @param returnMap
      * @return
      */
-    private Result weixinPaySucessRedirect(Order order, Map<String, String> returnMap) {
+    public Result weixinPaySucessRedirect(Order order, Map<String, String> returnMap) {
         if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
             PinUser pinUser = new PinUser();
             pinUser.setUserId(order.getUserId());
@@ -737,52 +737,6 @@ public class WeiXinCtrl extends Controller {
             return null;
         }
     }
-
-//    /**
-//     * 微信支付退款
-//     *
-//     * @param orderId
-//     * @return
-//     */
-//    public Result payRefund(Long orderId) {
-//        ObjectNode objectNode = newObject();
-//        try {
-//            String xmlContent = getRefundParams(orderId);
-//            try {
-//                String result = refundConnect(SysParCom.WEIXIN_PAY_REFUND, xmlContent); //接口提供所有微信支付订单的查询
-//                Logger.info("微信支付退款发送内容\n" + xmlContent + "\n返回内容" + result);
-//                if ("" == result || null == result) {
-//                    objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
-//                    return ok(objectNode);
-//                }
-//                Map<String, String> resultMap = xmlToMap(result);
-//                if (null == resultMap || resultMap.size() <= 0) {
-//                    objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
-//                    return ok(objectNode);
-//                }
-//                if (!"SUCCESS".equals(resultMap.get("return_code"))) { //返回状态码  SUCCESS/FAIL 此字段是通信标识，非交易标识，交易是否成功需要查看result_code来判断
-//                    objectNode.putPOJO("message", Json.toJson(new domain.Message(resultMap.get("return_msg"), domain.Message.ErrorCode.FAILURE.getIndex())));
-//                    return ok(objectNode);
-//                }
-//                if (!"SUCCESS".equals(resultMap.get("result_code"))) { //业务结果
-//                    objectNode.putPOJO("message", Json.toJson(new domain.Message(resultMap.get("err_code_des"), domain.Message.ErrorCode.FAILURE.getIndex())));
-//                    return ok(objectNode);
-//                }
-//
-//                //退款成功//TODO 退款逻辑
-//                objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-//                return ok(objectNode);
-//
-//            } catch (Exception e) {
-//                Logger.error(e.getMessage());
-//            }
-//
-//        } catch (Exception e) {
-//            Logger.error(e.getMessage());
-//        }
-//        objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
-//        return ok(objectNode);
-//    }
 
     /**
      * 微信退款请求

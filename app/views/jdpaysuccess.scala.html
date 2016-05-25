@@ -17,7 +17,9 @@
                 <div class="pay-suc">
                     <div class="icon-order-suc"></div>
                     <h1>订单支付成功</h1>
-                    <h3>订单金额: <span>@params.get("all_fee")</span></h3>
+                    @if(null!=params.get("all_fee")){
+                        <h3>订单金额: <span>@params.get("all_fee")</span></h3>
+                    }
                 </div>
                 <div class="btn-pay">
                     <button id="order">查看订单</button>

@@ -12,7 +12,7 @@ public enum WeiXinTradeType {
     //app支付
     APP("APP","A");
     private String tradeType;
-    //订单后缀
+    //订单后缀 后面拼一位写死了
     private String orderSuffix;
 
     private WeiXinTradeType(String tradeType,String orderSuffix){
