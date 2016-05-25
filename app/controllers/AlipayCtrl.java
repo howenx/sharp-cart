@@ -90,7 +90,7 @@ public class AlipayCtrl extends Controller {
         sParaTemp.put("total_fee", total_fee);
         sParaTemp.put("show_url", M_ORDERS);
         sParaTemp.put("body",detail);
-        Map<String, String> map=buildRequestPara(sParaTemp,"RSA");
+        Map<String, String> map=buildRequestPara(sParaTemp,"MD5");
         return map;
     }
     /**
@@ -237,15 +237,8 @@ public class AlipayCtrl extends Controller {
     public Result payBackNotify(){
         Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
-        Logger.info("1支付宝支付回调返回\n"+body_map+",request().body()="+request().body()+",params="+params);
-        body_map.forEach((k, v) -> {
-            try {
-                params.put(k, URLDecoder.decode(v[0], "utf-8"));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        });
-        Logger.info("2支付宝支付回调返回\n"+body_map+",request().body()="+request().body()+",params="+params);
+        body_map.forEach((k, v) -> params.put(k, v[0]));
+        Logger.info("支付宝支付回调返回request().body()="+request().body()+",params="+params);
         //除去数组中的空值和签名参数
         Map<String, String> sPara = paraFilter(params);
         //生成签名结果
@@ -426,15 +419,18 @@ public class AlipayCtrl extends Controller {
     public Result payRefundNotify(){
         Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
-        Logger.info("支付宝退款异步通知\n"+body_map+",request().body()="+request().body()+",params="+params);
-        body_map.forEach((k, v) -> {
-            try {
-                params.put(k, URLDecoder.decode(v[0], "utf-8"));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        });
-        Logger.info("支付宝退款异步通知\n"+body_map+",request().body()="+request().body()+",params="+params);
+
+//        params.put("sign","RCBlGZP4fWUlzkmvrQmRfKvonkI2033VZ3+djOW0ws/KW9bRBjbNU0of/1p1EpWary6yUdVkR3wYzPZzF9jTDVCIbrCt8ySbFpKzT29f3r5AsciWrrfGAQZXxS5xQgAThYHh6GxjqcxnbZ4i7IsOfgdMDDk2uGJ5mGhG/J9zRrg=");
+//        params.put("result_details","2016052521001004360218241676^0.01^SUCCESS");
+//        params.put("notify_time","2016-05-25 18:23:09");
+//        params.put("sign_type","RSA");
+//        params.put("notify_type","batch_refund_notify");
+//        params.put("notify_id","e8101c81cafd461d6aad631f90a36e0je9");
+//        params.put("batch_no","2016052518185850102295");
+//        params.put("success_num","1");
+
+        body_map.forEach((k, v) -> params.put(k, v[0]));
+        Logger.info("支付宝退款异步通知request().body()="+request().body()+",params="+params);
         //除去数组中的空值和签名参数
         Map<String, String> sPara = paraFilter(params);
         //生成签名结果
@@ -520,7 +516,7 @@ public class AlipayCtrl extends Controller {
 
             String detail_data = order.getPgTradeNo() + "^" + total_fee + "^" + "HMM";
             sParaTemp.put("detail_data", detail_data);
-            Map<String, String> map = buildRequestPara(sParaTemp, "RSA");
+            Map<String, String> map = buildRequestPara(sParaTemp, "MD5");
             Logger.info("支付宝退款参数" + Json.toJson(map) + ",ALIPAY_GATEWAY=" + ALIPAY_GATEWAY);
             return map;
         }

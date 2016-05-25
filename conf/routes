@@ -64,3 +64,4 @@ POST        /client/weixin/pay/app                                              
 POST        /client/alipay/pay/back                                                       controllers.AlipayCtrl.payBackNotify()
 GET         /client/alipay/pay/front                                                      controllers.AlipayCtrl.payFrontNotify()
 POST        /client/alipay/pay/refund                                                     controllers.AlipayCtrl.payRefundNotify()
+GET         /client/alipay/test                                                           controllers.AlipayCtrl.payRefundNotify()
