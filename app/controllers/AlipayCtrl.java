@@ -91,6 +91,8 @@ public class AlipayCtrl extends Controller {
         sParaTemp.put("show_url", M_ORDERS);
         sParaTemp.put("body",detail);
         Map<String, String> map=buildRequestPara(sParaTemp,"RSA");
+
+        Logger.info("支付宝参数===>"+createLinkString(map));
         return map;
     }
     /**
