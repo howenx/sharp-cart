@@ -1,4 +1,4 @@
-@(params:java.util.Map[String,String],paySrc:String,userType:String,token:String,securityCode:String,alipayParams:java.util.Map[String,String],refundParams:java.util.Map[String,String])
+@(params:java.util.Map[String,String],paySrc:String,userType:String,token:String,securityCode:String,refundParams:java.util.Map[String,String],alipayParamUrl:String)
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +11,6 @@
         <link rel="stylesheet" href="/assets/stylesheets/pay.css">
         <script src="/assets/js/jquery-1.11.1.min.js"></script>
         <script src="/assets/js/pay.js"></script>
-        <script src="/assets/js/ap.js"></script>
         <script>
 
            $(function () {
@@ -59,7 +58,12 @@
                 <em>仅安装微信6.0.2及以上版本客户端使用</em>
                 <div class="right-icon"></div>
             </div>
-
+            <hr>
+            <div class="alipay pay" onclick="alipayApp('APP',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')">
+                <span>支付宝支付</span>
+                <em>推荐支付宝用户使用</em>
+                <div class="right-icon"></div>
+            </div>
         }
 
         @if("M"==paySrc){
@@ -68,6 +72,12 @@
                 <span>微信支付</span>
                 <em>仅安装微信6.0.2及以上版本客户端使用</em>
                 <div class="right-icon"></div>
+            </div>
+            <hr>
+            <div class="alipay pay" style="display:none" onclick="alipayApp('APP',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')">
+            <span>支付宝APP支付</span>
+            <em>推荐支付宝用户使用</em>
+            <div class="right-icon"></div>
             </div>
 
             @if("WEIXIN"==userType){
@@ -96,11 +106,13 @@
 
         @if("WEIXIN"!=userType){
             <hr>
-            <div class="alipay pay">
-                    <span>支付宝支付</span>
+            <a href="https://mapi.alipay.com/gateway.do?@alipayParamUrl" onclick="checkOrder();return false;" style='text-decoration:none;'>
+                <div class="alipay pay ">
+                    <span>支付宝即时到账</span>
                     <em>推荐支付宝用户使用</em>
-                <div class="right-icon"></div>
-            </div>
+                    <div class="right-icon"></div>
+                </div>
+            </a>
             <a class="test" style="display:none"> 退款测试refund</a>
         }
 
@@ -127,18 +139,6 @@
                 }
             });
 
-            $('.alipay').click(function(){
-                @*/***毫秒数**/*@
-                var createAt = @params.get("""orderCreateAt""")/1;
-                var d = new Date();
-                var n = d.getTime();
-                if(n-createAt>=86400000){
-                    alert("您的订单已经超时自动取消");
-                }else{
-                    $("#codeImgHidden").val(0);
-                    $('#alipayForm').submit();
-                }
-            });
              $('.test').click(function(){
                     $('#refundForm').submit();
             });
@@ -146,41 +146,59 @@
 
 
 
-//微信APP统一下单
-function payUnifiedorderApp(tradeType,orderId,orderCreateAt,token,securityCode){
-    var d = new Date();
-    var n = d.getTime();
-    if(n-orderCreateAt>=86400000){
-        alert("您的订单已经超时自动取消");
-        return ;
-    }
-    var weixinAppForm = $('<form action="/client/weixin/pay/app" method="post">' +
-                        <!--'<input type="hidden" name="prepayid" value="'+data.prepay_id+'"/>' +-->
-                        '<input type="hidden" name="tradeType" value="'+tradeType+'"/>' +
-                        '<input type="hidden" name="orderId" value="'+orderId+'"/>' +
-                        '<input type="hidden" name="token" value="'+token+'"/>' +
-                        '<input type="hidden" name="securityCode" value="'+securityCode+'"/>' +
-                        '</form>');
-     weixinAppForm.submit();
-};
+    //微信APP统一下单
+    function payUnifiedorderApp(tradeType,orderId,orderCreateAt,token,securityCode){
+        var d = new Date();
+        var n = d.getTime();
+        if(n-orderCreateAt>=86400000){
+            alert("您的订单已经超时自动取消");
+            return ;
+        }
+        var weixinAppForm = $('<form action="/client/weixin/pay/app" method="post">' +
+                            <!--'<input type="hidden" name="prepayid" value="'+data.prepay_id+'"/>' +-->
+                            '<input type="hidden" name="tradeType" value="'+tradeType+'"/>' +
+                            '<input type="hidden" name="orderId" value="'+orderId+'"/>' +
+                            '<input type="hidden" name="token" value="'+token+'"/>' +
+                            '<input type="hidden" name="securityCode" value="'+securityCode+'"/>' +
+                            '</form>');
+         weixinAppForm.submit();
+    };
+
+    function checkOrder(){
+         var d = new Date();
+         var n = d.getTime();
+        if(n-orderCreateAt>=86400000){
+            alert("您的订单已经超时自动取消");
+            return ;
+        }
+    };
+
+    //支付宝APP跳转
+    function alipayApp(tradeType,orderId,orderCreateAt,token,securityCode){
+        var d = new Date();
+        var n = d.getTime();
+        if(n-orderCreateAt>=86400000){
+            alert("您的订单已经超时自动取消");
+            return ;
+        }
+        var alipayAppForm = $('<form action="/client/alipay/pay/app" method="post">' +
+                            '<input type="hidden" name="tradeType" value="'+tradeType+'"/>' +
+                            '<input type="hidden" name="orderId" value="'+orderId+'"/>' +
+                            '<input type="hidden" name="token" value="'+token+'"/>' +
+                            '<input type="hidden" name="securityCode" value="'+securityCode+'"/>' +
+                            '</form>');
+         alipayAppForm.submit();
+    };
     </script>
         </div>
 
-    <div style="display:none">
-        <form id="alipayForm" action="https://mapi.alipay.com/gateway.do" method="POST">
-        @for((k,v) <- alipayParams) {
-            <input type="hidden" name="@k" value="@v"/>
-        }
-        </form>
-
-    </div>
         <div style="display:none">
+
             <form id="refundForm" action="https://mapi.alipay.com/gateway.do" method="POST">
                 @for((k,v) <- refundParams) {
                 <input type="hidden" name="@k" value="@v"/>
                 }
             </form>
-
         </div>
     </body>
 </html>

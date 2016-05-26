@@ -64,4 +64,8 @@ POST        /client/weixin/pay/app                                              
 POST        /client/alipay/pay/back                                                       controllers.AlipayCtrl.payBackNotify()
 GET         /client/alipay/pay/front                                                      controllers.AlipayCtrl.payFrontNotify()
 POST        /client/alipay/pay/refund                                                     controllers.AlipayCtrl.payRefundNotify()
-GET         /client/alipay/test                                                           controllers.AlipayCtrl.payRefundNotify()
+POST        /client/alipay/pay/app                                                        controllers.AlipayCtrl.payApp()
+POST        /client/alipay/pay/orderquery/redirect                                        controllers.AlipayCtrl.redirectPayOrderquery()
+GET         /client/alipay/pay/orderquery/$orderId<[0-9]+>                                controllers.AlipayCtrl.payOrderquery(orderId:Long)
+
+#GET         /client/alipay/test                                                           controllers.AlipayCtrl.payRefundNotify()

@@ -1,19 +1,25 @@
 package controllers;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Throwables;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
-import domain.Order;
-import domain.Refund;
+import common.AlipayTradeType;
+import common.WeiXinTradeType;
+import domain.*;
+import filters.UserAuth;
 import middle.JDPayMid;
 import net.spy.memcached.MemcachedClient;
 import org.apache.commons.codec.digest.DigestUtils;
 import play.Logger;
+import play.data.Form;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
+import play.mvc.Security;
+import play.mvc.WebSocket;
 import service.CartService;
 import service.IdService;
 import service.PromotionService;
@@ -23,12 +29,14 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static play.libs.Json.newObject;
 import static util.SysParCom.*;
 
 /**
@@ -59,8 +67,13 @@ public class AlipayCtrl extends Controller {
         this.idService=idService;
     }
 
-
-    public Map<String,String>  getAlipayParams(Order order){
+    /**
+     * 支付宝请求参数
+     * @param order
+     * @param alipayTradeType
+     * @return
+     */
+    public String getAlipayParamsUrl(Order order, AlipayTradeType alipayTradeType){
 
         Long orderId=order.getOrderId();
         //商户订单号，商户网站订单系统中唯一订单号，必填
@@ -74,26 +87,39 @@ public class AlipayCtrl extends Controller {
             total_fee=order.getPayTotal().toPlainString();
         }
 
-        String detail="HMM"+orderId;
+        String detail="韩秘美订单"+orderId;
 
         //把请求参数打包成数组
         TreeMap<String, String> sParaTemp = new TreeMap<>();
-        sParaTemp.put("service", "create_direct_pay_by_user");
+        if(alipayTradeType==AlipayTradeType.APP){
+            sParaTemp.put("service", "mobile.securitypay.pay");
+        }else if(alipayTradeType==AlipayTradeType.DIRECT){  //立即支付
+            sParaTemp.put("service", "create_direct_pay_by_user");
+        }
         sParaTemp.put("partner", SysParCom.ALIPAY_PARTNER);
         sParaTemp.put("seller_id", SysParCom.ALIPAY_SELLER_ID);
         sParaTemp.put("_input_charset", "utf-8");
         sParaTemp.put("payment_type", SysParCom.ALIPAY_PAYMENT_TYPE);
         sParaTemp.put("notify_url", SysParCom.SHOPPING_URL + "/client/alipay/pay/back");
-        sParaTemp.put("return_url", SysParCom.SHOPPING_URL + "/client/alipay/pay/front");
+        if(alipayTradeType==AlipayTradeType.DIRECT) {  //立即支付
+            sParaTemp.put("return_url", SysParCom.SHOPPING_URL + "/client/alipay/pay/front");
+        }
         sParaTemp.put("out_trade_no", out_trade_no);
         sParaTemp.put("subject",detail);  //订单名称，必填
         sParaTemp.put("total_fee", total_fee);
         sParaTemp.put("show_url", M_ORDERS);
         sParaTemp.put("body",detail);
         Map<String, String> map=buildRequestPara(sParaTemp,"RSA");
+        String mySign= null;
+        try {
+            mySign = URLEncoder.encode(map.get("sign"),"utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        map.put("sign",mySign);
 
         Logger.info("支付宝参数===>"+createLinkString(map));
-        return map;
+        return createLinkString(map);
     }
     /**
      * 生成签名结果
@@ -297,10 +323,20 @@ public class AlipayCtrl extends Controller {
                                     Logger.error("################支付宝支付异步通知 拼购订单返回处理结果为空################," + order.getOrderId());
                                     return ok("order deal fail");
                                 } else {
+                                    WebSocket.Out<String> out=WEIXIN_SOCKET.get(orderId+"");
+                                    WEIXIN_SOCKET.remove(orderId+"");
+                                    if(null!=out){ //扫码
+                                        out.write("SUCCESS");
+                                    }
                                     Logger.error("################支付宝支付异步通知 拼购订单返回成功################," + order.getOrderId());
                                     return ok("success");
                                 }
                             } else {
+                                WebSocket.Out<String> out=WEIXIN_SOCKET.get(orderId+"");
+                                WEIXIN_SOCKET.remove(orderId+"");
+                                if(null!=out){ //扫码
+                                    out.write("SUCCESS");
+                                }
                                 Logger.error("################支付宝支付异步通知 普通订单返回成功################," + order.getOrderId());
                                 return ok("success");
                             }
@@ -624,4 +660,87 @@ public class AlipayCtrl extends Controller {
         }
         return null;
     }
+
+    /**
+     * app支付跳转空白页
+     * @return
+     */
+    public Result payApp(){
+        Form<WeiXinApp> redirectCashForm = Form.form(WeiXinApp.class).bindFromRequest();
+        Map<String, String> params_failed = new HashMap<>();
+        params_failed.put("m_index", M_INDEX);
+        if (redirectCashForm.hasErrors()) {
+            return ok(views.html.jdpayfailed.render(params_failed));
+        } else {
+            Map<String, String[]> body_map = request().body().asFormUrlEncoded();
+            Map<String, String> params = new HashMap<>();
+            body_map.forEach((k, v) -> params.put(k, v[0]));
+            Order order = new Order();
+            order.setOrderId(Long.valueOf(params.get("orderId")));
+            Optional<List<Order>> listOptional = null;
+            try {
+                listOptional = Optional.ofNullable(cartService.getOrder(order));
+                if (listOptional.isPresent() && listOptional.get().size() > 0) {
+                    order = listOptional.get().get(0);
+                    String paramsUrl=getAlipayParamsUrl(order,AlipayTradeType.APP);
+                    params.put("paramsUrl",paramsUrl);
+                    return ok(views.html.alipayapp.render(params)); //跳转页面
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return ok(views.html.jdpayfailed.render(params_failed));
+    }
+
+
+    /**
+     * 支付完成后订单状态查询
+     *
+     * @param orderId
+     * @return
+     */
+    @Security.Authenticated(UserAuth.class)
+    public Result payOrderquery(Long orderId) {
+        Map<String, String> returnMap = new HashMap<>();
+        returnMap.put("m_index", M_INDEX);
+        returnMap.put("m_orders", M_ORDERS);
+        try {
+            Order order = new Order();
+            order.setOrderId(orderId);
+            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
+            if (!listOptional.isPresent() || listOptional.get().size() <= 0) {
+                return ok(views.html.jdpayfailed.render(returnMap));
+            }
+            order = listOptional.get().get(0);
+            if (order.getOrderStatus().equals("S") || order.getOrderStatus().equals("PS")) { //订单状态是支付成功
+                return weiXinCtrl.weixinPaySucessRedirect(order, returnMap);
+            }
+            if (!order.getOrderStatus().equals("I")) { //订单状态不是初始状态
+                return ok(views.html.jdpayfailed.render(returnMap));
+            }
+        } catch (Exception e) {
+            Logger.error(Throwables.getStackTraceAsString(e));
+        }
+        return ok(views.html.jdpayfailed.render(returnMap));
+    }
+
+    /**
+     * 跳转查询下单
+     * @return
+     */
+    public Result redirectPayOrderquery() {
+        Form<RedirectWeiXin> redirectCashForm = Form.form(RedirectWeiXin.class).bindFromRequest();
+        if (redirectCashForm.hasErrors()) {
+            ObjectNode objectNode = newObject();
+            objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
+            return ok(objectNode);
+        } else {
+            RedirectWeiXin redirectCash = redirectCashForm.get();
+            flash().put("id-token", redirectCash.getToken());
+            return redirect("/client/alipay/pay/orderquery/" + redirectCash.getOrderId());
+        }
+    }
+
+
 }

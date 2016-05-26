@@ -1,0 +1,56 @@
+@(params: java.util.Map[String, String])
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.ico">
+    <link rel="stylesheet" href="/assets/stylesheets/pay.css">
+    <script src="/assets/js/jquery-1.11.1.min.js"></script>
+    <script>
+         //订单查询
+            function payOrderquery(tradeType,orderId,token,securityCode){
+                var form = $('<form action="/client/alipay/pay/orderquery/redirect" method="post">' +
+                            '<input type="hidden" name="orderId" value="'+orderId+'"/>' +
+                            '<input type="hidden" name="token" value="'+token+'"/>' +
+                            '<input type="hidden" name="securityCode" value="'+securityCode+'"/>' +
+                            '<input type="hidden" name="tradeType" value="'+tradeType+'"/>' +
+                            '</form>');
+               form.submit();
+            }
+           $(function () {
+                var wsUri = "@routes.WeiXinCtrl.weixinsocket(params.get("""orderId""")).webSocketURL()";
+                var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
+                var dateSocket = new WS(wsUri);
+                dateSocket.onmessage = function (event) {
+                    if(event.data=="SUCCESS"){
+                         payOrderquery("APP",'@params.get("""orderId""")','@params.get("""token""")','@params.get("""securityCode""")');
+
+                    }
+                }
+           });
+
+        </script>
+
+</head>
+<body>
+</body>
+<script>
+            $(function () {
+                $(window).load(function () {
+                    setTimeout(function () {
+                        try {
+                            alipayapp("@params.get("""paramsUrl""")");
+                        } catch (err) {
+                            window.handler.alipayapp("@params.get("""paramsUrl""")");
+                        } finally {
+                            <!--setTimeout(function () {-->
+                                <!--window.location = "@params.get("""m_pinActivity""")";-->
+                            <!--}, 500);-->
+                        }
+                     }, 1000);
+                });
+            });
+    </script>
+</html>

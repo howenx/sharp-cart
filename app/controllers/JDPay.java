@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.google.common.base.Throwables;
 import com.google.inject.Singleton;
+import common.AlipayTradeType;
 import domain.*;
 import filters.UserAuth;
 import middle.JDPayMid;
@@ -118,7 +119,7 @@ public class JDPay extends Controller {
 
                     String securityCode = orderSecurityCode(orderId + "", token);
 
-                    return ok(views.html.cashdesk.render(params, paySrc, userType, token, securityCode,alipayCtrl.getAlipayParams(order),alipayCtrl.getRefundParams(orderId)));
+                    return ok(views.html.cashdesk.render(params, paySrc, userType, token, securityCode,alipayCtrl.getRefundParams(orderId),alipayCtrl.getAlipayParamsUrl(order, AlipayTradeType.DIRECT)));
                 }
             } else return ok(views.html.jdpayfailed.render(params_failed));
         } catch (Exception ex) {
