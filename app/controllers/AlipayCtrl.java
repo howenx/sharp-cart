@@ -90,7 +90,7 @@ public class AlipayCtrl extends Controller {
         sParaTemp.put("total_fee", total_fee);
         sParaTemp.put("show_url", M_ORDERS);
         sParaTemp.put("body",detail);
-        Map<String, String> map=buildRequestPara(sParaTemp,"MD5");
+        Map<String, String> map=buildRequestPara(sParaTemp,"RSA");
         return map;
     }
     /**
@@ -237,19 +237,34 @@ public class AlipayCtrl extends Controller {
     public Result payBackNotify(){
         Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
-        body_map.forEach((k, v) -> params.put(k, v[0]));
+        body_map.forEach((k, v) -> {
+            if("sign".equals(k)) {
+                try {
+                    params.put(k, URLDecoder.decode(v[0], "utf-8"));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }else{
+                params.put(k, v[0]);
+            }
+        });
+        //body_map.forEach((k, v) -> params.put(k, v[0]));
         Logger.info("支付宝支付回调返回request().body()="+request().body()+",params="+params);
+
         //除去数组中的空值和签名参数
         Map<String, String> sPara = paraFilter(params);
         //生成签名结果
         String mysign = buildRequestMysign(sPara,params.get("sign_type"));
         if(null!=params.get("sign")&&params.get("sign").equals(mysign)) { //验证签名
+            String verifyAli=verifyFromAlipay(params.get("notify_id"));
+            if(!"true".equals(verifyAli)){ //验证是否是支付宝发来的通知
+                Logger.error("################支付宝支付异步通知 验证是否是支付宝发来的通知对不上################,notify_id=" + params.get("notify_id"));
+                return ok("fail");
+
+            }
             if(null!=params.get("out_trade_no")&& null!=params.get("total_fee")&&null!=params.get("trade_status")
                     &&("TRADE_SUCCESS".equals(params.get("trade_status"))||"TRADE_FINISHED".equals(params.get("trade_status")))){ //有订单号并且交易成功
-
                 Long orderId = Long.valueOf(params.get("out_trade_no"));
-
-
                 Order order = new Order();
                 order.setOrderId(orderId);
                 List<Order> orders = null;
@@ -383,13 +398,13 @@ public class AlipayCtrl extends Controller {
                 sParaTemp.put("out_trade_no",order.getOrderId()+"");
                 sParaTemp.put("refund_amount",order.getPayTotal().toPlainString());
                 Map<String, String> map=buildRequestPara(sParaTemp,"RSA");
-                Logger.info("支付宝退款参数"+Json.toJson(map)+",ALIPAY_GATEWAY="+ALIPAY_GATEWAY);
+                Logger.info("支付宝退款参数"+Json.toJson(map)+",ALIPAY_OPENAPI_GATEWAY="+ALIPAY_OPENAPI_GATEWAY);
                 //创建一个OkHttpClient对象
                 OkHttpClient okHttpClient = new OkHttpClient();
                 //创建一个RequestBody(参数1：数据类型 参数2传递的json串)
                 RequestBody requestBody = RequestBody.create(MEDIA_TYPE_JSON, Json.toJson(map).toString());
                 //创建一个请求对象
-                Request request = new Request.Builder().url(ALIPAY_GATEWAY).post(requestBody).build();
+                Request request = new Request.Builder().url(ALIPAY_OPENAPI_GATEWAY).post(requestBody).build();
                 //发送请求获取响应
                 try {
                     Response response=okHttpClient.newCall(request).execute();
@@ -420,7 +435,11 @@ public class AlipayCtrl extends Controller {
         Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
 
-//        params.put("sign","RCBlGZP4fWUlzkmvrQmRfKvonkI2033VZ3+djOW0ws/KW9bRBjbNU0of/1p1EpWary6yUdVkR3wYzPZzF9jTDVCIbrCt8ySbFpKzT29f3r5AsciWrrfGAQZXxS5xQgAThYHh6GxjqcxnbZ4i7IsOfgdMDDk2uGJ5mGhG/J9zRrg=");
+//        try {
+//            params.put("sign", URLEncoder.encode("RCBlGZP4fWUlzkmvrQmRfKvonkI2033VZ3+djOW0ws/KW9bRBjbNU0of/1p1EpWary6yUdVkR3wYzPZzF9jTDVCIbrCt8ySbFpKzT29f3r5AsciWrrfGAQZXxS5xQgAThYHh6GxjqcxnbZ4i7IsOfgdMDDk2uGJ5mGhG/J9zRrg=","utf-8"));
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//        }
 //        params.put("result_details","2016052521001004360218241676^0.01^SUCCESS");
 //        params.put("notify_time","2016-05-25 18:23:09");
 //        params.put("sign_type","RSA");
@@ -428,8 +447,18 @@ public class AlipayCtrl extends Controller {
 //        params.put("notify_id","e8101c81cafd461d6aad631f90a36e0je9");
 //        params.put("batch_no","2016052518185850102295");
 //        params.put("success_num","1");
-
-        body_map.forEach((k, v) -> params.put(k, v[0]));
+        body_map.forEach((k, v) -> {
+            if("sign".equals(k)) {
+                try {
+                    params.put(k, URLDecoder.decode(v[0], "utf-8"));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }else{
+                params.put(k, v[0]);
+            }
+        });
+      //  body_map.forEach((k, v) -> params.put(k, v[0]));
         Logger.info("支付宝退款异步通知request().body()="+request().body()+",params="+params);
         //除去数组中的空值和签名参数
         Map<String, String> sPara = paraFilter(params);
@@ -516,8 +545,8 @@ public class AlipayCtrl extends Controller {
 
             String detail_data = order.getPgTradeNo() + "^" + total_fee + "^" + "HMM";
             sParaTemp.put("detail_data", detail_data);
-            Map<String, String> map = buildRequestPara(sParaTemp, "MD5");
-            Logger.info("支付宝退款参数" + Json.toJson(map) + ",ALIPAY_GATEWAY=" + ALIPAY_GATEWAY);
+            Map<String, String> map = buildRequestPara(sParaTemp, "RSA");
+            Logger.info("支付宝退款参数" + Json.toJson(map));
             return map;
         }
         return null;
@@ -562,4 +591,35 @@ public class AlipayCtrl extends Controller {
         return null;
     }
 
+
+    /**
+     * 验证是否是支付宝发来的通知
+     * @param notify_id
+     * @return
+     */
+    private String verifyFromAlipay(String notify_id){
+        /**
+         * https://mapi.alipay.com/gateway.do?service=notify_verify&partner=2088002396712354&notify_id=RqPnCoPT3K9%252Fvwbh3I%252BFioE227%252BPfNMl8jwyZqMIiXQWxhOCmQ5MQO%252FWd93rvCB%252BaiGg
+         */
+        String utl=ALIPAY_MAPI_GATEWAY+"?service=notify_verify&partner="+ALIPAY_PARTNER+"&notify_id="+notify_id;
+        //创建一个OkHttpClient对象
+        OkHttpClient okHttpClient = new OkHttpClient();
+        //创建一个请求对象
+        Request request = new Request.Builder().url("https://mapi.alipay.com/gateway.do").get().build();
+        //发送请求获取响应
+        try {
+            Response response=okHttpClient.newCall(request).execute();
+            //判断请求是否成功
+            if(response.isSuccessful()){
+                //打印服务端返回结果
+                Logger.info("==验证是否是支付宝发来的通知==="+response.body().string());
+                return response.body().string();
+            }
+            else return null;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

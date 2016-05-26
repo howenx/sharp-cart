@@ -91,7 +91,8 @@ public class SysParCom {
     public static String ALIPAY_PARTNER;
     public static String ALIPAY_SELLER_ID;
     public static String ALIPAY_KEY;
-    public static String ALIPAY_GATEWAY;
+    public static String ALIPAY_OPENAPI_GATEWAY;
+    public static String ALIPAY_MAPI_GATEWAY;
     public static String ALIPAY_RSA_PRIVATE_KEY;
     public static String ALIPAY_RSA_PUBLIC_KEY;
 
@@ -192,7 +193,8 @@ public class SysParCom {
         ALIPAY_PARTNER = configuration.getString("alipay.partner");
         ALIPAY_SELLER_ID = configuration.getString("alipay.seller.id");
         ALIPAY_KEY = configuration.getString("alipay.key");
-        ALIPAY_GATEWAY = configuration.getString("alipay.gateway");
+        ALIPAY_OPENAPI_GATEWAY = configuration.getString("aalipay.openapi.gateway");
+        ALIPAY_MAPI_GATEWAY = configuration.getString("alipay.mapi.gateway");
         ALIPAY_RSA_PRIVATE_KEY=configuration.getString("alipay.rsa.private.key");
         ALIPAY_RSA_PUBLIC_KEY=configuration.getString("alipay.rsa.public.key");
 
