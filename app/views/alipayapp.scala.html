@@ -35,15 +35,17 @@
 
 </head>
 <body>
+<input type="hidden" id="paramsUrl" value='@params.get("""paramsUrl""")'>
 </body>
 <script>
             $(function () {
                 $(window).load(function () {
                     setTimeout(function () {
+                    var param=$("#paramsUrl").val();
                         try {
-                            alipayapp("@params.get("""paramsUrl""")");
+                            alipayapp(param);
                         } catch (err) {
-                            window.handler.alipayapp("@params.get("""paramsUrl""")");
+                            window.handler.alipayapp(param);
                         } finally {
                             <!--setTimeout(function () {-->
                                 <!--window.location = "@params.get("""m_pinActivity""")";-->

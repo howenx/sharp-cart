@@ -73,7 +73,7 @@
                 <em>仅安装微信6.0.2及以上版本客户端使用</em>
                 <div class="right-icon"></div>
             </div>
-            <div class="alipay pay" style="display:none" onclick="alipayApp('APP',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')">
+            <div class="alipay pay"  onclick="alipayApp('APP',@params.get("""out_trade_no"""),@params.get("""orderCreateAt""")/1,'@token','@securityCode')">
             <span>支付宝APP支付</span>
             <em>推荐支付宝用户使用</em>
             <div class="right-icon"></div>
@@ -106,7 +106,7 @@
         @if("WEIXIN"!=userType){
             <hr>
             <a href="https://mapi.alipay.com/gateway.do?@alipayParamUrl" onclick="checkOrder();return false;" style='text-decoration:none;'>
-                <div class="alipay pay ">
+                <div class="alipay pay">
                     <span>支付宝即时到账</span>
                     <em>推荐支付宝用户使用</em>
                     <div class="right-icon"></div>

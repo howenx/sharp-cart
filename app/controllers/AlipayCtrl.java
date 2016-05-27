@@ -38,6 +38,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static play.libs.Json.newObject;
+import static play.libs.Json.toJson;
 import static util.SysParCom.*;
 
 /**
@@ -75,7 +76,16 @@ public class AlipayCtrl extends Controller {
      * @return
      */
     public String getAlipayParamsUrl(Order order, AlipayTradeType alipayTradeType){
+        Map<String, String> map=getAlipayParams(order,alipayTradeType);
 
+        if(alipayTradeType==AlipayTradeType.APP){
+            Logger.info("支付宝参数===>"+createLinkStringApp(map));
+            return createLinkStringApp(map);
+        }
+        return createLinkString(map);
+    }
+
+    private Map<String, String> getAlipayParams(Order order, AlipayTradeType alipayTradeType){
         Long orderId=order.getOrderId();
         //商户订单号，商户网站订单系统中唯一订单号，必填
         String out_trade_no = orderId+"";
@@ -88,7 +98,7 @@ public class AlipayCtrl extends Controller {
             total_fee=order.getPayTotal().toPlainString();
         }
 
-        String detail="韩秘美订单"+orderId;
+        String detail="HMM"+orderId;
 
         //把请求参数打包成数组
         TreeMap<String, String> sParaTemp = new TreeMap<>();
@@ -104,13 +114,15 @@ public class AlipayCtrl extends Controller {
         sParaTemp.put("notify_url", SysParCom.SHOPPING_URL + "/client/alipay/pay/back");
         if(alipayTradeType==AlipayTradeType.DIRECT) {  //立即支付
             sParaTemp.put("return_url", SysParCom.SHOPPING_URL + "/client/alipay/pay/front");
+            sParaTemp.put("show_url", M_ORDERS);
+        }else if(alipayTradeType==AlipayTradeType.APP){
+            sParaTemp.put("it_b_pay", "30m"); //超时时间
         }
         sParaTemp.put("out_trade_no", out_trade_no);
         sParaTemp.put("subject",detail);  //订单名称，必填
         sParaTemp.put("total_fee", total_fee);
-        sParaTemp.put("show_url", M_ORDERS);
         sParaTemp.put("body",detail);
-        Map<String, String> map=buildRequestPara(sParaTemp,"RSA");
+        Map<String, String> map=buildRequestPara(sParaTemp,"RSA",alipayTradeType);
         String mySign= null;
         try {
             mySign = URLEncoder.encode(map.get("sign"),"utf-8");
@@ -119,8 +131,7 @@ public class AlipayCtrl extends Controller {
         }
         map.put("sign",mySign);
 
-        Logger.info("支付宝参数===>"+createLinkString(map));
-        return createLinkString(map);
+        return map;
     }
     /**
      * 生成签名结果
@@ -128,9 +139,19 @@ public class AlipayCtrl extends Controller {
      * @return 签名结果字符串
      */
     public static String buildRequestMysign(Map<String, String> sPara,String key,String signType) {
-        String prestr = createLinkString(sPara); //把数组所有元素，按照“参数=参数值”的模式用“&”字符拼接成字符串
+        String prestr =createLinkString(sPara); //把数组所有元素，按照“参数=参数值”的模式用“&”字符拼接成字符串
         String mysign = sign(prestr, key, "utf-8",signType);
-        Logger.info("支付宝签名"+prestr+"秘钥:"+key+",mysign="+mysign);
+        return mysign;
+    }
+    /**
+     * APP生成签名结果
+     * @param sPara 要签名的数组
+     * @return 签名结果字符串
+     */
+    public static String buildRequestMysignApp(Map<String, String> sPara,String key,String signType) {
+        String prestr=createLinkStringApp(sPara);
+        String mysign = sign(prestr, key, "utf-8",signType);
+        Logger.info("======支付宝APP签名串\n"+prestr+"===>秘钥:\n"+key+",mysign=\n"+mysign);
         return mysign;
     }
 
@@ -139,12 +160,18 @@ public class AlipayCtrl extends Controller {
      * @param sParaTemp 请求前的参数数组
      * @return 要请求的参数数组
      */
-    private static Map<String, String> buildRequestPara(Map<String, String> sParaTemp,String signType) {
+    private static Map<String, String> buildRequestPara(Map<String, String> sParaTemp,String signType,AlipayTradeType alipayTradeType) {
         //除去数组中的空值和签名参数
         Map<String, String> sPara = paraFilter(sParaTemp);
         String key=encodeKey(signType);
         //生成签名结果
-        String mysign = buildRequestMysign(sPara,key,signType);
+        String mysign = "";
+        if(alipayTradeType==AlipayTradeType.APP){
+            mysign=buildRequestMysignApp(sPara,key,signType);
+        }else{
+            mysign=buildRequestMysign(sPara,key,signType);
+        }
+
 
         //签名结果与签名方式加入请求提交参数组中
         sPara.put("sign", mysign);
@@ -196,6 +223,31 @@ public class AlipayCtrl extends Controller {
                 prestr = prestr + key + "=" + value;
             } else {
                 prestr = prestr + key + "=" + value + "&";
+            }
+        }
+
+        return prestr;
+    }
+    /**
+     * 把数组所有元素排序，并按照“参数=参数值”的模式用“&”字符拼接成字符串
+     * @param params 需要排序并参与字符拼接的参数组
+     * @return 拼接后字符串
+     */
+    public static String createLinkStringApp(Map<String, String> params) {
+
+        List<String> keys = new ArrayList<String>(params.keySet());
+        Collections.sort(keys);
+
+        String prestr = "";
+
+        for (int i = 0; i < keys.size(); i++) {
+            String key = keys.get(i);
+            String value = params.get(key);
+
+            if (i == keys.size() - 1) {//拼接时，不包括最后一个&字符
+                prestr = prestr + key + "="+'"' + value+'"';
+            } else {
+                prestr = prestr + key + "="+'"' + value+'"' + "&";
             }
         }
 
@@ -489,55 +541,55 @@ public class AlipayCtrl extends Controller {
 
     }
 
-    /**
-     * 获取退款参数
-     * @param orderId
-     * @return
-     */
-    public String getRefundParamsAPI(Long orderId) {
-        try {
-            Order order = new Order();
-            order.setOrderId(orderId);
-            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
-            if (listOptional.isPresent() && listOptional.get().size() == 1) {
-                order = listOptional.get().get(0);
-                TreeMap<String, String> sParaTemp = new TreeMap<>();
-                sParaTemp.put("app_id", SysParCom.ALIPAY_PARTNER);
-                sParaTemp.put("method","alipay.trade.refund");
-                sParaTemp.put("charset", "utf-8");
-                sParaTemp.put("timestamp",new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-                sParaTemp.put("version","1.0");
-                sParaTemp.put("out_trade_no",order.getOrderId()+"");
-                sParaTemp.put("refund_amount",order.getPayTotal().toPlainString());
-                Map<String, String> map=buildRequestPara(sParaTemp,"RSA");
-                Logger.info("支付宝退款参数"+Json.toJson(map)+",ALIPAY_OPENAPI_GATEWAY="+ALIPAY_OPENAPI_GATEWAY);
-                //创建一个OkHttpClient对象
-                OkHttpClient okHttpClient = new OkHttpClient();
-                //创建一个RequestBody(参数1：数据类型 参数2传递的json串)
-                RequestBody requestBody = RequestBody.create(MEDIA_TYPE_JSON, Json.toJson(map).toString());
-                //创建一个请求对象
-                Request request = new Request.Builder().url(ALIPAY_OPENAPI_GATEWAY).post(requestBody).build();
-                //发送请求获取响应
-                try {
-                    Response response=okHttpClient.newCall(request).execute();
-                    //判断请求是否成功
-                    if(response.isSuccessful()){
-                        //打印服务端返回结果
-                        Logger.info("==退款返回结果==="+response.body().string());
-                        return response.body().string();
-
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else return null;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.error(Throwables.getStackTraceAsString(ex));
-            return null;
-        }
-        return null;
-    }
+//    /**
+//     * 获取退款参数
+//     * @param orderId
+//     * @return
+//     */
+//    public String getRefundParamsAPI(Long orderId) {
+//        try {
+//            Order order = new Order();
+//            order.setOrderId(orderId);
+//            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
+//            if (listOptional.isPresent() && listOptional.get().size() == 1) {
+//                order = listOptional.get().get(0);
+//                TreeMap<String, String> sParaTemp = new TreeMap<>();
+//                sParaTemp.put("app_id", SysParCom.ALIPAY_PARTNER);
+//                sParaTemp.put("method","alipay.trade.refund");
+//                sParaTemp.put("charset", "utf-8");
+//                sParaTemp.put("timestamp",new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+//                sParaTemp.put("version","1.0");
+//                sParaTemp.put("out_trade_no",order.getOrderId()+"");
+//                sParaTemp.put("refund_amount",order.getPayTotal().toPlainString());
+//                Map<String, String> map=buildRequestPara(sParaTemp,"RSA");
+//                Logger.info("支付宝退款参数"+Json.toJson(map)+",ALIPAY_OPENAPI_GATEWAY="+ALIPAY_OPENAPI_GATEWAY);
+//                //创建一个OkHttpClient对象
+//                OkHttpClient okHttpClient = new OkHttpClient();
+//                //创建一个RequestBody(参数1：数据类型 参数2传递的json串)
+//                RequestBody requestBody = RequestBody.create(MEDIA_TYPE_JSON, Json.toJson(map).toString());
+//                //创建一个请求对象
+//                Request request = new Request.Builder().url(ALIPAY_OPENAPI_GATEWAY).post(requestBody).build();
+//                //发送请求获取响应
+//                try {
+//                    Response response=okHttpClient.newCall(request).execute();
+//                    //判断请求是否成功
+//                    if(response.isSuccessful()){
+//                        //打印服务端返回结果
+//                        Logger.info("==退款返回结果==="+response.body().string());
+//                        return response.body().string();
+//
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            } else return null;
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//            Logger.error(Throwables.getStackTraceAsString(ex));
+//            return null;
+//        }
+//        return null;
+//    }
 
     /**
      * 支付宝退款异步通知
@@ -637,7 +689,7 @@ public class AlipayCtrl extends Controller {
 
             String detail_data = order.getPgTradeNo() + "^" + total_fee + "^" + "HMM";
             sParaTemp.put("detail_data", detail_data);
-            Map<String, String> map = buildRequestPara(sParaTemp, "RSA");
+            Map<String, String> map = buildRequestPara(sParaTemp, "RSA",AlipayTradeType.DIRECT);
             Logger.info("支付宝退款参数" + Json.toJson(map));
             return map;
         }
@@ -737,8 +789,9 @@ public class AlipayCtrl extends Controller {
                 listOptional = Optional.ofNullable(cartService.getOrder(order));
                 if (listOptional.isPresent() && listOptional.get().size() > 0) {
                     order = listOptional.get().get(0);
-                    String paramsUrl=getAlipayParamsUrl(order,AlipayTradeType.APP);
-                    params.put("paramsUrl",paramsUrl);
+                    Map<String, String> paramsMap=getAlipayParams(order,AlipayTradeType.APP);
+                    params.put("paramsJson",toJson(paramsMap).toString());
+                    params.put("paramsUrl",getAlipayParamsUrl(order,AlipayTradeType.APP));
                     return ok(views.html.alipayapp.render(params)); //跳转页面
                 }
             } catch (Exception e) {
