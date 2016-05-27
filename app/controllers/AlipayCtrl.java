@@ -27,7 +27,6 @@ import util.SysParCom;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
@@ -38,7 +37,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static play.libs.Json.newObject;
-import static play.libs.Json.toJson;
 import static util.SysParCom.*;
 
 /**
@@ -126,11 +124,10 @@ public class AlipayCtrl extends Controller {
         String mySign= null;
         try {
             mySign = URLEncoder.encode(map.get("sign"),"utf-8");
+            map.put("sign",mySign);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        map.put("sign",mySign);
-
         return map;
     }
     /**
@@ -596,17 +593,17 @@ public class AlipayCtrl extends Controller {
      * @return
      */
     public Result payRefundNotify(){
-     //   Map<String, String[]> body_map = request().body().asFormUrlEncoded();
+        Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
-        params.put("sign", "RCBlGZP4fWUlzkmvrQmRfKvonkI2033VZ3+djOW0ws/KW9bRBjbNU0of/1p1EpWary6yUdVkR3wYzPZzF9jTDVCIbrCt8ySbFpKzT29f3r5AsciWrrfGAQZXxS5xQgAThYHh6GxjqcxnbZ4i7IsOfgdMDDk2uGJ5mGhG/J9zRrg=");
-        params.put("result_details","2016052521001004360218241676^0.01^SUCCESS");
-        params.put("notify_time","2016-05-25 18:23:09");
-        params.put("sign_type","RSA");
-        params.put("notify_type","batch_refund_notify");
-        params.put("notify_id","e8101c81cafd461d6aad631f90a36e0je9");
-        params.put("batch_no","2016052518185850102295");
-        params.put("success_num","1");
-      //  body_map.forEach((k, v) -> params.put(k, v[0]));
+//        params.put("sign", "RCBlGZP4fWUlzkmvrQmRfKvonkI2033VZ3+djOW0ws/KW9bRBjbNU0of/1p1EpWary6yUdVkR3wYzPZzF9jTDVCIbrCt8ySbFpKzT29f3r5AsciWrrfGAQZXxS5xQgAThYHh6GxjqcxnbZ4i7IsOfgdMDDk2uGJ5mGhG/J9zRrg=");
+//        params.put("result_details","2016052521001004360218241676^0.01^SUCCESS");
+//        params.put("notify_time","2016-05-25 18:23:09");
+//        params.put("sign_type","RSA");
+//        params.put("notify_type","batch_refund_notify");
+//        params.put("notify_id","e8101c81cafd461d6aad631f90a36e0je9");
+//        params.put("batch_no","2016052518185850102295");
+//        params.put("success_num","1");
+        body_map.forEach((k, v) -> params.put(k, v[0]));
         Logger.info("支付宝退款异步通知request().body()="+request().body()+",params="+params);
         if(verifySign(params,params.get("sign"),params.get("sign_type"))) { //验证签名
             String result_details=params.get("result_details");
@@ -789,9 +786,9 @@ public class AlipayCtrl extends Controller {
                 listOptional = Optional.ofNullable(cartService.getOrder(order));
                 if (listOptional.isPresent() && listOptional.get().size() > 0) {
                     order = listOptional.get().get(0);
-                    Map<String, String> paramsMap=getAlipayParams(order,AlipayTradeType.APP);
-                    params.put("paramsJson",toJson(paramsMap).toString());
-                    params.put("paramsUrl",getAlipayParamsUrl(order,AlipayTradeType.APP));
+                    String paramsUrl=getAlipayParamsUrl(order,AlipayTradeType.APP);
+                    params.put("paramsUrl",paramsUrl);
+                    params.put("paramsUrlIos",paramsUrl.replaceAll("%","%%"));
                     return ok(views.html.alipayapp.render(params)); //跳转页面
                 }
             } catch (Exception e) {

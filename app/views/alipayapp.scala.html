@@ -36,15 +36,17 @@
 </head>
 <body>
 <input type="hidden" id="paramsUrl" value='@params.get("""paramsUrl""")'>
+<input type="hidden" id="paramsUrlIos" value='@params.get("""paramsUrlIos""")'>
 </body>
 <script>
             $(function () {
                 $(window).load(function () {
                     setTimeout(function () {
-                    var param=$("#paramsUrl").val();
                         try {
-                            alipayapp(param);
+                            var paramsUrlIos=$("#paramsUrlIos").val();
+                            alipayapp(paramsUrlIos);
                         } catch (err) {
+                            var param=$("#paramsUrl").val();
                             window.handler.alipayapp(param);
                         } finally {
                             <!--setTimeout(function () {-->
