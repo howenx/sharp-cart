@@ -7,7 +7,6 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import common.AlipayTradeType;
-import common.WeiXinTradeType;
 import domain.*;
 import filters.UserAuth;
 import middle.JDPayMid;
@@ -32,7 +31,9 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -126,12 +127,8 @@ public class AlipayCtrl extends Controller {
      * @param sPara 要签名的数组
      * @return 签名结果字符串
      */
-    public static String buildRequestMysign(Map<String, String> sPara,String signType) {
+    public static String buildRequestMysign(Map<String, String> sPara,String key,String signType) {
         String prestr = createLinkString(sPara); //把数组所有元素，按照“参数=参数值”的模式用“&”字符拼接成字符串
-        String key=ALIPAY_KEY;
-        if(signType.equals("RSA")){
-            key=ALIPAY_RSA_PRIVATE_KEY;
-        }
         String mysign = sign(prestr, key, "utf-8",signType);
         Logger.info("支付宝签名"+prestr+"秘钥:"+key+",mysign="+mysign);
         return mysign;
@@ -145,8 +142,9 @@ public class AlipayCtrl extends Controller {
     private static Map<String, String> buildRequestPara(Map<String, String> sParaTemp,String signType) {
         //除去数组中的空值和签名参数
         Map<String, String> sPara = paraFilter(sParaTemp);
+        String key=encodeKey(signType);
         //生成签名结果
-        String mysign = buildRequestMysign(sPara,signType);
+        String mysign = buildRequestMysign(sPara,key,signType);
 
         //签名结果与签名方式加入请求提交参数组中
         sPara.put("sign", mysign);
@@ -203,7 +201,6 @@ public class AlipayCtrl extends Controller {
 
         return prestr;
     }
-
     /**
      * 签名字符串
      * @param text 需要签名的字符串
@@ -240,6 +237,58 @@ public class AlipayCtrl extends Controller {
         return null;
 
     }
+
+
+    /**
+     * 生成要请求给支付宝的参数数组
+     * @param sParaTemp 请求前的参数数组
+     * @return 要请求的参数数组
+     */
+    private boolean verifySign(Map<String, String> sParaTemp,String sign,String signType) {
+        //除去数组中的空值和签名参数
+        Map<String, String> sPara = paraFilter(sParaTemp);
+        String key=decodeKey(signType);
+        String prestr = createLinkString(sPara); //把数组所有元素，按照“参数=参数值”的模式用“&”字符拼接成字符串
+        Logger.info("=verifySign=="+key);
+        return verify(prestr,sign,key,"utf-8",signType);
+    }
+
+    /**
+     * 验签名检查
+     * @param content 待签名数据
+     * @param sign 签名值
+     * @param ali_public_key 支付宝公钥
+     * @param input_charset 编码格式
+     * @return 布尔值
+     */
+    private static boolean verify(String content, String sign, String ali_public_key, String input_charset,String signType)
+    {
+        if(signType.equals("MD5")){
+            content = content + ali_public_key;
+            return sign.equals(DigestUtils.md5Hex(getContentBytes(content, input_charset)));
+        }else if(signType.equals("RSA")) {
+            try {
+                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                byte[] encodedKey = Base64.getDecoder().decode(ali_public_key);
+                PublicKey pubKey = keyFactory.generatePublic(new X509EncodedKeySpec(encodedKey));
+
+
+                java.security.Signature signature = java.security.Signature
+                        .getInstance(SIGN_ALGORITHMS);
+
+                signature.initVerify(pubKey);
+                signature.update(content.getBytes(input_charset));
+
+                boolean bverify = signature.verify(Base64.getDecoder().decode(sign));
+                return bverify;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
     /**
      * @param content
      * @param charset
@@ -257,6 +306,32 @@ public class AlipayCtrl extends Controller {
         }
     }
 
+    /**
+     * 加密需要的key
+     * @param signType
+     * @return
+     */
+    private static String encodeKey(String signType){
+        String key=ALIPAY_KEY;
+        if(signType.equals("RSA")){
+            key=ALIPAY_RSA_PRIVATE_KEY;
+        }
+        return key;
+    }
+
+    /**
+     * 解密需要的key
+     * @param signType
+     * @return
+     */
+    private static String decodeKey(String signType){
+        String key=ALIPAY_KEY;
+        if(signType.equals("RSA")){
+            key=ALIPAY_RSA_PUBLIC_KEY;
+        }
+        return key;
+    }
+
 
     /**
      *支付宝异步通知
@@ -265,25 +340,34 @@ public class AlipayCtrl extends Controller {
     public Result payBackNotify(){
         Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
-        body_map.forEach((k, v) -> {
-            if("sign".equals(k)) {
-                try {
-                    params.put(k, URLDecoder.decode(v[0], "utf-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-            }else{
-                params.put(k, v[0]);
-            }
-        });
-        //body_map.forEach((k, v) -> params.put(k, v[0]));
+//        params.put("discount","0.00");
+//        params.put("payment_type","1");
+//        params.put("subject","韩秘美订单50102328");
+//        params.put("trade_no","2016052621001004360220362391");
+//        params.put("buyer_email","13716311853");
+//        params.put("gmt_create","2016-05-26 18:30:18");
+//        params.put("notify_type","trade_status_sync");
+//        params.put("quantity","1");
+//        params.put("out_trade_no","50102328");
+//        params.put("seller_id","2088811744291968");
+//        params.put("notify_time","2016-05-26 18:30:25");
+//        params.put("body","韩秘美订单50102328");
+//        params.put("trade_status","TRADE_SUCCESS");
+//        params.put("is_total_fee_adjust","N");
+//        params.put("total_fee","0.01");
+//        params.put("gmt_payment","2016-05-26 18:30:24");
+//        params.put("seller_email","management@bjdacorp.com");
+//        params.put("price","0.01");
+//        params.put("buyer_id","2088802427704365");
+//        params.put("notify_id","d75c103419a9844ddb6a0c5dcc38ce4is2");
+//        params.put("use_coupon","N");
+//        params.put("sign_type","RSA");
+//        params.put("sign","GHQI7RLBvbI9gz2S6WxjQUc6J9emdx84DIstuRZGxY3t/kwLcQT4EEg/i7Bx3vu+F6TzDTw0asclNYNemOZCfLDMCWm+NBzFFWvPWK8RHN8E8w4Ne95GJ6piJjTRwNXPZrq+iNyOXLRwmHue/gw/VjMdulBwmNkKFCw5j3ldW2k=");
+
+        body_map.forEach((k, v) -> params.put(k, v[0]));
         Logger.info("支付宝支付回调返回request().body()="+request().body()+",params="+params);
 
-        //除去数组中的空值和签名参数
-        Map<String, String> sPara = paraFilter(params);
-        //生成签名结果
-        String mysign = buildRequestMysign(sPara,params.get("sign_type"));
-        if(null!=params.get("sign")&&params.get("sign").equals(mysign)) { //验证签名
+        if(verifySign(params,params.get("sign"),params.get("sign_type"))) { //验证签名
             String verifyAli=verifyFromAlipay(params.get("notify_id"));
             if(!"true".equals(verifyAli)){ //验证是否是支付宝发来的通知
                 Logger.error("################支付宝支付异步通知 验证是否是支付宝发来的通知对不上################,notify_id=" + params.get("notify_id"));
@@ -302,7 +386,7 @@ public class AlipayCtrl extends Controller {
                     e.printStackTrace();
                 }
                 //校验金额
-                if(null==orders||!orders.get(0).getTotalFee().toPlainString().equals(params.get("total_fee"))){
+                if(null==orders||orders.size()<=0||!orders.get(0).getTotalFee().toPlainString().equals(params.get("total_fee"))){
                     Logger.error("################支付宝支付异步通知 支付金额对于不上################," + order.getOrderId());
                     return ok("fail");
                 }
@@ -355,7 +439,7 @@ public class AlipayCtrl extends Controller {
                 }
             }
         }else{
-            Logger.error("################支付宝支付异步通知 签名不一致################," + mysign);
+            Logger.error("################支付宝支付异步通知 签名不一致################");
         }
         return ok("fail");
 
@@ -368,23 +452,13 @@ public class AlipayCtrl extends Controller {
     public Result payFrontNotify(){
         Map<String, String[]> body_map = request().queryString();
         Map<String, String> params = new HashMap<>();
-        body_map.forEach((k, v) -> {
-            try {
-                params.put(k, URLDecoder.decode(v[0], "utf-8"));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        });
+        body_map.forEach((k, v) -> params.put(k, v[0]));
         Logger.info("支付宝前端通知\nparams="+params);
         Map<String, String> returnMap = new HashMap<>();
         returnMap.put("m_index", M_INDEX);
         returnMap.put("m_orders", M_ORDERS);
-        //除去数组中的空值和签名参数
-        Map<String, String> sPara = paraFilter(params);
-        //生成签名结果
-        String mysign = buildRequestMysign(sPara,params.get("sign_type"));
-        if(null!=params.get("sign")&&params.get("sign").equals(mysign)) { //验证签名
-            Logger.error("支付宝前端通知支付失败,签名对应不一致,mysign="+mysign);
+        if(!verifySign(params,params.get("sign"),params.get("sign_type"))) { //验证签名
+            Logger.error("支付宝前端通知支付失败,签名对应不一致");
             return ok(views.html.jdpayfailed.render(returnMap));
         }
         try {
@@ -470,39 +544,19 @@ public class AlipayCtrl extends Controller {
      * @return
      */
     public Result payRefundNotify(){
-        Map<String, String[]> body_map = request().body().asFormUrlEncoded();
+     //   Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
-
-//        try {
-//            params.put("sign", URLEncoder.encode("RCBlGZP4fWUlzkmvrQmRfKvonkI2033VZ3+djOW0ws/KW9bRBjbNU0of/1p1EpWary6yUdVkR3wYzPZzF9jTDVCIbrCt8ySbFpKzT29f3r5AsciWrrfGAQZXxS5xQgAThYHh6GxjqcxnbZ4i7IsOfgdMDDk2uGJ5mGhG/J9zRrg=","utf-8"));
-//        } catch (UnsupportedEncodingException e) {
-//            e.printStackTrace();
-//        }
-//        params.put("result_details","2016052521001004360218241676^0.01^SUCCESS");
-//        params.put("notify_time","2016-05-25 18:23:09");
-//        params.put("sign_type","RSA");
-//        params.put("notify_type","batch_refund_notify");
-//        params.put("notify_id","e8101c81cafd461d6aad631f90a36e0je9");
-//        params.put("batch_no","2016052518185850102295");
-//        params.put("success_num","1");
-        body_map.forEach((k, v) -> {
-            if("sign".equals(k)) {
-                try {
-                    params.put(k, URLDecoder.decode(v[0], "utf-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-            }else{
-                params.put(k, v[0]);
-            }
-        });
+        params.put("sign", "RCBlGZP4fWUlzkmvrQmRfKvonkI2033VZ3+djOW0ws/KW9bRBjbNU0of/1p1EpWary6yUdVkR3wYzPZzF9jTDVCIbrCt8ySbFpKzT29f3r5AsciWrrfGAQZXxS5xQgAThYHh6GxjqcxnbZ4i7IsOfgdMDDk2uGJ5mGhG/J9zRrg=");
+        params.put("result_details","2016052521001004360218241676^0.01^SUCCESS");
+        params.put("notify_time","2016-05-25 18:23:09");
+        params.put("sign_type","RSA");
+        params.put("notify_type","batch_refund_notify");
+        params.put("notify_id","e8101c81cafd461d6aad631f90a36e0je9");
+        params.put("batch_no","2016052518185850102295");
+        params.put("success_num","1");
       //  body_map.forEach((k, v) -> params.put(k, v[0]));
         Logger.info("支付宝退款异步通知request().body()="+request().body()+",params="+params);
-        //除去数组中的空值和签名参数
-        Map<String, String> sPara = paraFilter(params);
-        //生成签名结果
-        String mysign = buildRequestMysign(sPara,params.get("sign_type"));
-        if(null!=params.get("sign")&&params.get("sign").equals(mysign)) { //验证签名
+        if(verifySign(params,params.get("sign"),params.get("sign_type"))) { //验证签名
             String result_details=params.get("result_details");
             if(null!=result_details){
                 String[] array=result_details.split(";");  //批量
@@ -540,7 +594,7 @@ public class AlipayCtrl extends Controller {
             }
 
         }else{
-            Logger.error("支付宝退款异步通知签名不一致"+mysign);
+            Logger.error("支付宝退款异步通知签名不一致");
         }
         return ok("fail");
 
@@ -639,19 +693,20 @@ public class AlipayCtrl extends Controller {
         /**
          * https://mapi.alipay.com/gateway.do?service=notify_verify&partner=2088002396712354&notify_id=RqPnCoPT3K9%252Fvwbh3I%252BFioE227%252BPfNMl8jwyZqMIiXQWxhOCmQ5MQO%252FWd93rvCB%252BaiGg
          */
-        String utl=ALIPAY_MAPI_GATEWAY+"?service=notify_verify&partner="+ALIPAY_PARTNER+"&notify_id="+notify_id;
+        String url=ALIPAY_MAPI_GATEWAY+"?service=notify_verify&partner="+ALIPAY_PARTNER+"&notify_id="+notify_id;
         //创建一个OkHttpClient对象
         OkHttpClient okHttpClient = new OkHttpClient();
         //创建一个请求对象
-        Request request = new Request.Builder().url("https://mapi.alipay.com/gateway.do").get().build();
+        Request request = new Request.Builder().url(url).get().build();
         //发送请求获取响应
         try {
             Response response=okHttpClient.newCall(request).execute();
             //判断请求是否成功
             if(response.isSuccessful()){
                 //打印服务端返回结果
-                Logger.info("==验证是否是支付宝发来的通知==="+response.body().string());
-                return response.body().string();
+                String notify_return=response.body().string();
+                Logger.info("验证是否是支付宝发来的通知"+notify_return);
+                return notify_return;
             }
             else return null;
 

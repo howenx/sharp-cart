@@ -68,4 +68,4 @@ POST        /client/alipay/pay/app                                              
 POST        /client/alipay/pay/orderquery/redirect                                        controllers.AlipayCtrl.redirectPayOrderquery()
 GET         /client/alipay/pay/orderquery/$orderId<[0-9]+>                                controllers.AlipayCtrl.payOrderquery(orderId:Long)
 
-#GET         /client/alipay/test                                                           controllers.AlipayCtrl.payRefundNotify()
+#GET         /client/alipay/test                                                          controllers.AlipayCtrl.payRefundNotify()
