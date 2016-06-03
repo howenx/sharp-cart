@@ -239,7 +239,7 @@ public class MsgCtrl extends Controller {
             List<MsgRec> msgList = new ArrayList<MsgRec>();
             if (msgRecList.isPresent() && msgRecList.get().size() > 0) {
                 msgList = msgRecList.get().stream().map(m -> {
-                    if (m.getMsgImg().contains("url")) {
+                    if (null!=m.getMsgImg()&&m.getMsgImg().contains("url")) {
                         JsonNode jsonNode = Json.parse(m.getMsgImg());
                         if (jsonNode.has("url")) {
                             m.setMsgImg(SysParCom.IMAGE_URL + jsonNode.get("url").asText());

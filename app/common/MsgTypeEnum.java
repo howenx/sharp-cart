@@ -33,4 +33,12 @@ public enum MsgTypeEnum {
     public void setName(String name) {
         this.name = name;
     }
+    public static MsgTypeEnum getMsgTypeEnum(String tradeType){
+        for(MsgTypeEnum msgTypeEnum:MsgTypeEnum.values()){
+            if(msgTypeEnum.getMsgType().equals(tradeType)){
+                return msgTypeEnum;
+            }
+        }
+        return null;
+    }
 }
