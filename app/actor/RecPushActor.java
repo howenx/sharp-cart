@@ -24,7 +24,7 @@ public class RecPushActor extends AbstractActor {
                         pushMsg.getAliasOrTag());
             }else if("tag".equals(pushMsg.getAudience()))
             {
-                pushCtrl.send_push_android_and_ios_alias(pushMsg.getAlert(),pushMsg.getTitle(),pushCtrl.getPushExtras(pushMsg.getUrl(),pushMsg.getTargetType()),
+                pushCtrl.send_push_android_and_ios_tag(pushMsg.getAlert(),pushMsg.getTitle(),pushCtrl.getPushExtras(pushMsg.getUrl(),pushMsg.getTargetType()),
                         pushMsg.getAliasOrTag());
             }else if("all".equals(pushMsg.getAudience()))
             {
