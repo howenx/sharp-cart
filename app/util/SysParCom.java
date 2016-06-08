@@ -111,6 +111,8 @@ public class SysParCom {
 
     public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
 
+    public static Long PUSH_TIME_TO_LIVE;
+
 
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
@@ -208,6 +210,8 @@ public class SysParCom {
         REDIS_PASSWORD = configuration.getString("redis.password");
         REDIS_PORT = configuration.getInt("redis.port");
         REDIS_CHANNEL = configuration.getString("redis.channel");
+
+        PUSH_TIME_TO_LIVE=configuration.getLong("push.time.to.live");
 
         WEIXIN_SOCKET=new HashMap<>();
 
