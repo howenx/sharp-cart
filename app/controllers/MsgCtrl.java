@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.MsgTypeEnum;
 import domain.*;
 import filters.UserAuth;
+import play.libs.mailer.Email;
+import play.libs.mailer.MailerClient;
 import util.SysParCom;
 import play.Logger;
 import play.libs.Json;
@@ -37,6 +39,8 @@ public class MsgCtrl extends Controller {
     private MsgService msgService;
 
     private ActorRef schedulerCleanMsgActor;
+    @Inject
+    private MailerClient mailerClient;
 
     @Inject
     public MsgCtrl(SkuService skuService, CartService cartService, MsgService msgService, @Named("schedulerCleanMsgActor") ActorRef schedulerCleanMsgActor) {
@@ -349,6 +353,17 @@ public class MsgCtrl extends Controller {
                 Feedback feedback = new Feedback();
                 feedback.setUserId(userId);
                 feedback.setContent(content);
+                try {
+                    Email email = new Email()
+                            .setSubject("意见反馈")
+                            .setFrom("developer@hanmimei.com")
+                            .addTo("services@hanmimei.com")
+                            .setBodyText("A text message")
+                            .setBodyHtml("<html><body><p>韩秘美用户:<br/>" + userId + "<br/>反馈内容:<br/>" + content + "</p></body></html>");
+                    mailerClient.send(email);
+                }catch (Exception e){
+                    Logger.error("意见反馈发送邮件异常"+e.getMessage());
+                }
                 if (msgService.insertFeedBack(feedback)) {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                     return ok(result);
@@ -362,6 +377,7 @@ public class MsgCtrl extends Controller {
             return ok(result);
         }
         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+
         return ok(result);
     }
 

@@ -56,6 +56,8 @@ libraryDependencies += "ch.qos.logback" % "logback-access" % "1.1.3"
 libraryDependencies += "net.glxn.qrgen" % "javase" % "2.0" withSources() withJavadoc()
 libraryDependencies += "redis.clients" % "jedis" % "2.8.1"
 
+libraryDependencies += "com.typesafe.play" %% "play-mailer" % "4.0.0" withSources() withJavadoc()
+
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-persistence" % "2.4.1",
