@@ -74,10 +74,12 @@ public class Collect implements Serializable {
     @Override
     public String toString() {
         return "Collect{" +
-                "collectId="+collectId +
-                ", userId="+userId +
+                "collectId=" + collectId +
+                ", userId=" + userId +
                 ", skuId=" + skuId +
                 ", createAt=" + createAt +
-                "}";
+                ", skuType='" + skuType + '\'' +
+                ", skuTypeId=" + skuTypeId +
+                '}';
     }
 }
