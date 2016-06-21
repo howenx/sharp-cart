@@ -321,7 +321,7 @@ public class JDPayMid {
                     Map<String, String> map = new HashMap<>();
                     map.put("targetType", "V");
                     map.put("url", SysParCom.PROMOTION_URL + "/promotion/pin/activity/" + activity.getPinActiveId());
-                    pushCtrl.send_push_android_and_ios_alias(message, null, map, p.getUserId().toString());
+                    pushCtrl.send_push_android_and_ios_alias(message, null,SysParCom.PUSH_TIME_TO_LIVE, map, p.getUserId().toString());
                 }
             }
         }

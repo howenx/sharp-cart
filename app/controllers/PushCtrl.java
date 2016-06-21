@@ -3,6 +3,7 @@ package controllers;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import cn.jpush.api.push.model.Options;
 import cn.jpush.api.push.model.Platform;
 import cn.jpush.api.push.model.PushPayload;
 import cn.jpush.api.push.model.audience.Audience;
@@ -62,7 +63,7 @@ public class PushCtrl extends Controller {
 
     public Result testPush(){
         send_push_all("test only content");
-        send_push_android_and_ios_all("test title content url","hmm title",getPushExtras("http://172.28.3.78:9001/comm/detail/888301/111324","D"));
+        send_push_android_and_ios_all("test title content url","hmm title",86400L,getPushExtras("http://172.28.3.78:9001/comm/detail/888301/111324","D"));
         return ok("success");
     }
 
@@ -255,8 +256,9 @@ public class PushCtrl extends Controller {
       * @param alter
      * @param title
      * @param extras
+     * @param timeToLive 推送当前用户不在线时，为该用户保留多长时间的离线消息，以便其上线时再次推送。默认 86400 （1 天），最长 10 天。设置为 0 表示不保留离线消息，只有推送当前在线的用户可以收到。
      */
-    public  void send_push_android_and_ios_all(String alter,String title,Map<String, String> extras) {
+    public  void send_push_android_and_ios_all(String alter,String title,Long timeToLive,Map<String, String> extras) {
     PushPayload pushPayload= PushPayload.newBuilder()
             .setPlatform(Platform.android_ios())
             .setAudience(Audience.all())
@@ -268,6 +270,7 @@ public class PushCtrl extends Controller {
                             .incrBadge(1)
                             .addExtras(extras).build())
                     .build())
+            .setOptions(Options.newBuilder().setTimeToLive(timeToLive).build())
             .build();
     sendPush(pushPayload);
 }
@@ -277,9 +280,10 @@ public class PushCtrl extends Controller {
      * @param title
      * @param extras
      * @param tagValue
+     * @param timeToLive 推送当前用户不在线时，为该用户保留多长时间的离线消息，以便其上线时再次推送。默认 86400 （1 天），最长 10 天。设置为 0 表示不保留离线消息，只有推送当前在线的用户可以收到。
      * @return
      */
-    public  void send_push_android_and_ios_tag(String alter,String title,Map<String, String> extras,String...tagValue) {
+    public  void send_push_android_and_ios_tag(String alter,String title,Long timeToLive,Map<String, String> extras,String...tagValue) {
         PushPayload pushPayload=PushPayload.newBuilder()
                 .setPlatform(Platform.android_ios())
                 .setAudience(Audience.tag(tagValue))
@@ -291,6 +295,7 @@ public class PushCtrl extends Controller {
                                 .incrBadge(1)
                                 .addExtras(extras).build())
                         .build())
+                .setOptions(Options.newBuilder().setTimeToLive(timeToLive).build())
                 .build();
         sendPush(pushPayload);
     }
@@ -300,9 +305,10 @@ public class PushCtrl extends Controller {
      * @param title
      * @param extras
      * @param alias
+     * @param timeToLive 推送当前用户不在线时，为该用户保留多长时间的离线消息，以便其上线时再次推送。默认 86400 （1 天），最长 10 天。设置为 0 表示不保留离线消息，只有推送当前在线的用户可以收到。
      * @return
      */
-    public  void send_push_android_and_ios_alias(String alter,String title,Map<String, String> extras,String...alias) {
+    public  void send_push_android_and_ios_alias(String alter,String title,Long timeToLive,Map<String, String> extras,String...alias) {
         PushPayload pushPayload= PushPayload.newBuilder()
                 .setPlatform(Platform.android_ios())
                 .setAudience(Audience.alias(alias))
@@ -314,6 +320,7 @@ public class PushCtrl extends Controller {
                                 .incrBadge(1)
                                 .addExtras(extras).build())
                         .build())
+                .setOptions(Options.newBuilder().setTimeToLive(timeToLive).build())
                 .build();
         sendPush(pushPayload);
     }

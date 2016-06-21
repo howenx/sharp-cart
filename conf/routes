@@ -22,9 +22,9 @@ POST        /client/order/apply/refund                                          
 GET         /client/order/express/$orderId<[0-9]+>                                        controllers.OrderCtrl.express(orderId:Long)
 GET         /client/order/confirm/delivery/$orderId<[0-9]+>                               controllers.OrderCtrl.confirmDelivery(orderId:Long)
 
-POST        /client/collect/submit                                                        controllers.OrderCtrl.submitCollect()
-GET         /client/collect/get/collect/list                                              controllers.OrderCtrl.getCollect
-GET         /client/collect/del/$collectId<[0-9]+>                                        controllers.OrderCtrl.delCollect(collectId:Long)
+POST        /client/collect/submit                                                        controllers.CollectCtrl.submitCollect()
+GET         /client/collect/get/collect/list                                              controllers.CollectCtrl.getCollect
+GET         /client/collect/del/$collectId<[0-9]+>                                        controllers.CollectCtrl.delCollect(collectId:Long)
 
 #评论
 POST        /client/comment/add                                                           controllers.RemarkCtrl.submitRemark
