@@ -12,6 +12,7 @@ import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
+import redis.clients.jedis.Jedis;
 import service.CartService;
 import service.SkuService;
 import util.ComUtil;
@@ -35,12 +36,15 @@ public class Application extends Controller {
     @Inject
     private ComUtil comUtil;
 
+    @Inject
+    private Jedis jedis;
+
     //将Json串转换成List
     public final static ObjectMapper mapper = new ObjectMapper();
 
 
     /**
-     * 用户登陆后同步所有购物车商品,以及详细页面点击Add时候掉用接口
+     * 用户登陆后同步所有购物车商品,以及详细页面点击Add时候掉用接口,以及点击购物车列表中的加减时
      *
      * @return json
      */
@@ -116,6 +120,42 @@ public class Application extends Controller {
         }
     }
 
+    /***
+     * 登录状态下购物车商品勾选和取消勾选
+     *
+     * @return result
+     */
+    @Security.Authenticated(UserAuth.class)
+    public Result cartCheck() {
+        ObjectNode result = Json.newObject();
+        try {
+            Long userId = (Long) ctx().args.get("userId");
+            Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
+
+            if (json.isPresent()) {
+                List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
+                cartDtoList.forEach(cartDto -> {
+                    if (cartDto.getOrCheck().equals("N")){
+                        jedis.srem("cart-"+userId,cartDto.getCartId().toString());
+                    }else if (cartDto.getOrCheck().equals("Y")){
+                        jedis.sadd("cart-"+userId,cartDto.getCartId().toString());
+                    }
+                });
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                return ok(result);
+            } else {
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.BAD_PARAMETER.getIndex()), Message.ErrorCode.BAD_PARAMETER.getIndex())));
+                return ok(result);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("server exception:" + Throwables.getStackTraceAsString(ex));
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
+    }
+
+
     /**
      * 删除购物车
      *
@@ -153,7 +193,6 @@ public class Application extends Controller {
         try {
             if (json.isPresent()) {
                 List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
-
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                 result.putPOJO("cartList", Json.toJson(cartMid.getCarts(cartDtoList).get()));
                 return ok(result);

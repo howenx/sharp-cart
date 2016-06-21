@@ -41,11 +41,12 @@ public class CartListDto implements Serializable{
     private     String          invUrlAndroid;//安卓端的URL
     private     String          skuType;//商品类型
     private     Long            skuTypeId;//商品类型ID
+    private     String          orCheck;//是否勾选,'Y'为已经选中,null为未勾选
 
     public CartListDto() {
     }
 
-    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, String invAreaNm, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, String invUrlAndroid, String skuType, Long skuTypeId) {
+    public CartListDto(Long cartId, Long skuId, Integer amount, String itemColor, String itemSize, BigDecimal itemPrice, String state, BigDecimal shipFee, String invArea, String invAreaNm, Integer restrictAmount, Integer restAmount, String invImg, String invUrl, String invTitle, String cartDelUrl, Timestamp createAt, String invCustoms, String postalTaxRate, String postalStandard, String postalLimit, String invUrlAndroid, String skuType, Long skuTypeId, String orCheck) {
         this.cartId = cartId;
         this.skuId = skuId;
         this.amount = amount;
@@ -70,6 +71,7 @@ public class CartListDto implements Serializable{
         this.invUrlAndroid = invUrlAndroid;
         this.skuType = skuType;
         this.skuTypeId = skuTypeId;
+        this.orCheck = orCheck;
     }
 
     public Long getCartId() {
@@ -264,6 +266,14 @@ public class CartListDto implements Serializable{
         this.skuTypeId = skuTypeId;
     }
 
+    public String getOrCheck() {
+        return orCheck;
+    }
+
+    public void setOrCheck(String orCheck) {
+        this.orCheck = orCheck;
+    }
+
     @Override
     public String toString() {
         return "CartListDto{" +
@@ -291,6 +301,7 @@ public class CartListDto implements Serializable{
                 ", invUrlAndroid='" + invUrlAndroid + '\'' +
                 ", skuType='" + skuType + '\'' +
                 ", skuTypeId=" + skuTypeId +
+                ", orCheck='" + orCheck + '\'' +
                 '}';
     }
 }

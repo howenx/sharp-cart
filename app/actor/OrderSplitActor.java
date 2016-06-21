@@ -72,8 +72,6 @@ public class OrderSplitActor extends AbstractActor {
                 //减库存
                 reduceInvActor.tell(settleVo, ActorRef.noSender());
                 //24小时内未结算恢复库存并自动取消订单
-
-
                 newScheduler.scheduleOnce(FiniteDuration.create(ORDER_OVER_TIME, MILLISECONDS), cancelOrderActor, settleVo.getOrderId());
 
             } catch (Exception e) {

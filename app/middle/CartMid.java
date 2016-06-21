@@ -3,6 +3,7 @@ package middle;
 import controllers.Application;
 import controllers.OrderCtrl;
 import domain.*;
+import redis.clients.jedis.Jedis;
 import util.SysParCom;
 import service.CartService;
 import service.SkuService;
@@ -36,8 +37,17 @@ public class CartMid {
     @Inject
     private Application application;
 
+    @Inject
+    private Jedis jedis;
 
-    //创建用户购物车商品
+
+    /**
+     * 创建购物车商品数据
+     * @param userId userId
+     * @param cartDtoList cartDtoList
+     * @return List<CartPar>
+     * @throws Exception
+     */
     public List<CartPar> createCart(Long userId, List<CartDto> cartDtoList) throws Exception {
 
         List<CartPar> cartPars = new ArrayList<>();
@@ -49,84 +59,14 @@ public class CartMid {
         return cartPars;
     }
 
+
     /**
-     * 获取登录状态下购物车列表
+     * 创建用户购物车单品数据
+     * @param cartDto cartDto
      * @param userId userId
-     * @return Optional
+     * @return CartPar
      * @throws Exception
      */
-    public Optional<List<CartItemDTO>> getCarts(Long userId) throws Exception {
-
-        List<CartListDto> cartListDto = new ArrayList<>();
-
-        Cart c = new Cart();
-        c.setUserId(userId);
-
-        Optional<List<Cart>> listOptional = Optional.ofNullable(cartService.getCarts(c));
-
-        if (listOptional.isPresent() && listOptional.get().size()>0) {
-            //返回数据组装,根据用户id查询出所有可显示的购物车数据
-            List<Cart> listCart = listOptional.get();
-
-            for (Cart cart : listCart) {
-
-                SkuVo skuVo = new SkuVo();
-                skuVo.setSkuType(cart.getSkuType());
-                skuVo.setSkuTypeId(cart.getSkuTypeId());
-
-                Optional<List<SkuVo>> skuOptional = Optional.ofNullable(skuService.getAllSkus(skuVo));
-                if (skuOptional.isPresent()) {
-                    skuVo = skuOptional.get().get(0);
-
-                    //先确定商品状态是正常,否则直接存为失效商品
-                    if (!skuVo.getSkuTypeStatus().equals("Y")) {
-                        cart.setStatus("S");
-                    }
-
-                    //返回数据组装
-                    CartListDto cartList = new CartListDto();
-                    cartList.setCartId(cart.getCartId());
-                    cartList.setSkuId(cart.getSkuId());
-                    cartList.setAmount(cart.getAmount());
-                    cartList.setItemColor(skuVo.getItemColor());
-                    cartList.setItemSize(skuVo.getItemSize());
-                    cartList.setItemPrice(skuVo.getSkuTypePrice());
-                    cartList.setState(cart.getStatus());
-                    if (cart.getStatus().equals("S")){
-                        cart.setStatus("N");
-                        cartService.UpdateCartBy(cart);
-                    }
-                    cartList.setInvArea(skuVo.getInvArea());
-                    cartList.setInvAreaNm(skuVo.getInvAreaNm());
-                    cartList.setRestrictAmount(skuVo.getSkuTypeRestrictAmount());
-                    cartList.setRestAmount(skuVo.getRestAmount());
-
-                    cartList.setInvImg(orderCtrl.getInvImg(skuVo.getSkuTypeImg()));
-
-                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + cart.getSkuType() + "/" + skuVo.getItemId() + "/" + cart.getSkuTypeId());
-
-                    cartList.setCartDelUrl(SysParCom.SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
-                    cartList.setInvTitle(skuVo.getSkuTypeTitle());
-                    cartList.setCreateAt(cart.getCreateAt());
-                    cartList.setInvCustoms(skuVo.getInvCustoms());
-                    cartList.setPostalTaxRate(skuVo.getPostalTaxRate()==null? "0":skuVo.getPostalTaxRate());
-                    cartList.setPostalStandard(skuVo.getPostalStandard());
-                    cartList.setSkuType(cart.getSkuType());
-                    cartList.setSkuTypeId(cart.getSkuTypeId());
-                    cartListDto.add(cartList);
-                }
-            }
-            if (cartListDto.size() > 0) {
-
-                Map<String, List<CartListDto>> cartListMap = cartListDto
-                        .stream()
-                        .collect(Collectors.groupingBy(CartListDto::getInvArea));
-
-                return Optional.of(getCartListMap(cartListMap));
-            } else return Optional.empty();
-        } else return Optional.empty();
-    }
-
     private CartPar itemAddCart(CartDto cartDto, Long userId) throws Exception {
 
         CartPar cartPar = new CartPar();
@@ -212,6 +152,11 @@ public class CartMid {
                         //cartId为0,有两种情况,1种情况是,当购物车中没有出现同一个userId,skuId,状态为I,G的商品时候才去insert
                         cartService.addCart(cart);
                         if (cart.getStatus().equals("S")) cartPar.setsCartIds(cartDto.getCartId());
+
+                        //新增的购物车商品全部保存到redis勾选列表中
+                        if (cart.getCartId()!=null && cartDto.getCartSource()!=3){
+                            jedis.sadd("cart-"+userId,cart.getCartId().toString());
+                        }
                     }
                 }else{
                     cartPar.setRestMessageCode(Message.ErrorCode.SKU_STATUS_ERROR.getIndex());
@@ -220,11 +165,96 @@ public class CartMid {
                 cart.setCartId(cartDto.getCartId());
                 cartService.updateCart(cart);
             }
+
             return cartPar;
 
         }else return null;
 
 
+    }
+
+    /**
+     * 获取登录状态下购物车列表
+     * @param userId userId
+     * @return Optional
+     * @throws Exception
+     */
+    public Optional<List<CartItemDTO>> getCarts(Long userId) throws Exception {
+
+        List<CartListDto> cartListDto = new ArrayList<>();
+
+        Cart c = new Cart();
+        c.setUserId(userId);
+
+        Optional<List<Cart>> listOptional = Optional.ofNullable(cartService.getCarts(c));
+
+        if (listOptional.isPresent() && listOptional.get().size()>0) {
+            //返回数据组装,根据用户id查询出所有可显示的购物车数据
+            List<Cart> listCart = listOptional.get();
+
+            for (Cart cart : listCart) {
+
+                SkuVo skuVo = new SkuVo();
+                skuVo.setSkuType(cart.getSkuType());
+                skuVo.setSkuTypeId(cart.getSkuTypeId());
+
+                Optional<List<SkuVo>> skuOptional = Optional.ofNullable(skuService.getAllSkus(skuVo));
+                if (skuOptional.isPresent()) {
+                    skuVo = skuOptional.get().get(0);
+
+                    //先确定商品状态是正常,否则直接存为失效商品
+                    if (!skuVo.getSkuTypeStatus().equals("Y")) {
+                        cart.setStatus("S");
+                    }
+
+                    //返回数据组装
+                    CartListDto cartList = new CartListDto();
+                    cartList.setCartId(cart.getCartId());
+                    cartList.setSkuId(cart.getSkuId());
+                    cartList.setAmount(cart.getAmount());
+                    cartList.setItemColor(skuVo.getItemColor());
+                    cartList.setItemSize(skuVo.getItemSize());
+                    cartList.setItemPrice(skuVo.getSkuTypePrice());
+                    cartList.setState(cart.getStatus());
+                    if (cart.getStatus().equals("S")){
+                        cart.setStatus("N");
+                        cartService.UpdateCartBy(cart);
+                    }
+                    cartList.setInvArea(skuVo.getInvArea());
+                    cartList.setInvAreaNm(skuVo.getInvAreaNm());
+                    cartList.setRestrictAmount(skuVo.getSkuTypeRestrictAmount());
+                    cartList.setRestAmount(skuVo.getRestAmount());
+
+                    cartList.setInvImg(orderCtrl.getInvImg(skuVo.getSkuTypeImg()));
+
+                    cartList.setInvUrl(SysParCom.DEPLOY_URL + "/comm/detail/" + cart.getSkuType() + "/" + skuVo.getItemId() + "/" + cart.getSkuTypeId());
+
+                    cartList.setCartDelUrl(SysParCom.SHOPPING_URL + "/client/cart/del/" + cart.getCartId());
+                    cartList.setInvTitle(skuVo.getSkuTypeTitle());
+                    cartList.setCreateAt(cart.getCreateAt());
+                    cartList.setInvCustoms(skuVo.getInvCustoms());
+                    cartList.setPostalTaxRate(skuVo.getPostalTaxRate()==null? "0":skuVo.getPostalTaxRate());
+                    cartList.setPostalStandard(skuVo.getPostalStandard());
+                    cartList.setSkuType(cart.getSkuType());
+                    cartList.setSkuTypeId(cart.getSkuTypeId());
+
+                    //判断redi里是否存有此cartId,有表示勾选,没有表示未勾选
+                    if (jedis.sismember("cart-"+userId,cart.getCartId().toString())){
+                        cartList.setOrCheck("Y");
+                    }
+
+                    cartListDto.add(cartList);
+                }
+            }
+            if (cartListDto.size() > 0) {
+
+                Map<String, List<CartListDto>> cartListMap = cartListDto
+                        .stream()
+                        .collect(Collectors.groupingBy(CartListDto::getInvArea));
+
+                return Optional.of(getCartListMap(cartListMap));
+            } else return Optional.empty();
+        } else return Optional.empty();
     }
 
     /**
@@ -253,6 +283,8 @@ public class CartMid {
 
                 cartList.setCartId(cartDto.getCartId());
                 cartList.setSkuId(cartDto.getSkuId());
+
+                cartList.setOrCheck(cartDto.getOrCheck());//勾选状态
 
                 cartList.setItemColor(skuVo.getItemColor());
                 cartList.setItemSize(skuVo.getItemSize());
