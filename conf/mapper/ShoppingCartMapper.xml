@@ -45,7 +45,8 @@
         to_char(${alias}.confirm_receive_at, 'YYYY-MM-DD HH24:MI:SS') confirm_receive_at,
         ${alias}.pin_active_id         ,
         ${alias}.order_type            ,
-        ${alias}.pay_method_sub
+        ${alias}.pay_method_sub,
+        ${alias}.or_del
     </sql>
 
     <!---  获取用户购物车,以用户ID或者CartID    -->
@@ -298,7 +299,7 @@
         <if test="pgTradeNo!=null and pgTradeNo !=''">
             and t.pg_trade_no = #{pgTradeNo}
         </if>
-        and order_status !='N'
+        and or_del =false
         order by t.order_create_at DESC
     </select>
 
@@ -321,7 +322,6 @@
         <if test="pgTradeNo!=null and pgTradeNo !=''">
             and t.pg_trade_no = #{pgTradeNo}
         </if>
-
         and order_status ='PS'
         order by t.order_create_at DESC
     </select>
@@ -371,6 +371,9 @@
         </if>
         <if test="payMethodSub!=null and payMethodSub !=''">
             pay_method_sub = #{payMethodSub},
+        </if>
+        <if test="orDel!=null and orDel !=''">
+            or_del = #{orDel},
         </if>
 
         updated_at = CURRENT_TIMESTAMP(0)

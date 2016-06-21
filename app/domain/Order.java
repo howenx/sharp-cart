@@ -57,12 +57,13 @@ public class Order implements Serializable {
     @JsonIgnore
     private String              payMethodSub;//子支付方式，如微信JSAPI,NATIVE,APP
 
-
+    @JsonIgnore
+    private Boolean             orDel;//是否删除
 
     public Order() {
     }
 
-    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId, Long countDown, Integer orderType, Long pinActiveId, String remark,String payMethodSub) {
+    public Order(Long orderId, Long userId, BigDecimal payTotal, String payMethod, String orderCreateAt, String orderIp, String pgTradeNo, String orderStatus, String errorStr, BigDecimal discount, Timestamp updatedAt, String orderDesc, Long addId, BigDecimal shipFee, String confirmReceiveAt, String orderDetailUrl, BigDecimal postalFee, BigDecimal totalFee, Integer shipTime, Integer clientType, Integer orderAmount, Long orderSplitId, Long countDown, Integer orderType, Long pinActiveId, String remark, String payMethodSub, Boolean orDel) {
         this.orderId = orderId;
         this.userId = userId;
         this.payTotal = payTotal;
@@ -89,7 +90,8 @@ public class Order implements Serializable {
         this.orderType = orderType;
         this.pinActiveId = pinActiveId;
         this.remark = remark;
-        this.payMethodSub=payMethodSub;
+        this.payMethodSub = payMethodSub;
+        this.orDel = orDel;
     }
 
     public Long getOrderId() {
@@ -308,6 +310,14 @@ public class Order implements Serializable {
         this.payMethodSub = payMethodSub;
     }
 
+    public Boolean getOrDel() {
+        return orDel;
+    }
+
+    public void setOrDel(Boolean orDel) {
+        this.orDel = orDel;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -338,6 +348,7 @@ public class Order implements Serializable {
                 ", pinActiveId=" + pinActiveId +
                 ", remark='" + remark + '\'' +
                 ", payMethodSub='" + payMethodSub + '\'' +
+                ", orDel=" + orDel +
                 '}';
     }
 }

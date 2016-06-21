@@ -340,7 +340,7 @@ public class OrderCtrl extends Controller {
                     switch (order.getOrderStatus()) {
                         case "I":
                             cancelOrderActor.tell(orderId, null);
-                            order.setOrderStatus("N");
+                            order.setOrDel(true);
                             if (cartService.updateOrder(order)) {
                                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                                 return ok(result);
@@ -355,7 +355,7 @@ public class OrderCtrl extends Controller {
                             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ORDER_DEL.getIndex()), Message.ErrorCode.ORDER_DEL.getIndex())));
                             return ok(result);
                         default:
-                            order.setOrderStatus("N");
+                            order.setOrDel(true);
                             if (cartService.updateOrder(order)) {
                                 Logger.info("删除订单ID: " + order.getOrderId());
                                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
