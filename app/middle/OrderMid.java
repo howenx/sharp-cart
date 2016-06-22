@@ -349,7 +349,6 @@ public class OrderMid {
         Carriage carriage = new Carriage();
         carriage.setCityCode(provinceCode);
         carriage.setStoreArea(invArea);
-        Logger.error("邮费对象--->"+carriage.toString());
 
         Optional<Carriage> carriageOptional = Optional.ofNullable(skuService.getCarriage(carriage));
         if (carriageOptional.isPresent()) {
@@ -365,8 +364,6 @@ public class OrderMid {
                 shipFee = shipFee.add(carriage.getFirstFee()).add(new BigDecimal(addWeight).multiply(carriage.getAddFee()));
             }
         }
-
-        Logger.error("实际邮费--->"+shipFee.toPlainString());
 
         return shipFee;
     }
