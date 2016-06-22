@@ -458,14 +458,16 @@ public class OrderMid {
 
         if (settleOrderDTO.getCouponId() != null && !settleOrderDTO.getCouponId().equals("")) {
             BigDecimal discount = calDiscount(userId, settleOrderDTO.getCouponId(), settleVo.getTotalFee());
-            settleVo.setDiscountFee(discount);
+
             settleVo.setCouponId(settleOrderDTO.getCouponId());
-            settleVo.setTotalPayFee(settleVo.getTotalFee().subtract(discount));
 
             List<SettleFeeVo> settleFeeVoList = settleVo.getSingleCustoms();
 
-            BigDecimal totalDiscountSingle = BigDecimal.ZERO;//用于计数除过最后一笔订单折扣后总计
+            if(settleVo.getTotalFee().compareTo(discount)<=0){
+                discount = settleVo.getTotalFee().subtract(BigDecimal.ONE);
+            }
 
+            BigDecimal totalDiscountSingle = BigDecimal.ZERO;//用于计数除过最后一笔订单折扣后总计
             for (Integer i = 0; i < settleFeeVoList.size(); i++) {
                 BigDecimal singleDiscount = settleFeeVoList.get(i).getSingleCustomsSumFee().divide(settleVo.getTotalFee(), BigDecimal.ROUND_DOWN).multiply(discount);
                 if (i == settleFeeVoList.size() - 1) {
@@ -475,6 +477,8 @@ public class OrderMid {
                     totalDiscountSingle = singleDiscount.add(totalDiscountSingle);
                 }
             }
+            settleVo.setTotalPayFee(settleVo.getTotalFee().subtract(discount));
+            settleVo.setDiscountFee(discount);
         }
 
         //前端是立即购买还是结算页提交订单
