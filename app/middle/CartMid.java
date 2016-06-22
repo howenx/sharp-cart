@@ -4,6 +4,7 @@ import controllers.Application;
 import controllers.OrderCtrl;
 import domain.*;
 import redis.clients.jedis.Jedis;
+import util.RedisPool;
 import util.SysParCom;
 import service.CartService;
 import service.SkuService;
@@ -37,8 +38,6 @@ public class CartMid {
     @Inject
     private Application application;
 
-    @Inject
-    private Jedis jedis;
 
 
     /**
@@ -154,8 +153,10 @@ public class CartMid {
                         if (cart.getStatus().equals("S")) cartPar.setsCartIds(cartDto.getCartId());
 
                         //新增的购物车商品全部保存到redis勾选列表中
-                        if (cart.getCartId()!=null && cartDto.getCartSource()!=3){
-                            jedis.sadd("cart-"+userId,cart.getCartId().toString());
+                        if (cart.getCartId()!=null && cartDto.getCartSource()!=3 && cartDto.getOrCheck().equals("Y")){
+                            try (Jedis jedis = RedisPool.createPool().getResource()) {
+                                jedis.sadd("cart-"+userId,cart.getCartId().toString());
+                            }
                         }
                     }
                 }else{
@@ -163,6 +164,13 @@ public class CartMid {
                 }
             } else {
                 cart.setCartId(cartDto.getCartId());
+                if (cart.getStatus().equals("S")){
+                    try (Jedis jedis = RedisPool.createPool().getResource()) {
+                        if (jedis.sismember("cart-" + userId, cart.getCartId().toString())) {
+                            jedis.srem("cart-" + userId, cartDto.getCartId().toString());
+                        }
+                    }
+                }
                 cartService.updateCart(cart);
             }
 
@@ -237,10 +245,11 @@ public class CartMid {
                     cartList.setPostalStandard(skuVo.getPostalStandard());
                     cartList.setSkuType(cart.getSkuType());
                     cartList.setSkuTypeId(cart.getSkuTypeId());
-
-                    //判断redi里是否存有此cartId,有表示勾选,没有表示未勾选
-                    if (jedis.sismember("cart-"+userId,cart.getCartId().toString())){
-                        cartList.setOrCheck("Y");
+                    try (Jedis jedis = RedisPool.createPool().getResource()) {
+                        //判断redis里是否存有此cartId,有表示勾选,没有表示未勾选
+                        if (jedis.sismember("cart-" + userId, cart.getCartId().toString())) {
+                            cartList.setOrCheck("Y");
+                        }
                     }
 
                     cartListDto.add(cartList);

@@ -26,4 +26,19 @@ public class RedisPool {
         JedisPool pool = new JedisPool(config, REDIS_URL, REDIS_PORT, 3000, REDIS_PASSWORD);
         return pool.getResource();
     }
+
+    private static JedisPoolConfig config = new JedisPoolConfig();
+
+    static {
+        config.setMaxIdle(200);
+        config.setMaxTotal(300);
+        config.setTestOnBorrow(false);
+        config.setTestOnReturn(false);
+    }
+
+    private static final JedisPool jedisPool = new JedisPool(config, REDIS_URL, REDIS_PORT, 3000, REDIS_PASSWORD);
+
+    public static JedisPool createPool() {
+        return jedisPool;
+    }
 }

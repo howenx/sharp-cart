@@ -13,9 +13,11 @@ import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 import service.CartService;
 import service.SkuService;
 import util.ComUtil;
+import util.RedisPool;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -36,8 +38,7 @@ public class Application extends Controller {
     @Inject
     private ComUtil comUtil;
 
-    @Inject
-    private Jedis jedis;
+
 
     //将Json串转换成List
     public final static ObjectMapper mapper = new ObjectMapper();
@@ -128,17 +129,18 @@ public class Application extends Controller {
     @Security.Authenticated(UserAuth.class)
     public Result cartCheck() {
         ObjectNode result = Json.newObject();
-        try {
+        try (Jedis jedis = RedisPool.createPool().getResource()) {
             Long userId = (Long) ctx().args.get("userId");
             Optional<JsonNode> json = Optional.ofNullable(request().body().asJson());
 
             if (json.isPresent()) {
+
                 List<CartDto> cartDtoList = mapper.readValue(json.get().toString(), mapper.getTypeFactory().constructCollectionType(List.class, CartDto.class));
                 cartDtoList.forEach(cartDto -> {
-                    if (cartDto.getOrCheck().equals("N")){
-                        jedis.srem("cart-"+userId,cartDto.getCartId().toString());
-                    }else if (cartDto.getOrCheck().equals("Y")){
-                        jedis.sadd("cart-"+userId,cartDto.getCartId().toString());
+                    if (cartDto.getOrCheck().equals("N")) {
+                        jedis.srem("cart-" + userId, cartDto.getCartId().toString());
+                    } else if (cartDto.getOrCheck().equals("Y")) {
+                        jedis.sadd("cart-" + userId, cartDto.getCartId().toString());
                     }
                 });
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
@@ -166,10 +168,18 @@ public class Application extends Controller {
     public Result delCart(Long cartId) {
         ObjectNode result = Json.newObject();
         try {
+            Long userId = (Long) ctx().args.get("userId");
             Cart cart = new Cart();
             cart.setCartId(cartId);
             cart.setStatus("N");
             cartService.updateCart(cart);
+
+            try (Jedis jedis = RedisPool.createPool().getResource()) {
+                //判断redis里是否存有此cartId,有表示勾选,没有表示未勾选
+                if (jedis.sismember("cart-" + userId, cart.getCartId().toString())) {
+                    jedis.srem("cart-" + userId, cart.getCartId().toString());
+                }
+            }
 
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             return ok(result);

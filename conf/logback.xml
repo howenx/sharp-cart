@@ -64,7 +64,7 @@
     <logger name="access" level="INFO" additivity="false">
         <appender-ref ref="ACCESS_FILE"/>
         <appender-ref ref="ASYNC_STDOUT"/>
-        <appender-ref ref="ASYNC_CUSTOM"/>
+        <!--<appender-ref ref="ASYNC_CUSTOM"/>-->
     </logger>
 
     <logger name="mapper" level="DEBUG" additivity="false">
@@ -79,7 +79,7 @@
     <root level="INFO">
         <appender-ref ref="ASYNC_STDOUT"/>
         <appender-ref ref="ASYNC_FILE"/>
-        <appender-ref ref="ASYNC_CUSTOM"/>
+        <!--<appender-ref ref="ASYNC_CUSTOM"/>-->
     </root>
 
 </configuration>
