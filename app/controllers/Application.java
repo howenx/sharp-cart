@@ -39,7 +39,6 @@ public class Application extends Controller {
     private ComUtil comUtil;
 
 
-
     //将Json串转换成List
     public final static ObjectMapper mapper = new ObjectMapper();
 

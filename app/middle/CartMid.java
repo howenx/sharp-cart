@@ -39,10 +39,10 @@ public class CartMid {
     private Application application;
 
 
-
     /**
      * 创建购物车商品数据
-     * @param userId userId
+     *
+     * @param userId      userId
      * @param cartDtoList cartDtoList
      * @return List<CartPar>
      * @throws Exception
@@ -61,8 +61,9 @@ public class CartMid {
 
     /**
      * 创建用户购物车单品数据
+     *
      * @param cartDto cartDto
-     * @param userId userId
+     * @param userId  userId
      * @return CartPar
      * @throws Exception
      */
@@ -79,7 +80,7 @@ public class CartMid {
 
         Optional<List<SkuVo>> skuVos = Optional.ofNullable(skuService.getAllSkus(skuVo));
 
-        if (skuVos.isPresent() && skuVos.get().size()>0){
+        if (skuVos.isPresent() && skuVos.get().size() > 0) {
             skuVo = skuVos.get().get(0);
 
             cart.setItemId(skuVo.getItemId());
@@ -94,7 +95,7 @@ public class CartMid {
                 cart.setStatus("I");
             }
 
-            if (comUtil.isOutOfRestrictAmount(cartDto.getAmount(),skuVo)) {
+            if (comUtil.isOutOfRestrictAmount(cartDto.getAmount(), skuVo)) {
                 cart.setAmount(skuVo.getSkuTypeRestrictAmount());
                 cartPar.setRestrictMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex());
             } else {
@@ -114,11 +115,11 @@ public class CartMid {
             //如果商品是vary则需要判断所卖出商品数量和当前限制卖出数量
             if (cartDto.getSkuType().equals("vary")) {
                 Integer varyAmount = application.validateVary(skuVo.getSkuTypeId(), cartDto.getAmount());
-                if (varyAmount==null){
+                if (varyAmount == null) {
                     cart.setAmount(0);
                     cartPar.setRestMessageCode(Message.ErrorCode.VARY_OVER_LIMIT.getIndex());
-                }else if (varyAmount<0){
-                    cart.setAmount(cartDto.getAmount()+varyAmount);
+                } else if (varyAmount < 0) {
+                    cart.setAmount(cartDto.getAmount() + varyAmount);
                     cartPar.setRestMessageCode(Message.ErrorCode.VARY_OVER_LIMIT.getIndex());
                 } else {
                     cartPar.setRestMessageCode(Message.ErrorCode.SUCCESS.getIndex());
@@ -137,7 +138,7 @@ public class CartMid {
                     if (carts.size() > 0) {
                         cart.setCartId(carts.get(0).getCartId());//获取到登录状态下中已经存在的购物车ID,然后update
                         cart.setAmount(cart.getAmount() + carts.get(0).getAmount());//购买数量累加
-                        if (comUtil.isOutOfRestrictAmount(cart.getAmount(),skuVo)) {
+                        if (comUtil.isOutOfRestrictAmount(cart.getAmount(), skuVo)) {
                             cart.setAmount(skuVo.getSkuTypeRestrictAmount());
                             cartPar.setRestrictMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_LIMIT.getIndex());
                         } else if (cart.getAmount() > skuVo.getRestAmount()) {
@@ -153,18 +154,18 @@ public class CartMid {
                         if (cart.getStatus().equals("S")) cartPar.setsCartIds(cartDto.getCartId());
 
                         //新增的购物车商品全部保存到redis勾选列表中
-                        if (cart.getCartId()!=null && cartDto.getCartSource()!=3 && cartDto.getOrCheck().equals("Y")){
+                        if (null != cart.getCartId() && 3 != cartDto.getCartSource() && cartDto.getOrCheck().equals("Y")) {
                             try (Jedis jedis = RedisPool.createPool().getResource()) {
-                                jedis.sadd("cart-"+userId,cart.getCartId().toString());
+                                jedis.sadd("cart-" + userId, cart.getCartId().toString());
                             }
                         }
                     }
-                }else{
+                } else {
                     cartPar.setRestMessageCode(Message.ErrorCode.SKU_STATUS_ERROR.getIndex());
                 }
             } else {
                 cart.setCartId(cartDto.getCartId());
-                if (cart.getStatus().equals("S")){
+                if (cart.getStatus().equals("S")) {
                     try (Jedis jedis = RedisPool.createPool().getResource()) {
                         if (jedis.sismember("cart-" + userId, cart.getCartId().toString())) {
                             jedis.srem("cart-" + userId, cartDto.getCartId().toString());
@@ -176,13 +177,14 @@ public class CartMid {
 
             return cartPar;
 
-        }else return null;
+        } else return null;
 
 
     }
 
     /**
      * 获取登录状态下购物车列表
+     *
      * @param userId userId
      * @return Optional
      * @throws Exception
@@ -196,7 +198,7 @@ public class CartMid {
 
         Optional<List<Cart>> listOptional = Optional.ofNullable(cartService.getCarts(c));
 
-        if (listOptional.isPresent() && listOptional.get().size()>0) {
+        if (listOptional.isPresent() && listOptional.get().size() > 0) {
             //返回数据组装,根据用户id查询出所有可显示的购物车数据
             List<Cart> listCart = listOptional.get();
 
@@ -224,7 +226,7 @@ public class CartMid {
                     cartList.setItemSize(skuVo.getItemSize());
                     cartList.setItemPrice(skuVo.getSkuTypePrice());
                     cartList.setState(cart.getStatus());
-                    if (cart.getStatus().equals("S")){
+                    if (cart.getStatus().equals("S")) {
                         cart.setStatus("N");
                         cartService.UpdateCartBy(cart);
                     }
@@ -241,7 +243,7 @@ public class CartMid {
                     cartList.setInvTitle(skuVo.getSkuTypeTitle());
                     cartList.setCreateAt(cart.getCreateAt());
                     cartList.setInvCustoms(skuVo.getInvCustoms());
-                    cartList.setPostalTaxRate(skuVo.getPostalTaxRate()==null? "0":skuVo.getPostalTaxRate());
+                    cartList.setPostalTaxRate(skuVo.getPostalTaxRate() == null ? "0" : skuVo.getPostalTaxRate());
                     cartList.setPostalStandard(skuVo.getPostalStandard());
                     cartList.setSkuType(cart.getSkuType());
                     cartList.setSkuTypeId(cart.getSkuTypeId());
@@ -268,6 +270,7 @@ public class CartMid {
 
     /**
      * 获取购物车列表数据,未登录
+     *
      * @param cartDtoList cartDtoList
      * @return Optional
      * @throws Exception
@@ -284,7 +287,7 @@ public class CartMid {
 
             Optional<List<SkuVo>> skuVos = Optional.ofNullable(skuService.getAllSkus(skuVo));
 
-            if (skuVos.isPresent() && skuVos.get().size()>0) {
+            if (skuVos.isPresent() && skuVos.get().size() > 0) {
                 skuVo = skuVos.get().get(0);
 
                 //返回数据组装
@@ -322,10 +325,10 @@ public class CartMid {
                 //如果商品是vary则需要判断所卖出商品数量和当前限制卖出数量
                 if (cartDto.getSkuType().equals("vary")) {
                     Integer varyAmount = application.validateVary(skuVo.getSkuTypeId(), cartDto.getAmount());
-                    if (varyAmount==null){
+                    if (varyAmount == null) {
                         cartList.setAmount(0);
-                    }else if (varyAmount<0){
-                        cartList.setAmount(cartDto.getAmount()+varyAmount);
+                    } else if (varyAmount < 0) {
+                        cartList.setAmount(cartDto.getAmount() + varyAmount);
                     }
                 }
 
@@ -362,6 +365,7 @@ public class CartMid {
 
     /**
      * 获取购物车item
+     *
      * @param map map
      * @return List
      */
@@ -369,16 +373,16 @@ public class CartMid {
         List<CartItemDTO> list = new ArrayList<>();
 
         map.forEach((invArea, p) -> {
-                    CartItemDTO cartItemDTO = new CartItemDTO();
-                    cartItemDTO.setInvCustoms(p.get(0).getInvCustoms());
-                    cartItemDTO.setInvArea(invArea);
-                    cartItemDTO.setInvAreaNm(p.get(0).getInvAreaNm());
-                    cartItemDTO.setCarts(p);
-                    cartItemDTO.setPostalStandard(SysParCom.POSTAL_STANDARD);
-                    cartItemDTO.setPostalLimit(SysParCom.POSTAL_LIMIT);
-                    cartItemDTO.setFreeShip(SysParCom.FREE_SHIP);
-                    list.add(cartItemDTO);
-                });
+            CartItemDTO cartItemDTO = new CartItemDTO();
+            cartItemDTO.setInvCustoms(p.get(0).getInvCustoms());
+            cartItemDTO.setInvArea(invArea);
+            cartItemDTO.setInvAreaNm(p.get(0).getInvAreaNm());
+            cartItemDTO.setCarts(p);
+            cartItemDTO.setPostalStandard(SysParCom.POSTAL_STANDARD);
+            cartItemDTO.setPostalLimit(SysParCom.POSTAL_LIMIT);
+            cartItemDTO.setFreeShip(SysParCom.FREE_SHIP);
+            list.add(cartItemDTO);
+        });
         return list;
     }
 
