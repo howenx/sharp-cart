@@ -144,7 +144,7 @@ public class OrderMid {
                 shipFee = shipFee.add(settleFeeVo.getShipSingleCustomsFee());
                 postalFee = postalFee.add(settleFeeVo.getFactPortalFeeSingleCustoms());
                 totalFee = totalFee.add(settleFeeVo.getSingleCustomsSumFee());
-                totalPayFee = totalPayFee.add(settleFeeVo.getSingleCustomsSumPayFee());
+//                totalPayFee = totalPayFee.add(settleFeeVo.getSingleCustomsSumPayFee());
             }
         }
 
@@ -152,7 +152,7 @@ public class OrderMid {
         settleVo.setShipFee(shipFee);
         settleVo.setPortalFee(postalFee);
         settleVo.setTotalFee(totalFee);
-        settleVo.setTotalPayFee(totalPayFee);
+
         settleVo.setAddress(address);
         settleVo.setUserId(userId);
         settleVo.setFreeShipLimit(new BigDecimal(SysParCom.FREE_SHIP));
@@ -160,7 +160,7 @@ public class OrderMid {
         settleVo.setSkuTypeList(skuTypeList);
 
         //此订单的实际邮费统计
-        if (settleVo.getShipFee().compareTo(new BigDecimal(SysParCom.FREE_SHIP)) > 0) {
+        if (settleVo.getTotalFee().compareTo(new BigDecimal(SysParCom.FREE_SHIP)) > 0) {
             settleVo.setFactShipFee(BigDecimal.ZERO);
         } else settleVo.setFactShipFee(settleVo.getShipFee());
 
@@ -168,6 +168,9 @@ public class OrderMid {
         if (settleVo.getPortalFee().compareTo(new BigDecimal(SysParCom.POSTAL_STANDARD)) <= 0) {
             settleVo.setFactPortalFee(BigDecimal.ZERO);
         } else settleVo.setFactPortalFee(settleVo.getPortalFee());
+
+        //总支付费用
+        settleVo.setTotalPayFee(settleVo.getFactShipFee().add(settleVo.getFactPortalFee()).add(totalFee));
 
         return settleVo;
     }
