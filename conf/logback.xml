@@ -64,22 +64,22 @@
     <logger name="access" level="INFO" additivity="false">
         <appender-ref ref="ACCESS_FILE"/>
         <appender-ref ref="ASYNC_STDOUT"/>
-        <!--<appender-ref ref="ASYNC_CUSTOM"/>-->
+        <appender-ref ref="ASYNC_CUSTOM"/>
     </logger>
 
     <!--<logger name="mapper" level="DEBUG" additivity="false">-->
         <!--<appender-ref ref="STDOUT" />-->
     <!--</logger>-->
 
-    <logger name="org.apache.ibatis.logging.jdbc.ConnectionLogger" level="OFF" additivity="false"/> <!-- Won' log connections -->
-    <logger name="org.apache.ibatis.logging.jdbc.StatementLogger" level="DEBUG" additivity="false"/> <!-- Will log all statements -->
-    <logger name="org.apache.ibatis.logging.jdbc.ResultSetLogger" level="OFF" additivity="false"/> <!-- Won' log result sets -->
+    <!--<logger name="org.apache.ibatis.logging.jdbc.ConnectionLogger" level="OFF" additivity="false"/> &lt;!&ndash; Won' log connections &ndash;&gt;-->
+    <!--<logger name="org.apache.ibatis.logging.jdbc.StatementLogger" level="DEBUG" additivity="false"/> &lt;!&ndash; Will log all statements &ndash;&gt;-->
+    <!--<logger name="org.apache.ibatis.logging.jdbc.ResultSetLogger" level="OFF" additivity="false"/> &lt;!&ndash; Won' log result sets &ndash;&gt;-->
 
 
     <root level="INFO">
         <appender-ref ref="ASYNC_STDOUT"/>
         <appender-ref ref="ASYNC_FILE"/>
-        <!--<appender-ref ref="ASYNC_CUSTOM"/>-->
+        <appender-ref ref="ASYNC_CUSTOM"/>
     </root>
 
 </configuration>
