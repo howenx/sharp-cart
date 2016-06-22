@@ -2,11 +2,11 @@ import play.routes.compiler.InjectedRoutesGenerator
 import play.sbt.PlayJava
 
 name := """style-shopping"""
-version := "0.3.1"
+version := "0.3.2"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.11.7"
 
 evictionWarningOptions in evicted := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
 
