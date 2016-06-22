@@ -15,6 +15,7 @@ import service.CartService;
 import service.PromotionService;
 import service.SkuService;
 import util.ComUtil;
+import util.RedisPool;
 import util.SysParCom;
 
 import javax.inject.Inject;
@@ -39,9 +40,6 @@ public class CollectCtrl  extends Controller {
 
     @Inject
     private PromotionService promotionService;
-
-    @Inject
-    private Jedis jedis;
 
 
     @Inject
@@ -243,7 +241,9 @@ public class CollectCtrl  extends Controller {
                 collect.setSkuType(collectSubmitDTO.getSkuType());
                 collect.setSkuTypeId(collectSubmitDTO.getSkuTypeId());
                 //添加商品收藏数据到redis
-                jedis.hsetnx(userCollectKey,collectId+"",toJson(collect).toString());
+                try (Jedis jedis = RedisPool.createPool().getResource()) {
+                    jedis.hsetnx(userCollectKey, collectId + "", toJson(collect).toString());
+                }
 
                 result.putPOJO("collectId", collectId);
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
@@ -273,7 +273,9 @@ public class CollectCtrl  extends Controller {
             Long userId = (Long) ctx().args.get("userId");
             String userCollectKey=getUserCollectKey(userId);
             //redis删除收藏
-            jedis.hdel(userCollectKey,collectId+"");
+            try (Jedis jedis = RedisPool.createPool().getResource()) {
+                jedis.hdel(userCollectKey, collectId + "");
+            }
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             return ok(result);
         } catch (Exception ex) {
@@ -295,7 +297,11 @@ public class CollectCtrl  extends Controller {
         try {
             Long userId = (Long) ctx().args.get("userId");
             String userCollectKey=getUserCollectKey(userId);
-            List<String> collectList=jedis.hvals(userCollectKey);
+            List<String> collectList=null;
+            try (Jedis jedis = RedisPool.createPool().getResource()) {
+                collectList=jedis.hvals(userCollectKey);
+            }
+
             List<CollectDto> collectDtoList = new ArrayList<CollectDto>();
             if (null!=collectList&&!collectList.isEmpty()) {
                 Long skuId=0L,skuTypeId=0L;String skuType="";
