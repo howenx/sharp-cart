@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import play.Logger;
 import play.libs.Json;
 import redis.clients.jedis.Jedis;
+import util.RedisPool;
 
 import javax.inject.Inject;
 
@@ -20,13 +21,12 @@ import static util.SysParCom.REDIS_CHANNEL;
  */
 public class MnsActor extends AbstractActor {
 
-    @Inject
-    public MnsActor(Jedis jedis) {
+    public MnsActor() {
         receive(ReceiveBuilder.match(Object.class, event -> {
             try {
                 if (event instanceof ILoggingEvent) {
                     ((ILoggingEvent) event).getMDCPropertyMap().put("projectId", "style-shopping");
-                    jedis.publish(REDIS_CHANNEL, Json.mapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false).valueToTree(event).toString());
+                    RedisPool.createPool().getResource().publish(REDIS_CHANNEL, Json.mapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false).valueToTree(event).toString());
                 }
             } catch (Exception ignored) {
             }
