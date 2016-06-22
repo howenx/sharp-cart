@@ -196,7 +196,7 @@ public class OrderMid {
         Boolean orPinRestrict = false;//用于标识用户购买的拼购商品是否超出限购数量
 
 
-        Integer totalWeight = 0;//计算所有商品的总重量
+        Integer totalWeight = 0;//计算所有商品的总重量单位毫克
 
         for (CartDto cartDto : settleDTO.getCartDtos()) {
 
@@ -343,11 +343,14 @@ public class OrderMid {
 
     //计算邮费
     private BigDecimal calculateShipFee(String provinceCode, String invArea, Integer totalWeight) throws Exception {
+
         BigDecimal shipFee = BigDecimal.ZERO;
         //取邮费
         Carriage carriage = new Carriage();
         carriage.setCityCode(provinceCode);
         carriage.setStoreArea(invArea);
+        Logger.error("邮费对象--->"+carriage.toString());
+
         Optional<Carriage> carriageOptional = Optional.ofNullable(skuService.getCarriage(carriage));
         if (carriageOptional.isPresent()) {
             carriage = carriageOptional.get();
@@ -362,6 +365,9 @@ public class OrderMid {
                 shipFee = shipFee.add(carriage.getFirstFee()).add(new BigDecimal(addWeight).multiply(carriage.getAddFee()));
             }
         }
+
+        Logger.error("实际邮费--->"+shipFee.toPlainString());
+
         return shipFee;
     }
 
