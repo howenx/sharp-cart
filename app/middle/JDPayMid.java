@@ -9,8 +9,6 @@ import controllers.Application;
 import controllers.MsgCtrl;
 import controllers.PushCtrl;
 import domain.*;
-import util.SysParCom;
-import net.spy.memcached.MemcachedClient;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -21,14 +19,13 @@ import service.CartService;
 import service.IdService;
 import service.PromotionService;
 import util.Crypto;
+import util.SysParCom;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
-
-import static util.SysParCom.ERP_PUSH;
 
 /**
  * 京东支付中间层
@@ -55,8 +52,6 @@ public class JDPayMid {
     @Inject
     private PushCtrl pushCtrl;
 
-    @Inject
-    private MemcachedClient cache;
 
     @Inject
     private Configuration configuration;
@@ -108,6 +103,7 @@ public class JDPayMid {
                 order.setOrderStatus("S");
                 order.setErrorStr(params.get("trade_status"));
                 order.setPgTradeNo(params.get("trade_no"));
+                order.setPayMethod("JD");
 
                 if (cartService.updateOrder(order)) {
 
@@ -130,6 +126,12 @@ public class JDPayMid {
         }
     }
 
+    /**
+     * 支付宝和微信支付异步通知
+     *
+     * @param orderParams orderParams
+     * @return String
+     */
     public String asynPay(Order orderParams) {
         Order order = new Order();
         order.setOrderId(orderParams.getOrderId());
@@ -144,7 +146,7 @@ public class JDPayMid {
             } else {
                 order.setOrderStatus("S");
                 order.setPayMethod(orderParams.getPayMethod());
-                if(null!=orderParams.getPayMethodSub()){
+                if (null != orderParams.getPayMethodSub()) {
                     order.setPayMethodSub(orderParams.getPayMethodSub());
                 }
                 order.setErrorStr(orderParams.getErrorStr());
@@ -170,6 +172,13 @@ public class JDPayMid {
         }
     }
 
+    /**
+     * 拼购支付成功后做相应处理
+     *
+     * @param order order
+     * @return String
+     * @throws Exception
+     */
     public String pinActivityDeal(Order order) throws Exception {
         //如果是拼购,而且是团长发起的拼购活动,那么在支付成功后是需要创建拼购活动
         if (order.getOrderType() != null && order.getOrderType() == 2 && !order.getOrderStatus().equals("PS") && !order.getOrderStatus().equals("PF") && !order.getOrderStatus().equals("F") && !order.getOrderStatus().equals("T")) { //1:正常购买订单，2：拼购订单
@@ -274,6 +283,12 @@ public class JDPayMid {
     }
 
 
+    /**
+     * 京东支付退款异步通知
+     *
+     * @param params Map
+     * @return String
+     */
     public String asynRefund(Map<String, String> params) {
         Refund re = new Refund();
         re.setId(Long.valueOf(params.get("return_params")));
@@ -321,7 +336,7 @@ public class JDPayMid {
                     Map<String, String> map = new HashMap<>();
                     map.put("targetType", "V");
                     map.put("url", SysParCom.PROMOTION_URL + "/promotion/pin/activity/" + activity.getPinActiveId());
-                    pushCtrl.send_push_android_and_ios_alias(message, null,SysParCom.PUSH_TIME_TO_LIVE, map, p.getUserId().toString());
+                    pushCtrl.send_push_android_and_ios_alias(message, null, SysParCom.PUSH_TIME_TO_LIVE, map, p.getUserId().toString());
                 }
             }
         }
