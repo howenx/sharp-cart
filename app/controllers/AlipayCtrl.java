@@ -96,7 +96,7 @@ public class AlipayCtrl extends Controller {
             total_fee=order.getPayTotal().toPlainString();
         }
 
-        String detail="HMM"+orderId;
+        String detail="韩秘美-"+orderId;
 
         //把请求参数打包成数组
         TreeMap<String, String> sParaTemp = new TreeMap<>();
