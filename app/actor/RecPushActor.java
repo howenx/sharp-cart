@@ -18,7 +18,7 @@ public class RecPushActor extends AbstractActor {
     @Inject
     public RecPushActor(PushCtrl pushCtrl){
         receive(ReceiveBuilder.match(PushMsg.class, pushMsg -> {
-        //    Logger.info("收到推送消息"+pushMsg);
+            Logger.info("收到推送消息"+pushMsg);
             Long timeToLive= SysParCom.PUSH_TIME_TO_LIVE;
             if(null!=pushMsg.getTimeToLive()){
                 timeToLive=pushMsg.getTimeToLive();
