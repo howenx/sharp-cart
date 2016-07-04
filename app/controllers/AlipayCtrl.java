@@ -609,19 +609,22 @@ public class AlipayCtrl extends Controller {
 //        params.put("batch_no","2016052518185850102295");
 //        params.put("success_num","1");
         body_map.forEach((k, v) -> params.put(k, v[0]));
-        Logger.info("支付宝退款异步通知request().body()="+request().body()+",params="+params);
+        Logger.info("支付宝退款异步通知params="+params);
         if(verifySign(params,params.get("sign"),params.get("sign_type"))) { //验证签名
             String result_details=params.get("result_details");
             if(null!=result_details){
                 String[] array=result_details.split(";");  //批量
+                if(null==array||array.length<=0){
+                    Logger.error("支付宝退款异步通知,详情不存在result_details="+result_details);
+                    return ok("fail");
+                }
                 for(String refundInfo:array){
                     try {
-                        String[] arr=refundInfo.split("^");
+                        String[] arr=refundInfo.split("\\^"); //需要转义
                         if(arr.length>=3){
                             Order order = new Order();
                             order.setPgTradeNo(arr[0]);
-                            Optional<List<Order>> listOptional = null;
-                            listOptional = Optional.ofNullable(cartService.getOrder(order));
+                            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
                             if (listOptional.isPresent() && listOptional.get().size() == 1) {
                                     order=listOptional.get().get(0);
                                     Refund re = new Refund();
@@ -644,6 +647,8 @@ public class AlipayCtrl extends Controller {
                             }else{
                                 Logger.error(arr[0] + "支付宝退款失败,订单不存在" + arr[2]);
                             }
+                        }else{
+                            Logger.error("支付宝退款异步通知,退款信息有问题result_details="+result_details+",len="+arr.length);
                         }
 
                     } catch (Exception e) {
@@ -651,6 +656,8 @@ public class AlipayCtrl extends Controller {
                     }
                 }
                 return ok("success");
+            }else{
+                Logger.error("支付宝退款异步通知,详情不存在result_details="+result_details);
             }
 
         }else{

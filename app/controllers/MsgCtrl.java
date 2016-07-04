@@ -70,26 +70,6 @@ public class MsgCtrl extends Controller {
 
         // checkRecSysMsgOnline(1000073L);
         //cleanMsgAtFixedTime();
-//        Logger.info("========"+String.valueOf((new BigDecimal("0.20").compareTo(new BigDecimal("0.20"))!=0)));
-//
-//        Order order = new Order();
-//        order.setOrderId(50102556L);
-//        List<Order> orders = null;
-//        try {
-//            orders = cartService.getOrder(order);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        if(null==orders||orders.size()<=0){
-//            Logger.error("################支付宝支付异步通知 订单不存在################," + order.getOrderId());
-//            return ok("fail");
-//        }
-//        orders.get(0).setTotalFee(new BigDecimal("0.01"));
-//        //校验金额
-//        if(orders.get(0).getTotalFee().compareTo(new BigDecimal("0.01"))!=0){
-//            Logger.error("################支付宝支付异步通知 支付金额对于不上################," + order.getOrderId());
-//            return ok("fail");
-//        }
         ObjectNode result = newObject();
 
         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
