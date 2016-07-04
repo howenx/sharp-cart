@@ -227,14 +227,14 @@ public class JDPayMid {
                 if (!activity.getStatus().equals("Y")) {//如果拼购活动已经失败或者拼购活动已经结束
                     order.setPinActiveId(activity.getPinActiveId());
                     order.setOrderStatus("F");
-                    PinUser pinUser = new PinUser();
-                    pinUser.setOrMaster(false);
-                    pinUser.setOrRobot(false);
-                    pinUser.setPinActiveId(activity.getPinActiveId());
-                    pinUser.setUserId(order.getUserId());
-                    pinUser.setUserIp(order.getOrderIp());
-                    pinUser.setUserImg(idService.getID(order.getUserId()).getPhotoUrl());
-                    promotionService.insertPinUser(pinUser);
+//                    PinUser pinUser = new PinUser();
+//                    pinUser.setOrMaster(false);
+//                    pinUser.setOrRobot(false);
+//                    pinUser.setPinActiveId(activity.getPinActiveId());
+//                    pinUser.setUserId(order.getUserId());
+//                    pinUser.setUserIp(order.getOrderIp());
+//                    pinUser.setUserImg(idService.getID(order.getUserId()).getPhotoUrl());
+//                    promotionService.insertPinUser(pinUser);
 
                     Refund refund = new Refund();
                     refund.setAmount(order.getOrderAmount());
