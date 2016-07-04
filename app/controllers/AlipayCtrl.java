@@ -27,6 +27,7 @@ import util.SysParCom;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
@@ -414,7 +415,7 @@ public class AlipayCtrl extends Controller {
 //        params.put("sign","GHQI7RLBvbI9gz2S6WxjQUc6J9emdx84DIstuRZGxY3t/kwLcQT4EEg/i7Bx3vu+F6TzDTw0asclNYNemOZCfLDMCWm+NBzFFWvPWK8RHN8E8w4Ne95GJ6piJjTRwNXPZrq+iNyOXLRwmHue/gw/VjMdulBwmNkKFCw5j3ldW2k=");
 
         body_map.forEach((k, v) -> params.put(k, v[0]));
-        Logger.info("支付宝支付回调返回request().body()="+request().body()+",params="+params);
+        Logger.info("支付宝支付回调返回params="+params);
 
         if(verifySign(params,params.get("sign"),params.get("sign_type"))) { //验证签名
             String verifyAli=verifyFromAlipay(params.get("notify_id"));
@@ -434,9 +435,13 @@ public class AlipayCtrl extends Controller {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                if(null==orders||orders.size()<=0){
+                    Logger.error("################支付宝支付异步通知 订单不存在################," + order.getOrderId());
+                    return ok("fail");
+                }
                 //校验金额
-                if(null==orders||orders.size()<=0||!orders.get(0).getTotalFee().toPlainString().equals(params.get("total_fee"))){
-                    Logger.error("################支付宝支付异步通知 支付金额对于不上################," + order.getOrderId());
+                if(orders.get(0).getPayTotal().setScale(2,BigDecimal.ROUND_HALF_DOWN).compareTo(new BigDecimal(params.get("total_fee")).setScale(2,BigDecimal.ROUND_HALF_DOWN))!=0){
+                    Logger.error("################支付宝支付异步通知 支付金额对于不上################,orderId=" + order.getOrderId());
                     return ok("fail");
                 }
                 order.setPayMethod("ALIPAY");
@@ -625,6 +630,10 @@ public class AlipayCtrl extends Controller {
                                     re.setPgMessage("");
                                     re.setPgTradeNo(params.get("batch_no"));
                                     if (arr[2].startsWith("SUCCESS")) {
+                                        Order order1 = new Order();
+                                        order1.setOrderId(re.getOrderId());
+                                        order1.setOrderStatus("T");
+                                        cartService.updateOrder(order1);
                                         re.setState("Y");
                                         Logger.error(arr[0] + "支付宝退款成功,返回业务结果码:" + arr[2]+",Refund="+re);
                                     } else {
