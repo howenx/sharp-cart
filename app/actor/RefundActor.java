@@ -115,15 +115,15 @@ public class RefundActor extends AbstractActor {
                     Logger.error(refund.getUserId() + "微信退款失败,返回状态码:" + resultMap.get("return_code"));
                 } else {
                     String out_refund_no=resultMap.get("out_refund_no");
-                    re.setId(Long.valueOf(out_refund_no.substring(0,out_refund_no.length()-1))); //最后一位是拼的支付方式,写死了
+                    re.setId(Long.valueOf(out_refund_no)); //最后一位是拼的支付方式,写死了
                     re.setPgCode(resultMap.get("result_code"));
                     re.setPgMessage(resultMap.get("return_msg"));
                     re.setPgTradeNo(resultMap.get("refund_id"));//微信退款单号
                     if (resultMap.get("result_code").equals("SUCCESS")) {
                         re.setState("Y");
-                        Logger.error(refund.getUserId() + "微信退款成功,返回业务结果码:" + resultMap.get("result_code"));
+                        Logger.error(refund.getUserId() + "微信退款成功,返回业务结果码:" + resultMap.get("result_code")+",refund="+re);
                     } else {
-                        Logger.error(refund.getUserId() + "微信退款失败,返回业务结果码:" + resultMap.get("result_code"));
+                        Logger.error(refund.getUserId() + "微信退款失败,返回业务结果码:" + resultMap.get("result_code")+",refund="+re);
                         re.setState("N");
                     }
                     cartService.updateRefund(re);
