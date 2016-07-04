@@ -37,19 +37,29 @@ public class RefundActor extends AbstractActor {
                 List<Order> orderList = cartService.getOrder(order);
                 if (orderList.size() > 0) {
                     order = orderList.get(0);
+
                     ((Refund) refund).setAmount(order.getOrderAmount());
                     ((Refund) refund).setPayBackFee(order.getPayTotal());
                     ((Refund) refund).setSplitOrderId(order.getOrderSplitId());
                     ((Refund) refund).setUserId(order.getUserId());
-
-                    if (cartService.insertRefund(((Refund) refund))) {
-                        if (order.getPayMethod().equals("JD")) {
-                            jdPayRefund(cartService, ws, (Refund) refund);
-                        } else if (order.getPayMethod().equals("WEIXIN")) {
-                            weixinPayRefund(cartService, (Refund) refund, weiXinCtrl);
+                    List<Refund> refunds =cartService.selectRefund(((Refund) refund));
+                    if (refunds.size()>0){
+                        if (cartService.updateRefund(((Refund) refund))) {
+                            if (order.getPayMethod().equals("JD")) {
+                                jdPayRefund(cartService, ws, (Refund) refund);
+                            } else if (order.getPayMethod().equals("WEIXIN")) {
+                                weixinPayRefund(cartService, (Refund) refund, weiXinCtrl);
+                            }
+                        }
+                    }else{
+                        if (cartService.insertRefund(((Refund) refund))) {
+                            if (order.getPayMethod().equals("JD")) {
+                                jdPayRefund(cartService, ws, (Refund) refund);
+                            } else if (order.getPayMethod().equals("WEIXIN")) {
+                                weixinPayRefund(cartService, (Refund) refund, weiXinCtrl);
+                            }
                         }
                     }
-
                 }
             }
         }).matchAny(s -> Logger.error("RefundActor received messages not matched: {}", s.toString())).build());
