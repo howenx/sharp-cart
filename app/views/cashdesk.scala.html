@@ -1,4 +1,4 @@
-@(params:java.util.Map[String,String],paySrc:String,userType:String,token:String,securityCode:String,refundParams:java.util.Map[String,String],alipayParamUrl:String)
+@(params:java.util.Map[String,String],paySrc:String,userType:String,token:String,securityCode:String,alipayParamUrl:String)
 
 <!DOCTYPE html>
 <html lang="en">
@@ -190,14 +190,6 @@
     };
     </script>
         </div>
-
-        <div style="display:none">
-
-            <form id="refundForm" action="https://mapi.alipay.com/gateway.do" method="POST">
-                @for((k,v) <- refundParams) {
-                <input type="hidden" name="@k" value="@v"/>
-                }
-            </form>
-        </div>
+    
     </body>
 </html>

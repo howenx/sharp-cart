@@ -119,7 +119,7 @@ public class JDPay extends Controller {
 
                     String securityCode = orderSecurityCode(orderId + "", token);
 
-                    return ok(views.html.cashdesk.render(params, paySrc, userType, token, securityCode,alipayCtrl.getRefundParams(orderId),alipayCtrl.getAlipayParamsUrl(order, AlipayTradeType.DIRECT)));
+                    return ok(views.html.cashdesk.render(params, paySrc, userType, token, securityCode,alipayCtrl.getAlipayParamsUrl(order, AlipayTradeType.DIRECT)));
                 }
             } else return ok(views.html.jdpayfailed.render(params_failed));
         } catch (Exception ex) {
