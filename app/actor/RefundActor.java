@@ -115,7 +115,7 @@ public class RefundActor extends AbstractActor {
                     Logger.error(refund.getUserId() + "微信退款失败,返回状态码:" + resultMap.get("return_code"));
                 } else {
                     String out_refund_no=resultMap.get("out_refund_no");
-                    re.setId(Long.valueOf(out_refund_no)); //最后一位是拼的支付方式,写死了
+                    re.setOrderId(Long.valueOf(out_refund_no));
                     re.setPgCode(resultMap.get("result_code"));
                     re.setPgMessage(resultMap.get("return_msg"));
                     re.setPgTradeNo(resultMap.get("refund_id"));//微信退款单号

@@ -620,7 +620,7 @@ public class AlipayCtrl extends Controller {
                             if (listOptional.isPresent() && listOptional.get().size() == 1) {
                                     order=listOptional.get().get(0);
                                     Refund re = new Refund();
-                                    re.setId(order.getOrderId());
+                                    re.setOrderId(order.getOrderId());
                                     re.setPgCode(arr[2]);
                                     re.setPgMessage("");
                                     re.setPgTradeNo(params.get("batch_no"));
