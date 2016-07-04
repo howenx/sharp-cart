@@ -626,12 +626,14 @@ public class AlipayCtrl extends Controller {
                                     re.setPgTradeNo(params.get("batch_no"));
                                     if (arr[2].startsWith("SUCCESS")) {
                                         re.setState("Y");
-                                        Logger.error(arr[0] + "支付宝退款成功,返回业务结果码:" + arr[2]);
+                                        Logger.error(arr[0] + "支付宝退款成功,返回业务结果码:" + arr[2]+",Refund="+re);
                                     } else {
-                                        Logger.error(arr[0] + "支付宝退款失败,返回业务结果码:" + arr[2]);
+                                        Logger.error(arr[0] + "支付宝退款失败,返回业务结果码:" + arr[2]+",Refund="+re);
                                         re.setState("N");
                                     }
                                     cartService.updateRefund(re);
+                            }else{
+                                Logger.error(arr[0] + "支付宝退款失败,订单不存在" + arr[2]);
                             }
                         }
 
