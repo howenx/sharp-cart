@@ -121,6 +121,10 @@ public class RefundActor extends AbstractActor {
                     re.setPgTradeNo(resultMap.get("refund_id"));//微信退款单号
                     if (resultMap.get("result_code").equals("SUCCESS")) {
                         re.setState("Y");
+                        Order order1 = new Order();
+                        order1.setOrderId(refund.getOrderId());
+                        order1.setOrderStatus("T");
+                        cartService.updateOrder(order1);
                         Logger.error(refund.getUserId() + "微信退款成功,返回业务结果码:" + resultMap.get("result_code")+",refund="+re);
                     } else {
                         Logger.error(refund.getUserId() + "微信退款失败,返回业务结果码:" + resultMap.get("result_code")+",refund="+re);
