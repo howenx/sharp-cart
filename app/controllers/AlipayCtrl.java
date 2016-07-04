@@ -440,9 +440,9 @@ public class AlipayCtrl extends Controller {
                     return ok("fail");
                 }
                 //校验金额
-                if(orders.get(0).getTotalFee().compareTo(new BigDecimal(params.get("total_fee")))!=0){
-                    Logger.error("################支付宝支付异步通知 支付金额对于不上################," + order.getOrderId());
-                    return ok("fail");
+                if(orders.get(0).getTotalFee().setScale(2,BigDecimal.ROUND_HALF_DOWN).compareTo(new BigDecimal(params.get("total_fee")).setScale(2,BigDecimal.ROUND_HALF_DOWN))!=0){
+                    Logger.error("################支付宝支付异步通知 支付金额对于不上################,orderId=" + order.getOrderId()+",totalFee="+orders.get(0).getTotalFee()+",total_fee="+params.get("total_fee"));
+                //    return ok("fail");
                 }
                 order.setPayMethod("ALIPAY");
                 order.setPayMethodSub("ALIPAY");
