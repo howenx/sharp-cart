@@ -3,24 +3,20 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <meta name="format-detection" content="telephone=no">
+        <title>失败</title>
+        <meta content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width" name="viewport">
+        <link rel="stylesheet" href="/assets/stylesheets/payresult.css">
         <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.ico">
-        <link rel="stylesheet" href="/assets/stylesheets/pay.css">
         <script src="/assets/js/jquery-1.11.1.min.js"></script>
     </head>
-    <body style=" background : rgb(240,240,240) ;" onload="window.handler.clearHistory('')">
-        <div class="order-pay">
-            <h2>订单支付</h2>
-            <hr>
-            <div class="order-fni">
-                <div class="pay-suc">
-                    <div class="icon-order-fail"></div>
-                    <h1>订单支付失败</h1>
-                </div>
-                <div class="btn-pay">
-                    <button id="home">回首页</button>
-                </div>
+    <body>
+        <div class="pay">
+            <div class="pay-succ">
+                <img src="/assets/images/shibai.png" alt="">
+            </div>
+            <p class="failP">注&nbsp;:&nbsp;如此笔订单扣款成功,我们将会在1-5个工作日返回您的支付金额至您的支付账户里,请以支付公司的通知信息为准,如有疑问请联系我们客服400-664-0808</p>
+            <div class="succbtn">
+                <a id="home" href="javascript:void(0)" class="returnhome">返回首页</a>
             </div>
         </div>
     </body>

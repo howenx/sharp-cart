@@ -1,0 +1,68 @@
+body{
+    background: rgb(244,244,246);
+}
+img{
+    width: 100%;
+}
+.pay{
+    background: #fff;
+}
+.pay-succ{
+    width: 90%;
+    margin: 0 auto;
+    border-bottom: 1px solid rgb(227,227,227);
+    text-align: center;
+    padding: 60px 0;
+    position: relative;
+}
+.pay-succ .ordermoney{
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 28px;
+}
+.pay-succ .ordermoney>span{
+    color: rgb(145,145,145);
+}
+.pay-succ .ordermoney>i{
+    font-style: normal;
+    color: rgb(255,45,59);
+}
+.pay-succ img{
+    width: 35%;
+}
+.succbtn{
+    width: 90%;
+    margin: 20px auto 0;
+    padding-bottom: 20px;
+    text-align: center;
+}
+.succbtn>a{
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    padding: 10px 0;
+    font-weight: 500;
+    font-size: 18px;
+}
+.succbtn .checkorder{
+    width: 45%;
+    margin-right: 6%;
+    border: 2px solid rgb(174,174,174);
+    border-radius: 5px;
+    color: rgb(145,145,145);
+}
+.succbtn .returnhome{
+    width: 45%;
+    border: 2px solid rgb(255,128,131);
+    border-radius: 5px;
+    color: rgb(255,45,59);
+}
+.failP{
+    padding: 0 5%;
+    color: rgb(81,81,81);
+    line-height: 24px;
+    font-size: 14px;
+    letter-spacing:1px;
+    font-weight: 700;
+}
