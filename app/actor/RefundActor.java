@@ -4,6 +4,7 @@ import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Throwables;
+import common.WeiXinTradeType;
 import controllers.JDPay;
 import controllers.WeiXinCtrl;
 import domain.Order;
@@ -17,6 +18,7 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * 退款Actor
@@ -96,46 +98,59 @@ public class RefundActor extends AbstractActor {
 
     private void weixinPayRefund(CartService cartService, Refund refund, WeiXinCtrl weiXinCtrl) {
 
-        String xmlContent = weiXinCtrl.getRefundParams(refund.getOrderId());
-        if (xmlContent != null) {
-            String result = weiXinCtrl.refundConnect(SysParCom.WEIXIN_PAY_REFUND, xmlContent); //接口提供所有微信支付订单的查询
-            Logger.info("微信支付退款发送内容\n" + xmlContent + "\n返回内容" + result);
-
-            if (Objects.equals("", result) || null == result) {
-                Logger.error(refund.getUserId() + "微信退款返回结果为空");
-            }
-            try {
-                Map<String, String> resultMap = weiXinCtrl.xmlToMap(result);
-
-                Refund re = new Refund();
-
-                if (null == resultMap || resultMap.size() <= 0) {
-                    Logger.error(refund.getUserId() + "微信退款返回结果为空");
-                } else if (!"SUCCESS".equals(resultMap.get("return_code"))) { //返回状态码  SUCCESS/FAIL 此字段是通信标识，非交易标识，交易是否成功需要查看result_code来判断
-                    Logger.error(refund.getUserId() + "微信退款失败,返回状态码:" + resultMap.get("return_code"));
-                } else {
-                    String out_refund_no=resultMap.get("out_refund_no");
-                    re.setOrderId(Long.valueOf(out_refund_no));
-                    re.setPgCode(resultMap.get("result_code"));
-                    re.setPgMessage(resultMap.get("return_msg"));
-                    re.setPgTradeNo(resultMap.get("refund_id"));//微信退款单号
-                    if (resultMap.get("result_code").equals("SUCCESS")) {
-                        re.setState("Y");
-                        Order order1 = new Order();
-                        order1.setOrderId(refund.getOrderId());
-                        order1.setOrderStatus("T");
-                        cartService.updateOrder(order1);
-                        Logger.error(refund.getUserId() + "微信退款成功,返回业务结果码:" + resultMap.get("result_code")+",refund="+re);
-                    } else {
-                        Logger.error(refund.getUserId() + "微信退款失败,返回业务结果码:" + resultMap.get("result_code")+",refund="+re);
-                        re.setState("N");
-                    }
-                    cartService.updateRefund(re);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                Logger.error("微信退款出现异常," + Throwables.getStackTraceAsString(ex));
-            }
+        Order order = new Order();
+        order.setOrderId(refund.getOrderId());
+        Optional<List<Order>> listOptional = null;
+        try {
+            listOptional = Optional.ofNullable(cartService.getOrder(order));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        if (listOptional.isPresent() && listOptional.get().size() == 1) {
+            order = listOptional.get().get(0);
+            String xmlContent = weiXinCtrl.getRefundParams(order);
+            if (xmlContent != null) {
+                String result = weiXinCtrl.refundConnect(SysParCom.WEIXIN_PAY_REFUND, xmlContent, WeiXinTradeType.getWeiXinTradeType(order.getPayMethodSub())); //接口提供所有微信支付订单的查询
+                Logger.info("微信支付退款发送内容\n" + xmlContent + "\n返回内容" + result);
+
+                if (Objects.equals("", result) || null == result) {
+                    Logger.error(refund.getUserId() + "微信退款返回结果为空");
+                }
+                try {
+                    Map<String, String> resultMap = weiXinCtrl.xmlToMap(result);
+
+                    Refund re = new Refund();
+
+                    if (null == resultMap || resultMap.size() <= 0) {
+                        Logger.error(refund.getUserId() + "微信退款返回结果为空");
+                    } else if (!"SUCCESS".equals(resultMap.get("return_code"))) { //返回状态码  SUCCESS/FAIL 此字段是通信标识，非交易标识，交易是否成功需要查看result_code来判断
+                        Logger.error(refund.getUserId() + "微信退款失败,返回状态码:" + resultMap.get("return_code"));
+                    } else {
+                        String out_refund_no=resultMap.get("out_refund_no");
+                        re.setOrderId(Long.valueOf(out_refund_no));
+                        re.setPgCode(resultMap.get("result_code"));
+                        re.setPgMessage(resultMap.get("return_msg"));
+                        re.setPgTradeNo(resultMap.get("refund_id"));//微信退款单号
+                        if (resultMap.get("result_code").equals("SUCCESS")) {
+                            re.setState("Y");
+                            Order order1 = new Order();
+                            order1.setOrderId(refund.getOrderId());
+                            order1.setOrderStatus("T");
+                            cartService.updateOrder(order1);
+                            Logger.error(refund.getUserId() + "微信退款成功,返回业务结果码:" + resultMap.get("result_code")+",refund="+re);
+                        } else {
+                            Logger.error(refund.getUserId() + "微信退款失败,返回业务结果码:" + resultMap.get("result_code")+",refund="+re);
+                            re.setState("N");
+                        }
+                        cartService.updateRefund(re);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("微信退款出现异常," + Throwables.getStackTraceAsString(ex));
+                }
+            }
+
+        }
+
     }
 }
