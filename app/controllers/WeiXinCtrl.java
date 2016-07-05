@@ -680,6 +680,7 @@ public class WeiXinCtrl extends Controller {
      * @return
      */
     public Result weixinPaySucessRedirect(Order order, Map<String, String> returnMap) {
+        returnMap.put("all_fee",order.getPayTotal().toPlainString()); //支付成功界面显示的支付金额
         if (order.getOrderType() != null && order.getOrderType() == 2) { //1:正常购买订单，2：拼购订单
             PinUser pinUser = new PinUser();
             pinUser.setUserId(order.getUserId());
