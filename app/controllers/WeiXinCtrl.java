@@ -194,6 +194,18 @@ public class WeiXinCtrl extends Controller {
         return SysParCom.WEIXIN_KEY;
     }
 
+    /**
+     * 根据支付方式获取微信退款ssl路径
+     * @param tradeType
+     * @return
+     */
+    private String getWeixinSSLPath(WeiXinTradeType tradeType){
+        if(WeiXinTradeType.APP==tradeType){
+            return SysParCom.WEIXIN_SSL_PATH_APP;
+        }
+        return SysParCom.WEIXIN_SSL_PATH;
+    }
+
 
     /**
      * 获取微信签名
@@ -693,19 +705,14 @@ public class WeiXinCtrl extends Controller {
 
     /**
      * 获取退款参数
-     * @param orderId
+     * @param order
      * @return
      */
-    public String getRefundParams(Long orderId) {
+    public String getRefundParams(Order order) {
         try {
-            Order order = new Order();
-            order.setOrderId(orderId);
-            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
-            if (listOptional.isPresent() && listOptional.get().size() == 1) {
-                order = listOptional.get().get(0);
                 WeiXinTradeType tradeType=WeiXinTradeType.getWeiXinTradeType(order.getPayMethodSub());
                 if(null==tradeType){
-                    Logger.error("微信退款支付方式不存在orderId="+orderId+",tradeType="+order.getPayMethodSub());
+                    Logger.error("微信退款支付方式不存在orderId="+order.getOrderId()+",tradeType="+order.getPayMethodSub());
                     return null;
                 }
                 TreeMap<String, String> paramMap = new TreeMap<>();
@@ -714,7 +721,7 @@ public class WeiXinCtrl extends Controller {
                 paramMap.put("nonce_str", UUID.randomUUID().toString().replaceAll("-", ""));
             //    paramMap.put("out_trade_no", orderId + "");
                 paramMap.put("transaction_id", order.getPgTradeNo());//退款采用微信生成的订单号,因我们发送过去的订单号不同支付方式不同
-                paramMap.put("out_refund_no", orderId + ""); //商户系统内部的退款单号，商户系统内部唯一，同一退款单号多次请求只退一笔
+                paramMap.put("out_refund_no", order.getOrderId() + ""); //商户系统内部的退款单号，商户系统内部唯一，同一退款单号多次请求只退一笔
 
                 String totalFee="";
                 if (ONE_CENT_PAY) {
@@ -730,7 +737,7 @@ public class WeiXinCtrl extends Controller {
                 String sign = getWeiXinSign(paramMap,tradeType);
                 paramMap.put("sign", sign);
                 return mapToXml(paramMap);
-            } else return null;
+
         } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error(Throwables.getStackTraceAsString(ex));
@@ -744,10 +751,11 @@ public class WeiXinCtrl extends Controller {
      * @param sendStr
      * @return
      */
-    public String refundConnect(String requestUrl,String sendStr){
+    public String refundConnect(String requestUrl,String sendStr,WeiXinTradeType weiXinTradeType){
         try {
             KeyStore keyStore = KeyStore.getInstance("PKCS12");
-            FileInputStream instream = new FileInputStream(new File(SysParCom.WEIXIN_SSL_PATH));
+            String sslPath=getWeixinSSLPath(weiXinTradeType); //按照支付方式获取不同的证书
+            FileInputStream instream = new FileInputStream(new File(sslPath));
             keyStore.load(instream, SysParCom.WEIXIN_MCH_ID.toCharArray());
             instream.close();
             SSLContext sslcontext = SSLContexts.custom().loadKeyMaterial(keyStore, SysParCom.WEIXIN_MCH_ID.toCharArray()).build();
@@ -759,7 +767,7 @@ public class WeiXinCtrl extends Controller {
             httpost.setEntity(new StringEntity(sendStr, "UTF-8"));
             CloseableHttpResponse response = httpclient.execute(httpost);
             HttpEntity entity = response.getEntity();
-            Logger.info("----------------HttpEntity------------------------" + entity);
+//            Logger.info("----------------HttpEntity------------------------" + entity);
             String jsonStr = EntityUtils.toString(response.getEntity(), "UTF-8");
             EntityUtils.consume(entity);
             return jsonStr;

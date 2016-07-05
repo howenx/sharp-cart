@@ -149,7 +149,7 @@ public class AlipayCtrl extends Controller {
     public static String buildRequestMysignApp(Map<String, String> sPara,String key,String signType) {
         String prestr=createLinkStringApp(sPara);
         String mysign = sign(prestr, key, "utf-8",signType);
-        Logger.info("======支付宝APP签名串\n"+prestr+"===>秘钥:\n"+key+",mysign=\n"+mysign);
+//        Logger.info("======支付宝APP签名串\n"+prestr+"===>秘钥:\n"+key+",mysign=\n"+mysign);
         return mysign;
     }
 
@@ -299,7 +299,6 @@ public class AlipayCtrl extends Controller {
         Map<String, String> sPara = paraFilter(sParaTemp);
         String key=decodeKey(signType);
         String prestr = createLinkString(sPara); //把数组所有元素，按照“参数=参数值”的模式用“&”字符拼接成字符串
-        Logger.info("=verifySign=="+key);
         return verify(prestr,sign,key,"utf-8",signType);
     }
 
@@ -390,30 +389,6 @@ public class AlipayCtrl extends Controller {
     public Result payBackNotify(){
         Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
-//        params.put("discount","0.00");
-//        params.put("payment_type","1");
-//        params.put("subject","韩秘美订单50102328");
-//        params.put("trade_no","2016052621001004360220362391");
-//        params.put("buyer_email","13716311853");
-//        params.put("gmt_create","2016-05-26 18:30:18");
-//        params.put("notify_type","trade_status_sync");
-//        params.put("quantity","1");
-//        params.put("out_trade_no","50102328");
-//        params.put("seller_id","2088811744291968");
-//        params.put("notify_time","2016-05-26 18:30:25");
-//        params.put("body","韩秘美订单50102328");
-//        params.put("trade_status","TRADE_SUCCESS");
-//        params.put("is_total_fee_adjust","N");
-//        params.put("total_fee","0.01");
-//        params.put("gmt_payment","2016-05-26 18:30:24");
-//        params.put("seller_email","management@bjdacorp.com");
-//        params.put("price","0.01");
-//        params.put("buyer_id","2088802427704365");
-//        params.put("notify_id","d75c103419a9844ddb6a0c5dcc38ce4is2");
-//        params.put("use_coupon","N");
-//        params.put("sign_type","RSA");
-//        params.put("sign","GHQI7RLBvbI9gz2S6WxjQUc6J9emdx84DIstuRZGxY3t/kwLcQT4EEg/i7Bx3vu+F6TzDTw0asclNYNemOZCfLDMCWm+NBzFFWvPWK8RHN8E8w4Ne95GJ6piJjTRwNXPZrq+iNyOXLRwmHue/gw/VjMdulBwmNkKFCw5j3ldW2k=");
-
         body_map.forEach((k, v) -> params.put(k, v[0]));
         Logger.info("支付宝支付回调返回params="+params);
 
@@ -422,7 +397,6 @@ public class AlipayCtrl extends Controller {
             if(!"true".equals(verifyAli)){ //验证是否是支付宝发来的通知
                 Logger.error("################支付宝支付异步通知 验证是否是支付宝发来的通知对不上################,notify_id=" + params.get("notify_id"));
                 return ok("fail");
-
             }
             if(null!=params.get("out_trade_no")&& null!=params.get("total_fee")&&null!=params.get("trade_status")
                     &&("TRADE_SUCCESS".equals(params.get("trade_status"))||"TRADE_FINISHED".equals(params.get("trade_status")))){ //有订单号并且交易成功
@@ -543,55 +517,6 @@ public class AlipayCtrl extends Controller {
 
     }
 
-//    /**
-//     * 获取退款参数
-//     * @param orderId
-//     * @return
-//     */
-//    public String getRefundParamsAPI(Long orderId) {
-//        try {
-//            Order order = new Order();
-//            order.setOrderId(orderId);
-//            Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrder(order));
-//            if (listOptional.isPresent() && listOptional.get().size() == 1) {
-//                order = listOptional.get().get(0);
-//                TreeMap<String, String> sParaTemp = new TreeMap<>();
-//                sParaTemp.put("app_id", SysParCom.ALIPAY_PARTNER);
-//                sParaTemp.put("method","alipay.trade.refund");
-//                sParaTemp.put("charset", "utf-8");
-//                sParaTemp.put("timestamp",new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-//                sParaTemp.put("version","1.0");
-//                sParaTemp.put("out_trade_no",order.getOrderId()+"");
-//                sParaTemp.put("refund_amount",order.getPayTotal().toPlainString());
-//                Map<String, String> map=buildRequestPara(sParaTemp,"RSA");
-//                Logger.info("支付宝退款参数"+Json.toJson(map)+",ALIPAY_OPENAPI_GATEWAY="+ALIPAY_OPENAPI_GATEWAY);
-//                //创建一个OkHttpClient对象
-//                OkHttpClient okHttpClient = new OkHttpClient();
-//                //创建一个RequestBody(参数1：数据类型 参数2传递的json串)
-//                RequestBody requestBody = RequestBody.create(MEDIA_TYPE_JSON, Json.toJson(map).toString());
-//                //创建一个请求对象
-//                Request request = new Request.Builder().url(ALIPAY_OPENAPI_GATEWAY).post(requestBody).build();
-//                //发送请求获取响应
-//                try {
-//                    Response response=okHttpClient.newCall(request).execute();
-//                    //判断请求是否成功
-//                    if(response.isSuccessful()){
-//                        //打印服务端返回结果
-//                        Logger.info("==退款返回结果==="+response.body().string());
-//                        return response.body().string();
-//
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            } else return null;
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//            Logger.error(Throwables.getStackTraceAsString(ex));
-//            return null;
-//        }
-//        return null;
-//    }
 
     /**
      * 支付宝退款异步通知
@@ -600,14 +525,6 @@ public class AlipayCtrl extends Controller {
     public Result payRefundNotify(){
         Map<String, String[]> body_map = request().body().asFormUrlEncoded();
         Map<String, String> params = new HashMap<>();
-//        params.put("sign", "RCBlGZP4fWUlzkmvrQmRfKvonkI2033VZ3+djOW0ws/KW9bRBjbNU0of/1p1EpWary6yUdVkR3wYzPZzF9jTDVCIbrCt8ySbFpKzT29f3r5AsciWrrfGAQZXxS5xQgAThYHh6GxjqcxnbZ4i7IsOfgdMDDk2uGJ5mGhG/J9zRrg=");
-//        params.put("result_details","2016052521001004360218241676^0.01^SUCCESS");
-//        params.put("notify_time","2016-05-25 18:23:09");
-//        params.put("sign_type","RSA");
-//        params.put("notify_type","batch_refund_notify");
-//        params.put("notify_id","e8101c81cafd461d6aad631f90a36e0je9");
-//        params.put("batch_no","2016052518185850102295");
-//        params.put("success_num","1");
         body_map.forEach((k, v) -> params.put(k, v[0]));
         Logger.info("支付宝退款异步通知params="+params);
         if(verifySign(params,params.get("sign"),params.get("sign_type"))) { //验证签名
