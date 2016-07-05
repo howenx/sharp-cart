@@ -418,8 +418,8 @@ public class AlipayCtrl extends Controller {
                     Logger.error("################支付宝支付异步通知 支付金额对于不上################,orderId=" + order.getOrderId());
                     return ok("fail");
                 }
-                order.setPayMethod("ALIPAY");
-                order.setPayMethodSub("ALIPAY");
+                order.setPayMethod("APAY");
+                order.setPayMethodSub("APAY");
                 order.setErrorStr("");
                 if(null!=params.get("trade_no")){
                     order.setPgTradeNo(params.get("trade_no"));
