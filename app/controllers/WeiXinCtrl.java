@@ -755,10 +755,12 @@ public class WeiXinCtrl extends Controller {
         try {
             KeyStore keyStore = KeyStore.getInstance("PKCS12");
             String sslPath=getWeixinSSLPath(weiXinTradeType); //按照支付方式获取不同的证书
+            String mchId=getWeixinMchId(weiXinTradeType);
             FileInputStream instream = new FileInputStream(new File(sslPath));
-            keyStore.load(instream, SysParCom.WEIXIN_MCH_ID.toCharArray());
+
+            keyStore.load(instream, mchId.toCharArray());
             instream.close();
-            SSLContext sslcontext = SSLContexts.custom().loadKeyMaterial(keyStore, SysParCom.WEIXIN_MCH_ID.toCharArray()).build();
+            SSLContext sslcontext = SSLContexts.custom().loadKeyMaterial(keyStore, mchId.toCharArray()).build();
 
             SSLConnectionSocketFactory sslsf=new SSLConnectionSocketFactory(sslcontext,SSLConnectionSocketFactory.getDefaultHostnameVerifier());
             CloseableHttpClient httpclient = HttpClients.custom() .setSSLSocketFactory(sslsf) .build();
