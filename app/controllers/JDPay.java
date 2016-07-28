@@ -204,7 +204,7 @@ public class JDPay extends Controller {
             order = listOptional.get().get(0);
             map.put("out_trade_no", orderId.toString());
             map.put("return_params", orderId.toString());//成功支付,或者查询时候,返回订单编号
-            map.put("trade_subject", "韩秘美-订单编号" + orderId);
+            map.put("trade_subject", "KakaoGift-订单编号" + orderId);
             if (ONE_CENT_PAY) {
                 map.put("trade_amount", "1");
             } else {
@@ -243,7 +243,7 @@ public class JDPay extends Controller {
                     orderLine.setOrderId(orderId);
                     orderLine.setSplitId(orderSp.getSplitId());
                     subOrderMap.put("sub_order_no", orderSp.getSplitId().toString());
-                    subOrderMap.put("sub_order_name", "韩秘美-子订单号" + orderSp.getSplitId());
+                    subOrderMap.put("sub_order_name", "KakaoGift-子订单号" + orderSp.getSplitId());
 
                     if (ONE_CENT_PAY) {
                         subOrderMap.put("sub_order_amount", String.valueOf(1));

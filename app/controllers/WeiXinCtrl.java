@@ -106,7 +106,7 @@ public class WeiXinCtrl extends Controller {
         paramMap.put("appid", getWeixinAppId(tradeType)); //应用ID
         paramMap.put("mch_id", getWeixinMchId(tradeType));
         paramMap.put("nonce_str", UUID.randomUUID().toString().replaceAll("-", ""));
-        paramMap.put("body", "韩秘美-订单编号" + orderId);
+        paramMap.put("body", "KakaoGift-订单编号" + orderId);
         paramMap.put("notify_url", SysParCom.SHOPPING_URL + "/client/weixin/pay/back");
         paramMap.put("out_trade_no", toWeiXinOrderId(orderId,tradeType));
         paramMap.put("fee_type","CNY");
