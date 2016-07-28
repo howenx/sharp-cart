@@ -280,6 +280,7 @@
             and t.pg_trade_no = #{pgTradeNo}
         </if>
         and order_status !='N' and order_status !='PI' and order_status !='PS' and order_status !='PF'
+        and or_del =false
         order by t.order_create_at DESC
     </select>
 
