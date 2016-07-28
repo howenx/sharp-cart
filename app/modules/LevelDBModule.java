@@ -1,12 +1,9 @@
 package modules;
 
 import com.google.inject.AbstractModule;
-import com.typesafe.config.ConfigFactory;
 import middle.CartMid;
 import middle.JDPayMid;
 import middle.OrderMid;
-import play.Logger;
-import redis.clients.jedis.Jedis;
 import util.*;
 
 /**
@@ -22,7 +19,6 @@ public class LevelDBModule extends AbstractModule {
         bind(NewScheduler.class);
         bind(OrderMid.class);
         bind(SysParCom.class).asEagerSingleton();
-        bind(RemoteActorModule.class).asEagerSingleton();
         bind(AppOnStart.class).asEagerSingleton();
         bind(MnsInit.class).asEagerSingleton();
         bind(LogUtil.class).asEagerSingleton();
