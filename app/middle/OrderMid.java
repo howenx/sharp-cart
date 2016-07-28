@@ -331,7 +331,7 @@ public class OrderMid {
             return settleFeeVo;
         }
 
-        //如果存在单个海关的金额超过1000,返回   直邮不限制
+        //如果存在单个海关的金额超过2000,返回   直邮不限制
         if (comUtil.isOutOfPostalLimit(settleDTO.getInvArea(), totalFeeSingle)) {
             settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_QUANTITY_SUM_PRICE.getIndex());
             return settleFeeVo;
@@ -344,39 +344,44 @@ public class OrderMid {
     //计算邮费
     private BigDecimal calculateShipFee(String provinceCode, String invArea, Integer totalWeight) throws Exception {
 
-        BigDecimal shipFee = BigDecimal.ZERO;
-        //取邮费
-        Carriage carriage = new Carriage();
-        carriage.setCityCode(provinceCode);
-        carriage.setStoreArea(invArea);
+        return BigDecimal.ZERO;
 
-        Optional<Carriage> carriageOptional = Optional.ofNullable(skuService.getCarriage(carriage));
-        if (carriageOptional.isPresent()) {
-            carriage = carriageOptional.get();
-            //规则:如果购买数量小于首件数量要求,则取首费,否则就整除续件数量+1,乘以续费再加首费
-            if (totalWeight <= carriage.getFirstNum()) {
-                shipFee = shipFee.add(carriage.getFirstFee());
-            } else {
-                Integer addWeight = 0;
-                if ((totalWeight - carriage.getFirstNum()) % carriage.getAddNum() > 0) {
-                    addWeight = (totalWeight - carriage.getFirstNum()) / carriage.getAddNum() + 1;
-                } else addWeight = (totalWeight - carriage.getFirstNum()) / carriage.getAddNum();
-                shipFee = shipFee.add(carriage.getFirstFee()).add(new BigDecimal(addWeight).multiply(carriage.getAddFee()));
-            }
-        }
-
-        return shipFee;
+//        BigDecimal shipFee = BigDecimal.ZERO;
+//        //取邮费
+//        Carriage carriage = new Carriage();
+//        carriage.setCityCode(provinceCode);
+//        carriage.setStoreArea(invArea);
+//
+//        Optional<Carriage> carriageOptional = Optional.ofNullable(skuService.getCarriage(carriage));
+//        if (carriageOptional.isPresent()) {
+//            carriage = carriageOptional.get();
+//            //规则:如果购买数量小于首件数量要求,则取首费,否则就整除续件数量+1,乘以续费再加首费
+//            if (totalWeight <= carriage.getFirstNum()) {
+//                shipFee = shipFee.add(carriage.getFirstFee());
+//            } else {
+//                Integer addWeight = 0;
+//                if ((totalWeight - carriage.getFirstNum()) % carriage.getAddNum() > 0) {
+//                    addWeight = (totalWeight - carriage.getFirstNum()) / carriage.getAddNum() + 1;
+//                } else addWeight = (totalWeight - carriage.getFirstNum()) / carriage.getAddNum();
+//                shipFee = shipFee.add(carriage.getFirstFee()).add(new BigDecimal(addWeight).multiply(carriage.getAddFee()));
+//            }
+//        }
+//
+//        return shipFee;
     }
 
     //计算行邮税
     private BigDecimal calculatePostalTax(String postalTaxRate, BigDecimal price, Integer amount) {
-        if (postalTaxRate == null) {
-            return BigDecimal.ZERO;
-        }
-        BigDecimal postalFee = BigDecimal.ZERO;
-        //计算行邮税,行邮税加和
-        postalFee = postalFee.add(new BigDecimal(postalTaxRate).multiply(price).multiply(new BigDecimal(amount)).multiply(new BigDecimal(0.01)));
-        return postalFee;
+
+        return BigDecimal.ZERO;
+
+//        if (postalTaxRate == null) {
+//            return BigDecimal.ZERO;
+//        }
+//        BigDecimal postalFee = BigDecimal.ZERO;
+//        //计算行邮税,行邮税加和
+//        postalFee = postalFee.add(new BigDecimal(postalTaxRate).multiply(price).multiply(new BigDecimal(amount)).multiply(new BigDecimal(0.01)));
+//        return postalFee;
     }
 
 
