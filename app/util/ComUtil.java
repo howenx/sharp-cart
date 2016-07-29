@@ -41,8 +41,8 @@ public class ComUtil {
 
     //是否超出总额限制
     public boolean isOutOfPostalLimit(String invArea,BigDecimal curValue){
-        //直邮不限总额
-        if("K".equals(invArea)){
+        //直邮不限总额,北京仓直邮不限总额
+        if("K".equals(invArea)||"BK".equals(invArea)){
             return false;
         }
         if(curValue.compareTo(new BigDecimal(SysParCom.POSTAL_LIMIT)) > 0){

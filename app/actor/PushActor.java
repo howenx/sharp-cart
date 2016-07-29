@@ -7,6 +7,7 @@ import cn.jpush.api.common.resp.APIConnectionException;
 import cn.jpush.api.common.resp.APIRequestException;
 import cn.jpush.api.push.PushResult;
 import cn.jpush.api.push.model.PushPayload;
+import com.typesafe.config.ConfigFactory;
 import play.Logger;
 import util.SysParCom;
 
@@ -18,13 +19,12 @@ import javax.inject.Inject;
  */
 public class PushActor extends AbstractActor {
 
-//    private static JPushClient jpushClient=new JPushClient(SysParCom.PUSH_MASTER_SECRET, SysParCom.PUSH_APP_KEY) ;
-    //appKey:注册应用的应用Key
-    private static final String appKey = "a81748f2ead4ab0faef89329";
-    // masterSecret：注册应用的主密码,即API 主密码
-    private static final String masterSecret = "1bd35ab27b1530d417afb1b9";
+//    //appKey:注册应用的应用Key
+//    private static final String appKey = "a81748f2ead4ab0faef89329";
+//    // masterSecret：注册应用的主密码,即API 主密码
+//    private static final String masterSecret = "1bd35ab27b1530d417afb1b9";
 
-    private static JPushClient jpushClient=new JPushClient(masterSecret, appKey) ;
+    private static JPushClient jpushClient=new JPushClient(ConfigFactory.defaultApplication().getString("push.app.key"), ConfigFactory.defaultApplication().getString("push.master.secret")) ;
 
     @Inject
     public PushActor(){

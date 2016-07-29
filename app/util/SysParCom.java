@@ -114,8 +114,6 @@ public class SysParCom {
 
     //极光推送参数
     public static Long PUSH_TIME_TO_LIVE;
-    public static String PUSH_APP_KEY;
-    public static String PUSH_MASTER_SECRET;
 
 
     @Inject
@@ -217,8 +215,6 @@ public class SysParCom {
         REDIS_CHANNEL = configuration.getString("redis.channel");
 
         PUSH_TIME_TO_LIVE=configuration.getLong("push.time.to.live");
-        PUSH_APP_KEY=configuration.getString("push.app.key");
-        PUSH_MASTER_SECRET=configuration.getString("push.master.secret");
 
         WEIXIN_SOCKET=new HashMap<>();
 
