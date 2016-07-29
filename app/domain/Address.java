@@ -10,7 +10,7 @@ import java.io.Serializable;
  */
 public class Address implements Serializable {
 
-    private Long addId;//用户地址主键
+    private Long addId;//用户地址主键 
     private String tel;//电话
     private String name;//姓名
     private String deliveryCity;//配送城市
