@@ -43,7 +43,7 @@
             when ${alias}.inv_area='GZ' then '广州保税仓直邮'
             when ${alias}.inv_area='HZ' then '杭州保税仓直邮'
             when ${alias}.inv_area='K' then '海外直邮'
-            when ${alias}.inv_area='BK' then '北京仓直邮'
+            when ${alias}.inv_area='NK' then '国内仓直邮'
             else '其它'
         end as inv_area_nm,
         ${alias}.restrict_amount ,
@@ -105,7 +105,7 @@
         when ${alias}.inv_area='GZ' then '广州保税仓直邮'
         when ${alias}.inv_area='HZ' then '杭州保税仓直邮'
         when ${alias}.inv_area='K' then '海外直邮'
-        when ${alias}.inv_area='BK' then '北京仓直邮'
+        when ${alias}.inv_area='NK' then '国内仓直邮'
         else '其它'
         end as inv_area_nm,
         ${alias}.restrict_amount,
