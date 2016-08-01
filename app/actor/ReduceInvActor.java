@@ -6,6 +6,7 @@ import com.google.common.base.Throwables;
 import domain.*;
 import play.Logger;
 import service.SkuService;
+import util.ComUtil;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -15,6 +16,9 @@ import java.util.List;
  * Created by howen on 15/12/18.
  */
 public class ReduceInvActor extends AbstractActor {
+    @Inject
+    private ComUtil comUtil;
+
     @Inject
     public ReduceInvActor(SkuService skuService) {
 
@@ -45,13 +49,15 @@ public class ReduceInvActor extends AbstractActor {
                     }
 
                     if (sku.getRestAmount() - cartDto.getAmount() == 0) {
-                        sku.setRestAmount(0);
+                    //    sku.setRestAmount(0);
+                        comUtil.changeRestAmount(sku,-cartDto.getAmount());
                         sku.setState("K");
                         sku.setSoldAmount(sku.getSoldAmount() + cartDto.getAmount());
                     } else if (sku.getRestAmount() - cartDto.getAmount() < 0) {
                         Logger.error("ReduceInvActor: 出现库存负数,不能支付");
                     } else {
-                        sku.setRestAmount(sku.getRestAmount() - cartDto.getAmount());
+                     //   sku.setRestAmount(sku.getRestAmount() - cartDto.getAmount());
+                        comUtil.changeRestAmount(sku,-cartDto.getAmount());
                         sku.setSoldAmount(sku.getSoldAmount() + cartDto.getAmount());
                     }
                     try {

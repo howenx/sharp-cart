@@ -69,4 +69,13 @@ public class ComUtil {
         } else return SysParCom.IMAGE_URL + invImg;
     }
 
+    /**
+     * 改变库存
+     * @param sku 商品
+     * @param changeAmount 需要改变的个数,可正可负,如果正表示加库存,如果负表示减库存
+     */
+    public synchronized void changeRestAmount(Sku sku,Integer changeAmount){
+        sku.setRestAmount(sku.getRestAmount()+changeAmount);
+    }
+
 }

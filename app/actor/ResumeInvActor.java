@@ -10,6 +10,7 @@ import domain.Sku;
 import play.Logger;
 import service.CartService;
 import service.SkuService;
+import util.ComUtil;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -20,7 +21,8 @@ import java.util.Optional;
  * Created by howen on 15/12/19.
  */
 public class ResumeInvActor extends AbstractActor {
-
+    @Inject
+    private ComUtil comUtil;
     @Inject
     public ResumeInvActor(CartService cartService, SkuService skuService) {
         receive(ReceiveBuilder.match(Long.class, orderId -> {
@@ -58,16 +60,19 @@ public class ResumeInvActor extends AbstractActor {
                             }
                             switch (sku.getState()) {
                                 case "Y":
-                                    sku.setRestAmount(sku.getRestAmount() + ordL.getAmount());
+                                //    sku.setRestAmount(sku.getRestAmount() + ordL.getAmount());
+                                    comUtil.changeRestAmount(sku,ordL.getAmount());
                                     sku.setSoldAmount(sku.getSoldAmount() - ordL.getAmount());
                                     break;
                                 case "K":
-                                    sku.setRestAmount(sku.getRestAmount() + ordL.getAmount());
+                                //    sku.setRestAmount(sku.getRestAmount() + ordL.getAmount());
+                                    comUtil.changeRestAmount(sku,ordL.getAmount());
                                     sku.setSoldAmount(sku.getSoldAmount() - ordL.getAmount());
                                     sku.setState("Y");
                                     break;
                                 default:
-                                    sku.setRestAmount(sku.getRestAmount() - ordL.getAmount());
+                                 //   sku.setRestAmount(sku.getRestAmount() - ordL.getAmount());
+                                    comUtil.changeRestAmount(sku,-ordL.getAmount());
                                     sku.setSoldAmount(sku.getSoldAmount() + ordL.getAmount());
                                     break;
                             }
