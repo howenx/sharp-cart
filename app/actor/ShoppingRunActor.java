@@ -40,6 +40,8 @@ public class ShoppingRunActor extends AbstractActor {
                         inputStream = response.getBodyAsStream();
                         String zipPath = configuration.getString("shopping.zip.path");
 
+                        rmShell(zipPath,projectName);
+
                         final File file = new File(zipPath);
 
                         Logger.error("shopping.zip.path文件为: " + file.getPath());
@@ -80,6 +82,20 @@ public class ShoppingRunActor extends AbstractActor {
             Logger.error("AdminRunActor received messages not matched: {}", s.toString());
             unhandled(s);
         }).build());
+    }
+
+    private void rmShell(String dist, String projectName){
+        List<String> commands = Arrays.asList("bash", "-c", "rm -rf " + projectName +"*");
+
+        String output = null;
+        try {
+            output = exec(dist, null, commands);
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            Logger.error(Throwables.getStackTraceAsString(e));
+        }
+        Logger.error("删除---->\n" + output);
     }
 
     private void callShell(String dist, String fileName, String projectName) {
