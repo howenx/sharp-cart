@@ -85,7 +85,7 @@ public class ShoppingRunActor extends AbstractActor {
     }
 
     private void rmShell(String dist, String projectName){
-        List<String> commands = Arrays.asList("bash", "-c", "rm -rf " + projectName +"*");
+        List<String> commands = Arrays.asList("bash", "-c", "sudo rm -rf " + projectName +"*");
 
         String output = null;
         try {
