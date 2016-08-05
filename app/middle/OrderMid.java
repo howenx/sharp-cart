@@ -474,7 +474,7 @@ public class OrderMid {
 
             List<SettleFeeVo> settleFeeVoList = settleVo.getSingleCustoms();
 
-            if(settleVo.getTotalFee().compareTo(discount)<=0){
+            if(settleVo.getTotalFee().compareTo(discount.add(BigDecimal.ONE))<=0){   //至少1元
                 discount = settleVo.getTotalFee().subtract(BigDecimal.ONE);
             }
 
