@@ -24,7 +24,7 @@ public class PushActor extends AbstractActor {
 //    // masterSecret：注册应用的主密码,即API 主密码
 //    private static final String masterSecret = "1bd35ab27b1530d417afb1b9";
 
-    private static JPushClient jpushClient=new JPushClient(ConfigFactory.defaultApplication().getString("push.app.key"), ConfigFactory.defaultApplication().getString("push.master.secret")) ;
+    private static JPushClient jpushClient=new JPushClient(ConfigFactory.defaultApplication().getString("push.master.secret"),ConfigFactory.defaultApplication().getString("push.app.key")) ;
 
     @Inject
     public PushActor(){
