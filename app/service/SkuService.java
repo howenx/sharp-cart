@@ -28,4 +28,6 @@ public interface SkuService {
 
     List<VersionVo> getVersioning(VersionVo versionVo);
 
+    List<WeiSheng> getWeiSheng(WeiSheng weiSheng);
+
 }

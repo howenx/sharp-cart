@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Throwables;
+import com.squareup.okhttp.*;
 import domain.*;
 import filters.UserAuth;
 import middle.OrderMid;
@@ -18,17 +19,24 @@ import play.mvc.*;
 import service.CartService;
 import service.PromotionService;
 import service.SkuService;
+import sun.security.provider.MD5;
 import util.CalCountDown;
+import util.Crypto;
 import util.ExpressMD5;
 import util.SysParCom;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.util.*;
 
 import static akka.pattern.Patterns.ask;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static play.libs.Json.newObject;
+import static play.libs.Json.toJson;
 import static util.SysParCom.*;
 
 /**
@@ -243,17 +251,30 @@ public class OrderCtrl extends Controller {
                         final String expressName = orderSplit.getExpressNm();
                         final String expressNum = orderSplit.getExpressNum();
 
+
                         ObjectNode obj = Json.newObject();
                         obj.put("com", orderSplit.getExpressCode());
                         obj.put("num", orderSplit.getExpressNum());
 
+                        JsonNode weisheng=null;
+                        if(null!=expressNum&&!"0".equals(expressNum)){
+                            weisheng=weishengOrderTrack(expressNum);
+                         //   weisheng=weishengOrderTrack("806843734566");
+                        }
+
+
                         String sign = ExpressMD5.encode(obj.toString() + EXPRESS_KEY + EXPRESS_CUSTOMER);
 
+                        final JsonNode finalWeisheng = weisheng;
                         return ws.url(EXPRESS_POST_URL).setQueryParameter("param", obj.toString()).setQueryParameter("sign", sign).setQueryParameter("customer", EXPRESS_CUSTOMER).post("").map(wsResponse -> {
                             JsonNode jsonNode = wsResponse.asJson();
                             Logger.error("快递100返回信息--->" + jsonNode.toString());
                             ((ObjectNode) jsonNode).put("expressName", expressName);
                             ((ObjectNode) jsonNode).put("expressNum", expressNum);
+                            if(null!=finalWeisheng){
+                                ((ObjectNode) jsonNode).putPOJO("weisheng", finalWeisheng);
+                            }
+
                             return ok(jsonNode);
                         });
                     } else {
@@ -508,6 +529,64 @@ public class OrderCtrl extends Controller {
                 return Json.stringify(jsonNode_InvImg);
             } else return SysParCom.IMAGE_URL + invImg;
         } else return SysParCom.IMAGE_URL + invImg;
+    }
+
+
+    /**
+     * 商户获取物流追踪信息接口
+     * @param expressNo 威盛快递单号
+     */
+    private JsonNode weishengOrderTrack(String expressNo){
+        WeiSheng weiSheng=new WeiSheng();
+        weiSheng.setExpressNo(expressNo);
+        List<WeiSheng> weiShengList=skuService.getWeiSheng(weiSheng);
+
+        if(null!=weiShengList&&weiShengList.size()>0){
+            ObjectNode  requestJson= newObject();
+            requestJson.put("appname",WEISHENG_APP_NAME);
+            requestJson.put("appid",WEISHENG_APP_ID);
+            requestJson.put("TrackingID",weiShengList.get(0).getTrackingId());
+
+            String EData=Json.toJson(requestJson).toString();
+            String SignMsg= Crypto.md5(EData+WEISHENG_KEY);
+            String msg="";
+            try {
+                msg= URLEncoder.encode(EData,"UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            msg="EData="+msg+"&SignMsg="+SignMsg;
+
+//            Logger.error("-发送内容-->"+msg);
+
+            //创建一个OkHttpClient对象
+            OkHttpClient okHttpClient = new OkHttpClient();
+            RequestBody formBody = RequestBody.create(MediaType.parse("application/x-www-form-urlencoded; charset=utf-8"),msg);
+            //创建一个请求对象
+            Request request = new Request.Builder().url(WEISHENG_ORDER_TRACK_URL).post(formBody).build();
+            //发送请求获取响应
+            try {
+                Response response=okHttpClient.newCall(request).execute();
+                //判断请求是否成功
+                if(response.isSuccessful()){
+                    //打印服务端返回结果
+                    JsonNode jsonNode=Json.parse(new String(response.body().bytes(), UTF_8));
+                    Logger.info("威盛物流返回信息--->" + jsonNode);
+                    return jsonNode;
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else{
+            Logger.error("威盛订单TrackingID不存在,expressNo="+expressNo);
+        }
+
+        return null;
+
+
+
+
     }
 
 }

@@ -276,4 +276,18 @@
         order by current_version DESC,release_number DESC
     </select>
 
+    <select id="getWeiSheng" parameterType="domain.WeiSheng" resultType="domain.WeiSheng">
+        select * from weisheng where 1=1
+        <if test="trackingId!=null and trackingId!=''">
+            and tracking_id=#{trackingId}
+        </if>
+        <if test="expressNo!=null and expressNo!=''">
+            and express_no=#{expressNo}
+        </if>
+        <if test="orUse!=null and orUse!=''">
+            and or_use=#{orUse}
+        </if>
+
+    </select>
+
 </mapper>
