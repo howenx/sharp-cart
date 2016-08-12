@@ -214,7 +214,13 @@ public class OrderMid {
             }
 
             //先确定商品状态是正常,然后确定商品结算数量是否超出库存量
-            if (!skuVo.getState().equals("Y")) {
+            if ("K".equals(skuVo.getState())) { //单个sku状态  'Y'--正常,'D'--下架,'N'--删除,'K'--售空，'P'--预售
+                settleFeeVo.setMessageCode(Message.ErrorCode.SKU_DOWN.getIndex());
+                return settleFeeVo;
+            }else if ("P".equals(skuVo.getState())) { //单个sku状态  'Y'--正常,'D'--下架,'N'--删除,'K'--售空，'P'--预售
+                settleFeeVo.setMessageCode(Message.ErrorCode.SKU_PRE_SALE.getIndex());
+                return settleFeeVo;
+            }else if (!skuVo.getState().equals("Y")) {
                 settleFeeVo.setMessageCode(Message.ErrorCode.SKU_INVALID.getIndex());
                 return settleFeeVo;
             } else if (!skuVo.getSkuTypeStatus().equals("Y")) {
