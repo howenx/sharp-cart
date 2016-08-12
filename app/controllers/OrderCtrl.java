@@ -274,6 +274,9 @@ public class OrderCtrl extends Controller {
                             if(jsonNode.has("state")){
                                 express.put("state",jsonNode.get("state").asText());
                             }
+                            if(jsonNode.has("message")){
+                                express.put("message",jsonNode.get("message").asText());
+                            }
                             List<ExpressDataDTO> dataList=new ArrayList<ExpressDataDTO>();
                             //国内快递部分
                             if(jsonNode.has("data")){
