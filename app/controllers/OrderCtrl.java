@@ -1,6 +1,7 @@
 package controllers;
 
 import akka.actor.ActorRef;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -19,7 +20,6 @@ import play.mvc.*;
 import service.CartService;
 import service.PromotionService;
 import service.SkuService;
-import sun.security.provider.MD5;
 import util.CalCountDown;
 import util.Crypto;
 import util.ExpressMD5;
@@ -262,20 +262,49 @@ public class OrderCtrl extends Controller {
                          //   weisheng=weishengOrderTrack("806843734566");
                         }
 
-
                         String sign = ExpressMD5.encode(obj.toString() + EXPRESS_KEY + EXPRESS_CUSTOMER);
 
                         final JsonNode finalWeisheng = weisheng;
                         return ws.url(EXPRESS_POST_URL).setQueryParameter("param", obj.toString()).setQueryParameter("sign", sign).setQueryParameter("customer", EXPRESS_CUSTOMER).post("").map(wsResponse -> {
                             JsonNode jsonNode = wsResponse.asJson();
                             Logger.error("快递100返回信息--->" + jsonNode.toString());
-                            ((ObjectNode) jsonNode).put("expressName", expressName);
-                            ((ObjectNode) jsonNode).put("expressNum", expressNum);
-                            if(null!=finalWeisheng){
-                                ((ObjectNode) jsonNode).putPOJO("weisheng", finalWeisheng);
+                            ObjectNode express = newObject();
+                            express.put("expressName", expressName);
+                            express.put("expressNum", expressNum);
+                            if(jsonNode.has("state")){
+                                express.put("state",jsonNode.get("state").asText());
+                            }
+                            List<ExpressDataDTO> dataList=new ArrayList<ExpressDataDTO>();
+                            //国内快递部分
+                            if(jsonNode.has("data")){
+                                for(JsonNode node:jsonNode.get("data")) {
+                                    ExpressDataDTO expressDataDTO=new ExpressDataDTO();
+                                    if (node.has("time"))
+                                        expressDataDTO.setTime(node.get("time").asText());
+                                    if (node.has("context"))
+                                        expressDataDTO.setContext(node.get("context").asText());
+                                    dataList.add(expressDataDTO);
+                                }
                             }
 
-                            return ok(jsonNode);
+                            //威盛部分
+                            if(null!=finalWeisheng&&finalWeisheng.has("rtnList")&&null!=finalWeisheng.get("rtnList")){
+                                List<ExpressDataDTO> weishengDataList=new ArrayList<ExpressDataDTO>();
+                                for(JsonNode node:finalWeisheng.get("rtnList")){
+                                    ExpressDataDTO expressDataDTO=new ExpressDataDTO();
+                                    if(node.has("Createtime"))
+                                        expressDataDTO.setTime(node.get("Createtime").asText());
+                                    if(node.has("Remark"))
+                                        expressDataDTO.setContext(node.get("Remark").asText());
+                                    weishengDataList.add(expressDataDTO);
+                                }
+                                Collections.reverse(weishengDataList);
+                                dataList.addAll(weishengDataList);
+                            }
+
+                            express.putPOJO("data",toJson(dataList));
+
+                            return ok(express);
                         });
                     } else {
                         result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.DATA_NOT_EXISTS.getIndex()), Message.ErrorCode.DATA_NOT_EXISTS.getIndex())));
