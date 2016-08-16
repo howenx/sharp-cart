@@ -108,12 +108,24 @@
     </sql>
 
     <!-- 获取一条用户第三方登录信息 -->
-    <select id="getIdThree" resultType="domain.IdThree" parameterType="java.lang.Integer">
+    <select id="getIdThree" resultType="domain.IdThree" parameterType="domain.IdThree">
         select
         <include refid="idThreeColumns">
             <property name="alias" value="t"/>
         </include>
-        from id_three t where user_id=${value}
+        from id_three t where 1=1
+        <if test="userId!=null and userId!=''">
+            and user_id=#{userId}
+        </if>
+        <if test="idType!=null and idType!=''">
+            and id_type=#{idType}
+        </if>
+        <if test="openId!=null and openId!=''">
+            and open_id=#{openId}
+        </if>
+        <if test="unionId!=null and unionId!=''">
+            and union_id=#{unionId}
+        </if>
     </select>
 
 </mapper>

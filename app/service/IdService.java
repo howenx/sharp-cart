@@ -5,6 +5,8 @@ import domain.ID;
 import domain.IdPlus;
 import domain.IdThree;
 
+import java.util.List;
+
 /**
  * Id service
  * Created by howen on 15/11/25.
@@ -21,5 +23,5 @@ public interface IdService {
 
     ID getID(Long userId) throws Exception;
     //第三方登录数据
-    IdThree getIdThree(Long userId) throws Exception;
+    List<IdThree> getIdThree(IdThree idThree) throws Exception;
 }

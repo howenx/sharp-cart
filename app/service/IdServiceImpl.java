@@ -7,6 +7,7 @@ import domain.IdThree;
 import mapper.IdMapper;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * impl
@@ -43,7 +44,9 @@ public class IdServiceImpl implements IdService{
     }
 
     @Override
-    public IdThree getIdThree(Long userId) throws Exception {
-        return idMapper.getIdThree(userId);
+    public List<IdThree> getIdThree(IdThree idThree) throws Exception {
+        return idMapper.getIdThree(idThree);
     }
+
+
 }
