@@ -371,17 +371,17 @@ public class MsgCtrl extends Controller {
                 Feedback feedback = new Feedback();
                 feedback.setUserId(userId);
                 feedback.setContent(content);
-                try {
-                    Email email = new Email()
-                            .setSubject("意见反馈")
-                            .setFrom("developer@hanmimei.com")
-                            .addTo("services@hanmimei.com")
-                            .setBodyText("A text message")
-                            .setBodyHtml("<html><body><p>Kakao Gift用户:<br/>" + userId + "<br/>反馈内容:<br/>" + content + "</p></body></html>");
-                    mailerClient.send(email);
-                }catch (Exception e){
-                    Logger.error("意见反馈发送邮件异常"+e.getMessage());
-                }
+//                try {
+//                    Email email = new Email()
+//                            .setSubject("意见反馈")
+//                            .setFrom("developer@hanmimei.com")
+//                            .addTo("services@hanmimei.com")
+//                            .setBodyText("A text message")
+//                            .setBodyHtml("<html><body><p>Kakao Gift用户:<br/>" + userId + "<br/>反馈内容:<br/>" + content + "</p></body></html>");
+//                    mailerClient.send(email);
+//                }catch (Exception e){
+//                    Logger.error("意见反馈发送邮件异常"+e.getMessage());
+//                }
                 if (msgService.insertFeedBack(feedback)) {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                     return ok(result);
