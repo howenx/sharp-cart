@@ -78,6 +78,7 @@ public class Message implements Serializable{
         ORDER_STATUS_EXCEPTION("订单状态不符合",1024),
 
         REMARK_EXISTS("此订单中的商品已经评价过",1025),
+        REFUND_EXISTS("此订单已经申请退款",1026),
 
         SKU_AMOUNT_SHORTAGE("亲,此件商品库存不足了", 2001),
         SKU_INVALID("亲,您已经长时间未操作,此商品已经失效,建议您刷新购物车", 2002),

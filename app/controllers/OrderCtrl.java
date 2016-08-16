@@ -460,6 +460,14 @@ public class OrderCtrl extends Controller {
             try {
                 Refund refund = userForm.get();
 
+                Refund tempRefund=new Refund();
+                tempRefund.setOrderId(refund.getOrderId());
+                List<Refund> list=cartService.selectRefund(tempRefund);
+                //已经申请过退款
+                if(null!=list&&list.size()>0){
+                    result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.REFUND_EXISTS.getIndex()), Message.ErrorCode.REFUND_EXISTS.getIndex())));
+                    return ok(result);
+                }
                 if (refund.getOrderId() != null && refund.getSkuId() != null) {
                     OrderLine orderLine = new OrderLine();
                     orderLine.setOrderId(refund.getOrderId());
