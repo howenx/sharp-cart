@@ -70,3 +70,6 @@ POST        /client/alipay/pay/orderquery/redirect                              
 GET         /client/alipay/pay/orderquery/$orderId<[0-9]+>                                controllers.AlipayCtrl.payOrderquery(orderId:Long)
 
 #GET         /client/alipay/test                                                          controllers.AlipayCtrl.payRefundNotify()
+
+#领取优惠券
+GET         /client/coupon/rec/$recCouponId<[0-9]+>                                     controllers.OrderCtrl.couponRec(recCouponId:Long)

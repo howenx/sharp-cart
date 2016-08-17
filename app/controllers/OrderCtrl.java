@@ -1,6 +1,7 @@
 package controllers;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -70,6 +71,9 @@ public class OrderCtrl extends Controller {
     private WSClient ws;
 
     private static ObjectMapper mapper = new ObjectMapper();
+
+    @Inject
+    ActorSystem system;
 
     /**
      * 请求结算页面
@@ -623,10 +627,33 @@ public class OrderCtrl extends Controller {
         }
 
         return null;
+    }
 
+    /**
+     * 领取优惠券
+     * @param recCouponsId
+     * @return
+     */
+    @Security.Authenticated(UserAuth.class)
+    public Result couponRec(Long recCouponsId){
 
+        ObjectNode result = newObject();
+        try{
 
+            Long userId = (Long) ctx().args.get("userId");
 
+       //     system.actorSelection(SysParCom.COUPON_REC).tell(pushMsg, ActorRef.noSender()).get();
+            Logger.info("userId="+userId+",recCouponsId="+recCouponsId);
+
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            return ok(result);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("server exception:" + Throwables.getStackTraceAsString(ex));
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SERVER_EXCEPTION.getIndex()), Message.ErrorCode.SERVER_EXCEPTION.getIndex())));
+            return ok(result);
+        }
     }
 
 }

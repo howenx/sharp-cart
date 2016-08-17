@@ -121,6 +121,8 @@ public class SysParCom {
     public static String WEISHENG_KEY;
     public static String WEISHENG_ORDER_TRACK_URL;
 
+    public static String COUPON_REC;
+
 
 
     @Inject
@@ -229,6 +231,8 @@ public class SysParCom {
         WEISHENG_APP_NAME=configuration.getString("weisheng.app.name");
         WEISHENG_KEY=configuration.getString("weisheng.key");
         WEISHENG_ORDER_TRACK_URL=configuration.getString("weisheng.order.track.url");
+
+        COUPON_REC=configuration.getString("coupon.rec");
 
     }
 }
