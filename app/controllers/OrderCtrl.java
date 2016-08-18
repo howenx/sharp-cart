@@ -631,20 +631,30 @@ public class OrderCtrl extends Controller {
 
     /**
      * 领取优惠券
-     * @param recCouponsId
+     * @param coupCateId
      * @return
      */
     @Security.Authenticated(UserAuth.class)
-    public Result couponRec(Long recCouponsId){
+    public Result couponRec(Long coupCateId){
 
         ObjectNode result = newObject();
         try{
 
             Long userId = (Long) ctx().args.get("userId");
+            CouponVo temp=new CouponVo();
+            temp.setUserId(userId);
+            temp.setCoupCateId(coupCateId);
 
-       //     system.actorSelection(SysParCom.COUPON_REC).tell(pushMsg, ActorRef.noSender()).get();
-            Logger.info("userId="+userId+",recCouponsId="+recCouponsId);
+            List<CouponVo> couponVoList=cartService.getUserCouponAll(temp);
+            if(null!=couponVoList&&couponVoList.size()>0){
+                //已经领取
+                Logger.info("该优惠券已经领取userId="+userId+",coupCateId="+coupCateId);
+                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.COUPON_EXISTS.getIndex()), Message.ErrorCode.COUPON_EXISTS.getIndex())));
+                return ok(result);
+            }
 
+            CouponRec couponRec=new CouponRec(userId,coupCateId,1);
+            system.actorSelection(SysParCom.COUPON_REC).tell(couponRec, ActorRef.noSender());
             result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             return ok(result);
 
