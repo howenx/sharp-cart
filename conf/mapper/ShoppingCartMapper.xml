@@ -469,8 +469,8 @@
         <if test="coupId!=null and coupId!=''">
             and coup_id = #{coupId}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            and cate_id = #{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            and cate_id = #{coupCateId}
         </if>
         <if test="orderId!=null and orderId!=''">
             and order_id = #{orderId}
@@ -499,8 +499,8 @@
         <if test="coupId!=null and coupId!=''">
             and t.coup_id = #{coupId}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            and t.coup_cate_id = #{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            and t.coup_cate_id = #{coupCateId}
         </if>
         <if test="state!=null and state!=''">
             and t.state = #{state}
@@ -522,17 +522,17 @@
             end_at,
             state,
             limit_quota,
-            cate_nm
+            coup_cate_nm
         ) values(
             #{coupId},
             #{userId},
-            #{cateId},
+            #{coupCateId},
             #{denomination},
         to_timestamp(#{startAt},'YYYY-MM-DD HH24:MI:SS'),
         to_timestamp(#{endAt},'YYYY-MM-DD HH24:MI:SS'),
             #{state},
             #{limitQuota},
-            #{cateNm}
+            #{coupCateNm}
         )
     </insert>
 
@@ -541,8 +541,8 @@
         <if test="userId!=null and userId!=''">
             ,user_id = #{userId}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            ,coup_cate_id = #{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            ,coup_cate_id = #{coupCateId}
         </if>
         <if test="denomination!=null and denomination!=''">
             ,denomination = #{denomination}
@@ -569,8 +569,8 @@
         <if test="userId!=null and userId!=''">
             and user_id =#{userId}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            and coup_cate_id =#{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            and coup_cate_id =#{coupCateId}
         </if>
     </update>
 
@@ -579,8 +579,8 @@
         <if test="userId!=null and userId!=''">
             ,user_id = #{userId}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            ,coup_cate_id = #{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            ,coup_cate_id = #{coupCateId}
         </if>
         <if test="denomination!=null and denomination!=''">
             ,denomination = #{denomination}
@@ -604,8 +604,8 @@
         <if test="state!=null and state!=''">
             and state = #{state}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            and coup_cate_id =#{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            and coup_cate_id =#{coupCateId}
         </if>
         and end_at &lt;=CURRENT_TIMESTAMP(0)
     </update>
