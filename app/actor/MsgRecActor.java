@@ -23,10 +23,10 @@ public class MsgRecActor extends AbstractActor {
         receive(ReceiveBuilder.match(Object.class,msg->{
             if (msg instanceof Msg){ //收到全体系统消息
                 Msg m=(Msg)msg;
-                Logger.info("=====收到全体系统消息"+(Msg)msg);
+                Logger.info("收到全体系统消息"+(Msg)msg);
                 msgCtrl.addSysMsg(MsgTypeEnum.getMsgTypeEnum(m.getMsgType()),m.getMsgTitle(),m.getMsgContent(),m.getMsgImg(),m.getMsgUrl(),m.getTargetType(),m.getEndAt());
             }else if(msg instanceof MsgRec){ //收到指定用户的消息
-                Logger.info("=====收到指定用户的消息"+(MsgRec)msg);
+                Logger.info("收到指定用户的消息"+(MsgRec)msg);
                 MsgRec m=(MsgRec)msg;
                 msgCtrl.addMsgRec(m.getUserId(),MsgTypeEnum.getMsgTypeEnum(m.getMsgType()),m.getMsgTitle(),m.getMsgContent(),m.getMsgImg(),m.getMsgUrl(),m.getTargetType());
             }
