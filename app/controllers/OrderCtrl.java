@@ -648,7 +648,7 @@ public class OrderCtrl extends Controller {
             List<CouponVo> couponVoList=cartService.getUserCouponAll(temp);
             if(null!=couponVoList&&couponVoList.size()>0){
                 //已经领取
-                Logger.info("该优惠券已经领取userId="+userId+",coupCateId="+coupCateId);
+        //        Logger.info("该优惠券已经领取userId="+userId+",coupCateId="+coupCateId);
                 result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.COUPON_EXISTS.getIndex()), Message.ErrorCode.COUPON_EXISTS.getIndex())));
                 return ok(result);
             }

@@ -7,10 +7,13 @@ import java.io.Serializable;
  * Created by sibyl.sun on 16/8/18.
  */
 public class CouponRec implements Serializable {
+    private static final long serialVersionUID = -1L;
     private Long userId;
     private Long coupCateId;
     private Integer couponType;
+    public CouponRec(){
 
+    }
     public CouponRec(Long userId, Long coupCateId, Integer couponType) {
         this.userId = userId;
         this.coupCateId = coupCateId;
