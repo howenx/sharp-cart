@@ -124,7 +124,8 @@ public class Message implements Serializable{
 
         PURCHASE_PIN_SINGLE_ONE_TIME("您尚有未结束的拼团,不能再次发起拼团",7002),
 
-        COUPON_EXISTS("该优惠券已经领取了",8001);
+        COUPON_EXISTS("该优惠券已经领取了",8001),
+        COUPON_SUC("优惠券领取成功请查收",8002);
 
         // 成员变量
         private String name;
