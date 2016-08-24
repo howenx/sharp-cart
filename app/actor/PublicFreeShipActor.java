@@ -43,9 +43,9 @@ public class PublicFreeShipActor extends AbstractActor {
                     couponVo.setEndAt(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cal.getTime()));
                     String coupId = GenCouponCode.GetCode(GenCouponCode.CouponClassCode.SHIP_FREE.getIndex(), 8);
                     couponVo.setCoupId(coupId);
-                    couponVo.setCateId(((Integer) GenCouponCode.CouponClassCode.SHIP_FREE.getIndex()).longValue());
+                    couponVo.setCoupCateId(((Integer) GenCouponCode.CouponClassCode.SHIP_FREE.getIndex()).longValue());
                     couponVo.setState("F");
-                    couponVo.setCateNm(GenCouponCode.CouponClassCode.SHIP_FREE.getName());
+                    couponVo.setCoupCateNm(GenCouponCode.CouponClassCode.SHIP_FREE.getName());
                     couponVo.setLimitQuota(freeShipLimit);
                     couponVo.setOrderId(orderId);
                     try {

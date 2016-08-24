@@ -22,4 +22,6 @@ public interface SkuMapper {
 
     List<VersionVo> getVersioning(VersionVo versionVo);
 
+    List<WeiSheng> getWeiSheng(WeiSheng weiSheng);
+
 }

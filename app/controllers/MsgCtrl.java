@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.MsgTypeEnum;
 import domain.*;
 import filters.UserAuth;
+import net.spy.memcached.MemcachedClient;
 import play.libs.mailer.Email;
 import play.libs.mailer.MailerClient;
 import util.SysParCom;
@@ -42,6 +43,8 @@ public class MsgCtrl extends Controller {
     private ActorRef schedulerCleanMsgActor;
     @Inject
     private MailerClient mailerClient;
+    @Inject
+    private MemcachedClient cache;
 
     @Inject
     public MsgCtrl(SkuService skuService, CartService cartService, MsgService msgService, @Named("schedulerCleanMsgActor") ActorRef schedulerCleanMsgActor) {
@@ -336,35 +339,49 @@ public class MsgCtrl extends Controller {
     }
 
     /**
-     * 意见反馈
+     * 意见反馈(登录和不登录情况下都可以)
      *
      * @return
      */
-    @Security.Authenticated(UserAuth.class)
+//    @Security.Authenticated(UserAuth.class)
     public Result feedback() {
-        JsonNode json = request().body().asJson();
+        JsonNode jsonNode=request().body().asJson();
         String content = "";
-        if (json.has("content")) {
-            content = json.findValue("content").asText().trim();
+        if(null!=jsonNode&&jsonNode.has("content")){
+            content = jsonNode.get("content").asText().trim();
         }
         ObjectNode result = newObject();
-        Long userId = (Long) ctx().args.get("userId");
+        Optional<String> requestHeader = Optional.ofNullable(ctx().request().getHeader("id-token"));
+        Optional<String> flashHeader = Optional.ofNullable(ctx().flash().get("id-token"));
+        Long userId =-1L;
+        if (requestHeader.isPresent() || flashHeader.isPresent()) {
+            String header = requestHeader.isPresent()?requestHeader.get():(flashHeader.isPresent()?flashHeader.get():null);
+            if (header!=null){
+                Optional<Object> token = Optional.ofNullable(cache.get(header));
+                if (token.isPresent()) {
+                    JsonNode userJson = Json.parse(token.get().toString());
+                    if(userJson.has("id")){
+                        userId = Long.valueOf(userJson.findValue("id").asText());
+                    }
+                }
+            }
+        }
         try {
             if (content.length() > 0 && content.length() < 140) {
                 Feedback feedback = new Feedback();
                 feedback.setUserId(userId);
                 feedback.setContent(content);
-                try {
-                    Email email = new Email()
-                            .setSubject("意见反馈")
-                            .setFrom("developer@hanmimei.com")
-                            .addTo("services@hanmimei.com")
-                            .setBodyText("A text message")
-                            .setBodyHtml("<html><body><p>韩秘美用户:<br/>" + userId + "<br/>反馈内容:<br/>" + content + "</p></body></html>");
-                    mailerClient.send(email);
-                }catch (Exception e){
-                    Logger.error("意见反馈发送邮件异常"+e.getMessage());
-                }
+//                try {
+//                    Email email = new Email()
+//                            .setSubject("意见反馈")
+//                            .setFrom("developer@hanmimei.com")
+//                            .addTo("services@hanmimei.com")
+//                            .setBodyText("A text message")
+//                            .setBodyHtml("<html><body><p>Kakao Gift用户:<br/>" + userId + "<br/>反馈内容:<br/>" + content + "</p></body></html>");
+//                    mailerClient.send(email);
+//                }catch (Exception e){
+//                    Logger.error("意见反馈发送邮件异常"+e.getMessage());
+//                }
                 if (msgService.insertFeedBack(feedback)) {
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
                     return ok(result);

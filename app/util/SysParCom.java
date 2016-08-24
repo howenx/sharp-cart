@@ -115,6 +115,15 @@ public class SysParCom {
     //极光推送参数
     public static Long PUSH_TIME_TO_LIVE;
 
+    //威盛
+    public static String WEISHENG_APP_ID;
+    public static String WEISHENG_APP_NAME;
+    public static String WEISHENG_KEY;
+    public static String WEISHENG_ORDER_TRACK_URL;
+
+    public static String COUPON_REC;
+
+
 
     @Inject
     public SysParCom(SkuService skuService, Configuration configuration) {
@@ -217,6 +226,13 @@ public class SysParCom {
         PUSH_TIME_TO_LIVE=configuration.getLong("push.time.to.live");
 
         WEIXIN_SOCKET=new HashMap<>();
+
+        WEISHENG_APP_ID=configuration.getString("weisheng.app.id");
+        WEISHENG_APP_NAME=configuration.getString("weisheng.app.name");
+        WEISHENG_KEY=configuration.getString("weisheng.key");
+        WEISHENG_ORDER_TRACK_URL=configuration.getString("weisheng.order.track.url");
+
+        COUPON_REC=configuration.getString("coupon.rec");
 
     }
 }

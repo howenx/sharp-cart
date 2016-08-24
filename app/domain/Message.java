@@ -78,11 +78,13 @@ public class Message implements Serializable{
         ORDER_STATUS_EXCEPTION("订单状态不符合",1024),
 
         REMARK_EXISTS("此订单中的商品已经评价过",1025),
+        REFUND_EXISTS("此订单已经申请退款",1026),
 
         SKU_AMOUNT_SHORTAGE("亲,此件商品库存不足了", 2001),
         SKU_INVALID("亲,您已经长时间未操作,此商品已经失效,建议您刷新购物车", 2002),
         SKU_STATUS_ERROR("亲,此商品已经失效,请选择其他商品", 2003),
         SKU_DOWN("亲,此件商品已经售空", 2004),
+        SKU_PRE_SALE("亲,此件商品正处于预售状态", 2005),
 
         PURCHASE_QUANTITY_LIMIT("亲,您购买数量超过我们的限制了", 3001),
         PURCHASE_QUANTITY_SUM_PRICE("海关规定单次报关物品价值不能超过1000元", 3002),
@@ -120,7 +122,10 @@ public class Message implements Serializable{
 
         PURCHASE_PIN_RESTRICT("购买同一拼购商品数量超出限制",7001),
 
-        PURCHASE_PIN_SINGLE_ONE_TIME("您尚有未结束的拼团,不能再次发起拼团",7002);
+        PURCHASE_PIN_SINGLE_ONE_TIME("您尚有未结束的拼团,不能再次发起拼团",7002),
+
+        COUPON_EXISTS("该优惠券已经领取了",8001),
+        COUPON_SUC("优惠券领取成功请查收",8002);
 
         // 成员变量
         private String name;

@@ -73,4 +73,9 @@ public class SkuServiceImpl implements SkuService{
         return skuMapper.getVersioning(versionVo);
     }
 
+    @Override
+    public List<WeiSheng> getWeiSheng(WeiSheng weiSheng) {
+        return skuMapper.getWeiSheng(weiSheng);
+    }
+
 }

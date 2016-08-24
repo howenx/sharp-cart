@@ -1,6 +1,7 @@
 package domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import util.MoneySerializer;
 
@@ -18,7 +19,7 @@ public class CouponVo implements Serializable {
     @JsonIgnore
     private Long userId;
     @JsonIgnore
-    private Long cateId;
+    private Long coupCateId;
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal denomination;
 
@@ -32,7 +33,8 @@ public class CouponVo implements Serializable {
     private String useAt;
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal limitQuota;
-    private String cateNm;
+    @JsonProperty("cateNm")
+    private String coupCateNm;
 
 
     public CouponVo() {
@@ -41,7 +43,7 @@ public class CouponVo implements Serializable {
     public CouponVo(String coupId, Long userId, Long cateId, BigDecimal denomination, String startAt, String endAt, String state, Long orderId, String useAt, BigDecimal limitQuota, String cateNm) {
         this.coupId = coupId;
         this.userId = userId;
-        this.cateId = cateId;
+        this.coupCateId = cateId;
         this.denomination = denomination;
         this.startAt = startAt;
         this.endAt = endAt;
@@ -49,7 +51,7 @@ public class CouponVo implements Serializable {
         this.orderId = orderId;
         this.useAt = useAt;
         this.limitQuota = limitQuota;
-        this.cateNm = cateNm;
+        this.coupCateNm = cateNm;
     }
 
     public String getCoupId() {
@@ -68,12 +70,12 @@ public class CouponVo implements Serializable {
         this.userId = userId;
     }
 
-    public Long getCateId() {
-        return cateId;
+    public Long getCoupCateId() {
+        return coupCateId;
     }
 
-    public void setCateId(Long cateId) {
-        this.cateId = cateId;
+    public void setCoupCateId(Long coupCateId) {
+        this.coupCateId = coupCateId;
     }
 
     public BigDecimal getDenomination() {
@@ -132,12 +134,12 @@ public class CouponVo implements Serializable {
         this.limitQuota = limitQuota;
     }
 
-    public String getCateNm() {
-        return cateNm;
+    public String getCoupCateNm() {
+        return coupCateNm;
     }
 
-    public void setCateNm(String cateNm) {
-        this.cateNm = cateNm;
+    public void setCoupCateNm(String coupCateNm) {
+        this.coupCateNm = coupCateNm;
     }
 
     @Override
@@ -145,7 +147,7 @@ public class CouponVo implements Serializable {
         return "CouponVo{" +
                 "coupId='" + coupId + '\'' +
                 ", userId=" + userId +
-                ", cateId=" + cateId +
+                ", coupCateId=" + coupCateId +
                 ", denomination=" + denomination +
                 ", startAt='" + startAt + '\'' +
                 ", endAt='" + endAt + '\'' +
@@ -153,7 +155,7 @@ public class CouponVo implements Serializable {
                 ", orderId=" + orderId +
                 ", useAt='" + useAt + '\'' +
                 ", limitQuota=" + limitQuota +
-                ", cateNm='" + cateNm + '\'' +
+                ", coupCateNm='" + coupCateNm + '\'' +
                 '}';
     }
 }

@@ -294,9 +294,13 @@ public class WeiXinCtrl extends Controller {
             WeiXinTradeType tradeType=WeiXinTradeType.getWeiXinTradeType(tType);
             String openid="";
             if(WeiXinTradeType.JSAPI==tradeType){
-                IdThree user=idService.getIdThree(userId);
-                if(null!=user&&null!=user.getOpenId()&&!"".equals(user.getOpenId())){
-                    openid=user.getOpenId();
+                IdThree temp=new IdThree();
+                temp.setIdType("W");
+                temp.setUserId(userId);
+                List<IdThree> idThreeList=idService.getIdThree(temp);
+               // IdThree user=idService.getIdThree(userId);
+                if(null!=idThreeList&&idThreeList.size()>0){
+                    openid=idThreeList.get(0).getOpenId();
                 }else{
                     objectNode.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.FAILURE.getIndex()), Message.ErrorCode.FAILURE.getIndex())));
                     return ok(objectNode);

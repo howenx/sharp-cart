@@ -447,7 +447,7 @@
     <sql id="couponColumns">
         ${alias}.coup_id        ,
         ${alias}.user_id        ,
-        ${alias}.cate_id        ,
+        ${alias}.coup_cate_id        ,
         ${alias}.denomination   ,
         to_char(${alias}.start_at, 'YYYY-MM-DD HH24:MI:SS') start_at,
         to_char(${alias}.end_at, 'YYYY-MM-DD HH24:MI:SS') end_at,
@@ -455,7 +455,7 @@
         ${alias}.order_id       ,
         to_char(${alias}.use_at, 'YYYY-MM-DD HH24:MI:SS') use_at         ,
         ${alias}.limit_quota,
-        ${alias}.cate_nm
+        ${alias}.coup_cate_nm
     </sql>
     <select id="getUserCoupon" parameterType="domain.CouponVo" resultType="domain.CouponVo">
         select
@@ -469,8 +469,8 @@
         <if test="coupId!=null and coupId!=''">
             and coup_id = #{coupId}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            and cate_id = #{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            and cate_id = #{coupCateId}
         </if>
         <if test="orderId!=null and orderId!=''">
             and order_id = #{orderId}
@@ -494,45 +494,45 @@
         </include>
         from sp_coupons t where 1=1
         <if test="userId!=null and userId!=''">
-            and user_id = #{userId}
+            and t.user_id = #{userId}
         </if>
         <if test="coupId!=null and coupId!=''">
-            and coup_id = #{coupId}
+            and t.coup_id = #{coupId}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            and cate_id = #{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            and t.coup_cate_id = #{coupCateId}
         </if>
         <if test="state!=null and state!=''">
-            and state = #{state}
+            and t.state = #{state}
         </if>
         <if test="state==null or state==''">
-            and state in ('Y','N','S')
+            and t.state in ('Y','N','S')
         </if>
         <if test="limitQuota!=null and limitQuota!=''">
-            and limit_quota = #{limitQuota}
+            and t.limit_quota = #{limitQuota}
         </if>
     </select>
 
     <insert id="insertCoupon" parameterType="domain.CouponVo">
         insert into sp_coupons (coup_id,
             user_id,
-            cate_id,
+            coup_cate_id,
             denomination,
             start_at,
             end_at,
             state,
             limit_quota,
-            cate_nm
+            coup_cate_nm
         ) values(
             #{coupId},
             #{userId},
-            #{cateId},
+            #{coupCateId},
             #{denomination},
         to_timestamp(#{startAt},'YYYY-MM-DD HH24:MI:SS'),
         to_timestamp(#{endAt},'YYYY-MM-DD HH24:MI:SS'),
             #{state},
             #{limitQuota},
-            #{cateNm}
+            #{coupCateNm}
         )
     </insert>
 
@@ -541,8 +541,8 @@
         <if test="userId!=null and userId!=''">
             ,user_id = #{userId}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            ,cate_id = #{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            ,coup_cate_id = #{coupCateId}
         </if>
         <if test="denomination!=null and denomination!=''">
             ,denomination = #{denomination}
@@ -569,8 +569,8 @@
         <if test="userId!=null and userId!=''">
             and user_id =#{userId}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            and cate_id =#{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            and coup_cate_id =#{coupCateId}
         </if>
     </update>
 
@@ -579,8 +579,8 @@
         <if test="userId!=null and userId!=''">
             ,user_id = #{userId}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            ,cate_id = #{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            ,coup_cate_id = #{coupCateId}
         </if>
         <if test="denomination!=null and denomination!=''">
             ,denomination = #{denomination}
@@ -604,8 +604,8 @@
         <if test="state!=null and state!=''">
             and state = #{state}
         </if>
-        <if test="cateId!=null and cateId!=''">
-            and cate_id =#{cateId}
+        <if test="coupCateId!=null and coupCateId!=''">
+            and coup_cate_id =#{coupCateId}
         </if>
         and end_at &lt;=CURRENT_TIMESTAMP(0)
     </update>
