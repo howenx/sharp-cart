@@ -77,7 +77,7 @@ public class OrderMid {
         if (settleVo.getMessageCode() != null) {
             return settleVo;
         } else if (!settleVo.getSkuTypeList().contains("pin")) {
-            settleVo.setCoupons(calCoupon(userId, settleVo.getTotalFee()));
+            settleVo.setCoupons(calCoupon(userId, settleVo,settleOrderDTO));
         }
         return settleVo;
     }
@@ -127,6 +127,8 @@ public class OrderMid {
         List<SettleFeeVo> singleCustoms = new ArrayList<>();
 
         List<String> skuTypeList = new ArrayList<>();//用于保存该笔订单的所有sku的类型
+        List<Long> itemIdList = new ArrayList<>();//用于保存该笔订单的所有itemId
+        List<Long> invIdList = new ArrayList<>();//用于保存该笔订单的所有invId
 
         for (SettleDTO settleDTO : settleDTOList) {
 
@@ -134,6 +136,8 @@ public class OrderMid {
             SettleFeeVo settleFeeVo = calCustomsFee(settleDTO, address, userId);
 
             if (settleFeeVo.getSkuTypeList() != null) skuTypeList.addAll(settleFeeVo.getSkuTypeList());
+            if (null!=settleFeeVo.getItemIdList()) itemIdList.addAll(settleFeeVo.getItemIdList());
+            if (null!=settleFeeVo.getInvIdList()) invIdList.addAll(settleFeeVo.getInvIdList());
 
             if (settleFeeVo.getMessageCode() != null) {
                 settleVo.setMessageCode(settleFeeVo.getMessageCode());
@@ -158,6 +162,8 @@ public class OrderMid {
         settleVo.setFreeShipLimit(new BigDecimal(SysParCom.FREE_SHIP));
         settleVo.setPostalStandard(SysParCom.POSTAL_STANDARD);
         settleVo.setSkuTypeList(skuTypeList);
+        settleVo.setItemIdList(itemIdList);
+        settleVo.setInvIdList(invIdList);
 
         //此订单的实际邮费统计
         if (settleVo.getTotalFee().compareTo(new BigDecimal(SysParCom.FREE_SHIP)) > 0) {
@@ -392,17 +398,81 @@ public class OrderMid {
 
 
     //计算优惠券
-    private List<CouponVo> calCoupon(Long userId, BigDecimal totalFee) throws Exception {
+    private List<CouponVo> calCoupon(Long userId, SettleVo settleVo,SettleOrderDTO settleOrderDTO) throws Exception {
         CouponVo couponVo = new CouponVo();
         couponVo.setUserId(userId);
         couponVo.setState("N");
         List<CouponVo> lists = cartService.getUserCoupon(couponVo);
         //优惠券,只列出当前满足条件优惠的优惠券,购买金额要大于限制金额且是未使用的,有效的
-        return lists.stream().filter(s -> s.getLimitQuota().compareTo(totalFee) <= 0).collect(Collectors.toList());
+        return lists.stream().filter(s ->checkCouponCondition(s,settleVo,settleOrderDTO)).collect(Collectors.toList());
+    }
+
+    /**
+     * 检测符合要求的优惠券
+     * @param couponVo
+     * @param settleVo
+     * @param settleOrderDTO
+     * @return
+     */
+    private boolean checkCouponCondition(CouponVo couponVo,SettleVo settleVo,SettleOrderDTO settleOrderDTO){
+        if(couponVo.getLimitQuota().compareTo(settleVo.getTotalFee()) >0){ //购买金额要大于限制金额且是未使用的,有效的
+            return false;
+        }
+        CouponMap temp=new CouponMap();
+        temp.setCouponCateId(couponVo.getCoupCateId());
+        List<CouponMap> couponMapList=cartService.getCouponMap(temp);
+        if(null!=couponMapList&&couponMapList.size()>0){
+            for(CouponMap couponMap:couponMapList){
+                //1.全场，2.商品，3.sku，4.拼购商品，5.商品分类，6.主题
+                //0表示任意商品，item_id，inv_id，pin_id，cate_id，theme_id
+                if(couponMap.getCateType()==1){
+                    return true;
+                }else if(couponMap.getCateType()==2){
+                    if(null!=settleVo.getItemIdList()&&settleVo.getItemIdList().contains(couponMap.getCateTypeId())){
+                        return true;
+                    }
+                }else if(couponMap.getCateType()==3){
+                    if(null!=settleVo.getInvIdList()&&settleVo.getInvIdList().contains(couponMap.getCateTypeId())){
+                        return true;
+                    }
+                }else if(couponMap.getCateType()==4){
+                    if(null!=settleOrderDTO.getPinActiveId()&&settleOrderDTO.getPinActiveId()>0&&settleOrderDTO.getPinActiveId().longValue()==couponMap.getCateTypeId()){
+                        return true;
+                    }
+                }else if(couponMap.getCateType()==5){
+                   if(null!=settleVo.getItemIdList()){
+                       for(Long itemId:settleVo.getItemIdList()){
+                           Item item=new Item();
+                           item.setId(itemId);
+                           List<Item> itemList=skuService.getItemBy(item);
+                           if(null!=itemList&&itemList.size()>0){
+                               if(couponMap.getCateTypeId().longValue()==itemList.get(0).getCateId()){
+                                   return true;
+                               }
+                           }
+                       }
+                   }
+                }else if(couponMap.getCateType()==6){
+                    Theme theme= skuService.getThemeBy(couponMap.getCateTypeId());
+                    if(null!=theme&&null!=theme.getThemeItem()&&null!=settleVo.getInvIdList()){
+                        for(Long invId:settleVo.getInvIdList()){
+                            if(theme.getThemeItem().contains(invId+"")){
+                                return true;
+                            }
+                        }
+                    }
+
+                }
+
+            }
+            return false;
+        }
+
+        return true;
     }
 
     //计算优惠了多钱
-    private BigDecimal calDiscount(Long userId, String couponId, BigDecimal totalFee) throws Exception {
+    private BigDecimal calDiscount(Long userId, String couponId, SettleVo settleVo,SettleOrderDTO settleOrderDTO) throws Exception {
         BigDecimal discountFee = BigDecimal.ZERO;
         //优惠金额
         CouponVo couponVo = new CouponVo();
@@ -413,7 +483,7 @@ public class OrderMid {
 
         if (lists.isPresent()) {
             //优惠券,只列出当前满足条件优惠的优惠券,购买金额要大于限制金额且是未使用的,有效的
-            if (lists.get().size() > 0 && lists.get().get(0).getLimitQuota().compareTo(totalFee) <= 0) {
+            if (lists.get().size() > 0 && checkCouponCondition(lists.get().get(0),settleVo,settleOrderDTO)) {
                 discountFee = lists.get().get(0).getDenomination();
             }
         }
@@ -474,7 +544,7 @@ public class OrderMid {
         settleVo = calOrderFee(settleOrderDTO.getSettleDTOs(), userId, settleVo.getAddress());
 
         if (settleOrderDTO.getCouponId() != null && !settleOrderDTO.getCouponId().equals("")) {
-            BigDecimal discount = calDiscount(userId, settleOrderDTO.getCouponId(), settleVo.getTotalFee());
+            BigDecimal discount = calDiscount(userId, settleOrderDTO.getCouponId(), settleVo,settleOrderDTO);
 
             settleVo.setCouponId(settleOrderDTO.getCouponId());
 

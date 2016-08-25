@@ -78,4 +78,14 @@ public class SkuServiceImpl implements SkuService{
         return skuMapper.getWeiSheng(weiSheng);
     }
 
+    @Override
+    public Theme getThemeBy(Long themeId) {
+        return skuMapper.getThemeBy(themeId);
+    }
+
+    @Override
+    public List<Item> getItemBy(Item item) {
+        return skuMapper.getItemBy(item);
+    }
+
 }

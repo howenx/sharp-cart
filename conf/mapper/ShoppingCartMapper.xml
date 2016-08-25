@@ -1211,4 +1211,30 @@
         </if>
     </update>
 
+    <sql id="couponMapColumns">
+        ${alias}.id
+        ,${alias}.coupon_cate_id
+        ,${alias}.cate_type
+        ,${alias}.cate_type_id
+        ,${alias}.or_destory
+    </sql>
+    <select id="getCouponMap" parameterType="domain.CouponMap" resultType="domain.CouponMap">
+        select
+        <include refid="couponMapColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from sp_coupons_map t
+        where 1=1 and or_destory=false
+        <if test="id!=null and id !=''">
+            and t.id = #{id}
+        </if>
+        <if test="couponCateId!=null and couponCateId !=''">
+            and t.coupon_cate_id = #{couponCateId}
+        </if>
+        <if test="cateTypeId!=null and cateTypeId !=''">
+            and t.cate_type_id = #{cateTypeId}
+        </if>
+
+    </select>
+
 </mapper>

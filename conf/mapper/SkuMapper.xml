@@ -290,4 +290,77 @@
 
     </select>
 
+    <sql id="themesColumns">
+        ${alias}.id                  ,
+        ${alias}.master_item_id      ,
+        ${alias}.title               ,
+        ${alias}.start_at            ,
+        ${alias}.end_at              ,
+        ${alias}.theme_img           ,
+        ${alias}.sort_nu             ,
+        ${alias}.or_destroy          ,
+        ${alias}.destroy_at          ,
+        ${alias}.update_at           ,
+        ${alias}.create_at           ,
+        ${alias}.theme_src_img       ,
+        ${alias}.theme_config_info::text   ,
+        ${alias}.theme_item::text          ,
+        ${alias}.master_item_tag::text,
+        ${alias}.theme_master_img,
+        count(*) over() theme_num,
+        type,
+        h5_link,
+        ${alias}.theme_state,
+        ${alias}.show_type
+    </sql>
+    <!--  获取单个主题  -->
+    <select id="getThemeBy" resultType="domain.Theme" parameterType="Long">
+        select
+        <include refid="themesColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from themes t
+        where 1=1 and t.id = #{value}
+    </select>
+
+    <sql id="itemColumns">
+        ${alias}.id                 ,
+        ${alias}.cate_id            ,
+        ${alias}.brand_id           ,
+        ${alias}.item_title         ,
+        ${alias}.supply_merch       ,
+        ${alias}.on_shelves_at      ,
+        ${alias}.off_shelves_at     ,
+        ${alias}.item_master_img    ,
+        ${alias}.item_detail_imgs::text   ,
+        ${alias}.item_features::text      ,
+        ${alias}.theme_id           ,
+        ${alias}.state              ,
+        ${alias}.share_url          ,
+        ${alias}.share_count        ,
+        ${alias}.collect_count      ,
+        ${alias}.browse_count       ,
+        ${alias}.item_notice        ,
+        ${alias}.or_destroy         ,
+        ${alias}.destroy_at         ,
+        ${alias}.update_at          ,
+        ${alias}.create_at          ,
+        ${alias}.master_inv_id      ,
+        ${alias}.publicity::text    ,
+        ${alias}.item_detail
+    </sql>
+    <!--获取商品信息-->
+    <select id="getItemBy" resultType="domain.Item" parameterType="domain.Item" >
+        select
+        <include refid="itemColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from items t
+        where 1=1
+        <if test="id!=null and id !=''">
+            and t.id = #{id}
+        </if>
+        ORDER BY t.create_at DESC
+    </select>
+
 </mapper>

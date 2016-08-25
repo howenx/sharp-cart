@@ -6,6 +6,7 @@ import util.MoneySerializer;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -55,6 +56,10 @@ public class SettleVo implements Serializable {
 
     @JsonIgnore
     private List<String> skuTypeList;//用于保存该笔订单的所有sku的类型
+    @JsonIgnore
+    private List<Long> itemIdList;//用于保存该笔订单的所有itemId
+    @JsonIgnore
+    private List<Long> invIdList;//用于保存该笔订单的所有invId
 
 
     @JsonSerialize(using = MoneySerializer.class)
@@ -236,6 +241,22 @@ public class SettleVo implements Serializable {
 
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
+    }
+
+    public List<Long> getItemIdList() {
+        return itemIdList;
+    }
+
+    public void setItemIdList(List<Long> itemIdList) {
+        this.itemIdList = itemIdList;
+    }
+
+    public List<Long> getInvIdList() {
+        return invIdList;
+    }
+
+    public void setInvIdList(List<Long> invIdList) {
+        this.invIdList = invIdList;
     }
 
     @Override

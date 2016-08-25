@@ -79,4 +79,10 @@ public interface ShoppingCartMapper {
     int insertRemark(Remark remark);
 
     int updateRemark(Remark remark);
+    /**
+     * 获取
+     * @param couponMap
+     * @return
+     */
+    List<CouponMap> getCouponMap(CouponMap couponMap);
 }

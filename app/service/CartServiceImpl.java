@@ -186,4 +186,9 @@ public class CartServiceImpl implements CartService {
     public Boolean updateRemark(Remark remark) {
         return shoppingCartMapper.updateRemark(remark) >= 0;
     }
+
+    @Override
+    public List<CouponMap> getCouponMap(CouponMap couponMap) {
+        return shoppingCartMapper.getCouponMap(couponMap);
+    }
 }

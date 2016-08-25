@@ -102,4 +102,11 @@ public interface CartService {
      * @return Boolean
      */
     Boolean updateRemark(Remark remark);
+
+    /**
+     * 获取
+     * @param couponMap
+     * @return
+     */
+    List<CouponMap> getCouponMap(CouponMap couponMap);
 }

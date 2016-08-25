@@ -24,4 +24,8 @@ public interface SkuMapper {
 
     List<WeiSheng> getWeiSheng(WeiSheng weiSheng);
 
+    Theme getThemeBy(Long themeId);
+
+    List<Item> getItemBy(Item item);
+
 }
