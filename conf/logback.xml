@@ -67,9 +67,9 @@
         <appender-ref ref="ASYNC_CUSTOM"/>
     </logger>
 
-    <!--<logger name="mapper" level="DEBUG" additivity="false">-->
-        <!--<appender-ref ref="STDOUT" />-->
-    <!--</logger>-->
+    <logger name="mapper" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
 
     <!--<logger name="org.apache.ibatis.logging.jdbc.ConnectionLogger" level="OFF" additivity="false"/> &lt;!&ndash; Won' log connections &ndash;&gt;-->
     <!--<logger name="org.apache.ibatis.logging.jdbc.StatementLogger" level="DEBUG" additivity="false"/> &lt;!&ndash; Will log all statements &ndash;&gt;-->

@@ -76,7 +76,7 @@ public class CancelOrderActor extends AbstractActor {
                             }
                             try {
                                 if (skuService.updateInv(sku))
-                                    Logger.debug("恢复库存ID: " + sku.getId()+" 需要恢复的数量: "+ordL.getAmount());
+                                    Logger.debug("恢复库存ID: " + sku.getId()+" 需要恢复的数量: "+ordL.getAmount()+",restAmount="+sku.getRestAmount()+",soldAmount="+sku.getSoldAmount());
                             } catch (Exception e) {
                                 Logger.error("CancelOrderActor Error:" + Throwables.getStackTraceAsString(e));
                                 sender().tell(500,self());

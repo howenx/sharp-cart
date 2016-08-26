@@ -76,6 +76,7 @@ public class ResumeInvActor extends AbstractActor {
                                     sku.setSoldAmount(sku.getSoldAmount() + ordL.getAmount());
                                     break;
                             }
+
                             try {
                                 if (skuService.updateInv(sku))
                                     Logger.error("恢复库存ID: " + sku.getId()+" 需要恢复的数量: "+ordL.getAmount());
