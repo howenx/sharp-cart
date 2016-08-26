@@ -1,6 +1,9 @@
 package domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * cartDto
@@ -17,6 +20,13 @@ public class CartDto implements Serializable {
     private Long pinTieredPriceId;//拼购价格ID
     private String orCheck;//提交勾选 'Y'为提交勾选,'N'为提交取消勾选
     private Integer cartSource;//购物车数据来源,1登陆后同步,2详细页面点击加入购物车,3点击购物车列表页操作(增删减)
+
+    @JsonIgnore
+    private BigDecimal feeSingle;//暂存的每个商品*数量的费用
+    @JsonIgnore
+    private Long itemId; //暂存的itemId
+    @JsonIgnore
+    private Long invId;//暂存的invId
 
     public CartDto() {
     }
@@ -105,6 +115,30 @@ public class CartDto implements Serializable {
         this.cartSource = cartSource;
     }
 
+    public BigDecimal getFeeSingle() {
+        return feeSingle;
+    }
+
+    public void setFeeSingle(BigDecimal feeSingle) {
+        this.feeSingle = feeSingle;
+    }
+
+    public Long getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
+    }
+
+    public Long getInvId() {
+        return invId;
+    }
+
+    public void setInvId(Long invId) {
+        this.invId = invId;
+    }
+
     @Override
     public String toString() {
         return "CartDto{" +
@@ -117,6 +151,9 @@ public class CartDto implements Serializable {
                 ", pinTieredPriceId=" + pinTieredPriceId +
                 ", orCheck='" + orCheck + '\'' +
                 ", cartSource=" + cartSource +
+                ", feeSingle=" + feeSingle +
+                ", itemId=" + itemId +
+                ", invId=" + invId +
                 '}';
     }
 }

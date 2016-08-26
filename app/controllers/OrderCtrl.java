@@ -655,7 +655,7 @@ public class OrderCtrl extends Controller {
 
             CouponRec couponRec=new CouponRec(userId,coupCateId,1);
             system.actorSelection(SysParCom.COUPON_REC).tell(couponRec, ActorRef.noSender());
-            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.COUPON_SUC.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
             return ok(result);
 
         } catch (Exception ex) {
