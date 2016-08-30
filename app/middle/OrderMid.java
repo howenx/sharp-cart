@@ -253,14 +253,15 @@ public class OrderMid {
                 cartDto.setInvId(skuVo.getInvId()); //暂存的invId
 
                 if (cartDto.getSkuType().equals("pin")) {
-                    PinActivity pinActivity = new PinActivity();
-                    pinActivity.setMasterUserId(userId);
-                    pinActivity.setPinId(cartDto.getSkuTypeId());
-                    pinActivity.setStatus("Y");
-                    List<PinActivity> pinActivities = promotionService.selectPinActivity(pinActivity);
-                    if (pinActivities.size() > 0) {
-                        settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_PIN_SINGLE_ONE_TIME.getIndex());
-                    }
+                    //1.取消重复拼团相关的限制，即同一个用户在发起或参加一个拼团且拼团未成功时，应还可以参加或发起另一个拼团 2016-08-30
+//                    PinActivity pinActivity = new PinActivity();
+//                    pinActivity.setMasterUserId(userId);
+//                    pinActivity.setPinId(cartDto.getSkuTypeId());
+//                    pinActivity.setStatus("Y");
+//                    List<PinActivity> pinActivities = promotionService.selectPinActivity(pinActivity);
+//                    if (pinActivities.size() > 0) {
+//                        settleFeeVo.setMessageCode(Message.ErrorCode.PURCHASE_PIN_SINGLE_ONE_TIME.getIndex());
+//                    }
 
                     PinTieredPrice pinTieredPrice = new PinTieredPrice();
                     pinTieredPrice.setId(cartDto.getPinTieredPriceId());
@@ -438,14 +439,16 @@ public class OrderMid {
      //   Logger.info("==settleVo.getItemIdList()==="+settleVo.getItemIdList()+"==getInvIdList="+settleVo.getInvIdList());
         if(null!=couponMapList&&couponMapList.size()>0){
             for(CouponMap couponMap:couponMapList){
-                //1.全场，2.商品，3.sku，4.拼购商品，5.商品分类，6.主题
-                //0表示任意商品，item_id，inv_id，pin_id，cate_id，theme_id
+                //1.全场，2.商品，3.sku，4.拼购商品，5.商品二级类目，6.主题，7.商品一级类目
+                //0表示任意商品，item_id，inv_id，pin_id，cate_id，theme_id，pcate_id
+                List<Long> idList=new ArrayList<>();
                 if(couponMap.getCateType()==1){
                     return true;
                 }else if(couponMap.getCateType()==2){ //2.商品 item_id
                     if(null!=settleVo.getItemIdList()&&settleVo.getItemIdList().contains(couponMap.getCateTypeId())){
+                        idList.add(couponMap.getCateTypeId());
                         //该部分的商品满足限额
-                        if(checkLimitQuotaByItemId(settleOrderDTO,couponMap.getCateTypeId(),couponVo.getLimitQuota())){
+                        if(checkLimitQuotaByItemId(settleOrderDTO,idList,couponVo.getLimitQuota())){
                             return true;
                         }else{
                             Logger.info("该购物券不满足限额"+couponMap);
@@ -453,8 +456,9 @@ public class OrderMid {
                     }
                 }else if(couponMap.getCateType()==3){//3.sku item_id
                     if(null!=settleVo.getInvIdList()&&settleVo.getInvIdList().contains(couponMap.getCateTypeId())){
+                        idList.add(couponMap.getCateTypeId());
                         //该部分的商品满足限额
-                        if(checkLimitQuotaByInvId(settleOrderDTO,couponMap.getCateTypeId(),couponVo.getLimitQuota())){
+                        if(checkLimitQuotaByInvId(settleOrderDTO,idList,couponVo.getLimitQuota())){
                             return true;
                         }else{
                             Logger.info("该购物券不满足限额"+couponMap);
@@ -464,7 +468,7 @@ public class OrderMid {
                     if(null!=settleOrderDTO.getPinActiveId()&&settleOrderDTO.getPinActiveId()>0&&settleOrderDTO.getPinActiveId().longValue()==couponMap.getCateTypeId()){
                         return true;
                     }
-                }else if(couponMap.getCateType()==5){ //5.商品分类 cate_id
+                }else if(couponMap.getCateType()==5){ //5.商品二级类目 cate_id
                    if(null!=settleVo.getItemIdList()){
                        for(Long itemId:settleVo.getItemIdList()){
                            Item item=new Item();
@@ -472,14 +476,15 @@ public class OrderMid {
                            List<Item> itemList=skuService.getItemBy(item);
                            if(null!=itemList&&itemList.size()>0){
                                if(couponMap.getCateTypeId().longValue()==itemList.get(0).getCateId()){
-                                   //该部分的商品满足限额
-                                   if(checkLimitQuotaByItemId(settleOrderDTO,itemList.get(0).getId(),couponVo.getLimitQuota())){
-                                       return true;
-                                   }else{
-                                       Logger.info("该购物券不满足限额"+couponMap);
-                                   }
+                                   idList.add(itemList.get(0).getId());
                                }
                            }
+                       }
+                       //该部分的商品满足限额
+                       if(checkLimitQuotaByItemId(settleOrderDTO,idList,couponVo.getLimitQuota())){
+                           return true;
+                       }else{
+                           Logger.info("该购物券不满足限额"+couponMap);
                        }
                    }
                 }else if(couponMap.getCateType()==6){ //6.主题  theme_id
@@ -487,8 +492,9 @@ public class OrderMid {
                     if(null!=theme&&null!=theme.getThemeItem()&&null!=settleVo.getInvIdList()){
                         for(Long invId:settleVo.getInvIdList()){
                             if(theme.getThemeItem().contains(invId+"")){
+                                idList.add(invId);
                                 //该部分的商品满足限额
-                                if(checkLimitQuotaByInvId(settleOrderDTO,invId,couponVo.getLimitQuota())){
+                                if(checkLimitQuotaByInvId(settleOrderDTO,idList,couponVo.getLimitQuota())){
                                     return true;
                                 }else{
                                     Logger.info("该购物券不满足限额"+couponMap);
@@ -496,7 +502,37 @@ public class OrderMid {
                             }
                         }
                     }
+                }else if(couponMap.getCateType()==7){ //7.商品一级类目  pcate_id
+                    if(null!=settleVo.getItemIdList()){
+                        //查询一级以及二级目录
+                        Cates tempCates=new Cates();
+                        tempCates.setPcateId(couponMap.getCateTypeId());
+                        List<Cates> catesList=skuService.getCate(tempCates);
+                        HashSet<Long> cateSet=new HashSet<>();
+                        cateSet.add(couponMap.getCateTypeId());
+                        if(null!=catesList&&catesList.size()>0){
+                            for(Cates cates:catesList){
+                                cateSet.add(cates.getCateId());
+                            }
+                        }
 
+                        for(Long itemId:settleVo.getItemIdList()){
+                            Item item=new Item();
+                            item.setId(itemId);
+                            List<Item> itemList=skuService.getItemBy(item);
+                            if(null!=itemList&&itemList.size()>0){
+                                if(cateSet.contains(itemList.get(0).getCateId())){
+                                    idList.add(itemList.get(0).getId());//该分类对应的itemId
+                                }
+                            }
+                        }
+                        //该部分的商品满足限额
+                        if(checkLimitQuotaByItemId(settleOrderDTO,idList,couponVo.getLimitQuota())){
+                            return true;
+                        }else{
+                            Logger.info("该购物券不满足限额"+couponMap);
+                        }
+                    }
                 }
 
             }
@@ -509,16 +545,18 @@ public class OrderMid {
     /**
      * 根据itemId判断商品是否满足限额
      * @param settleOrderDTO
-     * @param itemId
+     * @param itemIdList
      * @param limitQuota
      * @return
      */
-    private boolean checkLimitQuotaByItemId(SettleOrderDTO settleOrderDTO,long itemId,BigDecimal limitQuota){
+    private boolean checkLimitQuotaByItemId(SettleOrderDTO settleOrderDTO,List<Long> itemIdList,BigDecimal limitQuota){
+        BigDecimal total=new BigDecimal(0);
         for(SettleDTO settleDTO:settleOrderDTO.getSettleDTOs()){
             for(CartDto cartDto:settleDTO.getCartDtos()){
-                if(null != cartDto.getItemId() && itemId==cartDto.getItemId().longValue()){
+                if(null != cartDto.getItemId() && itemIdList.contains(cartDto.getItemId().longValue())){
+                    total=total.add(cartDto.getFeeSingle());
                     //该部分的商品满足限额
-                    if(limitQuota.compareTo(cartDto.getFeeSingle())<=0){
+                    if(limitQuota.compareTo(total)<=0){
                         return true;
                     }
                 }
@@ -527,19 +565,22 @@ public class OrderMid {
         return false;
     }
 
+
     /**
      * 根据invId判断商品是否满足限额
      * @param settleOrderDTO
-     * @param itemId
+     * @param itemIdList
      * @param limitQuota
      * @return
      */
-    private boolean checkLimitQuotaByInvId(SettleOrderDTO settleOrderDTO,long itemId,BigDecimal limitQuota){
+    private boolean checkLimitQuotaByInvId(SettleOrderDTO settleOrderDTO,List<Long> itemIdList,BigDecimal limitQuota){
+        BigDecimal total=new BigDecimal(0);
         for(SettleDTO settleDTO:settleOrderDTO.getSettleDTOs()){
             for(CartDto cartDto:settleDTO.getCartDtos()){
-                if(null != cartDto.getItemId() && itemId==cartDto.getInvId().longValue()){
+                if(null != cartDto.getItemId() && itemIdList.contains(cartDto.getInvId().longValue())){
+                    total=total.add(cartDto.getFeeSingle());
                     //该部分的商品满足限额
-                    if(limitQuota.compareTo(cartDto.getFeeSingle())<=0){
+                    if(limitQuota.compareTo(total)<=0){
                         return true;
                     }
                 }

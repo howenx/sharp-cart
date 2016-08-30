@@ -88,4 +88,9 @@ public class SkuServiceImpl implements SkuService{
         return skuMapper.getItemBy(item);
     }
 
+    @Override
+    public List<Cates> getCate(Cates cates) {
+        return skuMapper.getCate(cates);
+    }
+
 }

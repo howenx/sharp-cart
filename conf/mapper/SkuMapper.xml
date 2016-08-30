@@ -363,4 +363,28 @@
         ORDER BY t.create_at DESC
     </select>
 
+    <sql id="catesColumns">
+        ${alias}.cate_id,
+        ${alias}.pcate_id,
+        ${alias}.cate_nm,
+        ${alias}.cate_desc,
+        ${alias}.cate_code
+    </sql>
+
+    <!-- 获取类别信息 -->
+    <select id="getCate" resultType="domain.Cates" parameterType="domain.Cates">
+        select
+        <include refid="catesColumns">
+            <property name="alias" value="t"/>
+        </include>
+        from cates t where 1=1
+        <if test="pcateId !=null">
+            AND pcate_id = #{pcateId}
+        </if>
+        <if test="cateId !=null">
+            AND cate_id = #{cateId}
+        </if>
+        ORDER BY t.cate_nm;
+    </select>
+
 </mapper>

@@ -33,5 +33,11 @@ public interface SkuService {
     Theme getThemeBy(Long themeId);
 
     List<Item> getItemBy(Item item);
+    /**
+     * 获取商品分类
+     * @param cates
+     * @return
+     */
+    List<Cates> getCate(Cates cates);
 
 }
