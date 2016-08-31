@@ -10,7 +10,7 @@ public class CouponMap implements Serializable {
     private Long cateTypeId ;  //0表示任意商品，item_id，inv_id，pin_id，cate_id，theme_id
     private Integer cateType;//1.全场，2.商品，3.sku，4.拼购商品，5.商品分类，6.主题
     private Long couponCateId;//优惠券类别ID
-    private Boolean orDestory; //true：已经删除
+    private Boolean orestroy; //true：已经删除
 
     public Long getId() {
         return id;
@@ -44,12 +44,12 @@ public class CouponMap implements Serializable {
         this.couponCateId = couponCateId;
     }
 
-    public Boolean getOrDestory() {
-        return orDestory;
+    public Boolean getOrestroy() {
+        return orestroy;
     }
 
-    public void setOrDestory(Boolean orDestory) {
-        this.orDestory = orDestory;
+    public void setOrestroy(Boolean orestroy) {
+        this.orestroy = orestroy;
     }
 
     @Override
@@ -59,7 +59,7 @@ public class CouponMap implements Serializable {
                 ", cateTypeId=" + cateTypeId +
                 ", cateType=" + cateType +
                 ", couponCateId=" + couponCateId +
-                ", orDestory=" + orDestory +
+                ", orestroy=" + orestroy +
                 '}';
     }
 }

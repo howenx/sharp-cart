@@ -1216,7 +1216,7 @@
         ,${alias}.coupon_cate_id
         ,${alias}.cate_type
         ,${alias}.cate_type_id
-        ,${alias}.or_destory
+        ,${alias}.or_destroy
     </sql>
     <select id="getCouponMap" parameterType="domain.CouponMap" resultType="domain.CouponMap">
         select
@@ -1224,7 +1224,7 @@
             <property name="alias" value="t"/>
         </include>
         from sp_coupons_map t
-        where 1=1 and or_destory=false
+        where 1=1 and or_destroy=false
         <if test="id!=null and id !=''">
             and t.id = #{id}
         </if>
