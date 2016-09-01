@@ -451,7 +451,7 @@ public class OrderMid {
                         if(checkLimitQuotaByItemId(settleOrderDTO,idList,couponVo.getLimitQuota())){
                             return true;
                         }else{
-                            Logger.info("该购物券不满足限额"+couponMap);
+                            Logger.debug("该购物券不满足限额"+couponMap+",couponVo="+couponVo);
                         }
                     }
                 }else if(couponMap.getCateType()==3){//3.sku item_id
@@ -461,7 +461,7 @@ public class OrderMid {
                         if(checkLimitQuotaByInvId(settleOrderDTO,idList,couponVo.getLimitQuota())){
                             return true;
                         }else{
-                            Logger.info("该购物券不满足限额"+couponMap);
+                            Logger.debug("该购物券不满足限额"+couponMap+",couponVo="+couponVo);
                         }
                     }
                 }else if(couponMap.getCateType()==4){//4.拼购商品 pin_id
@@ -484,7 +484,7 @@ public class OrderMid {
                        if(checkLimitQuotaByItemId(settleOrderDTO,idList,couponVo.getLimitQuota())){
                            return true;
                        }else{
-                           Logger.info("该购物券不满足限额"+couponMap);
+                           Logger.debug("该购物券不满足限额"+couponMap+",couponVo="+couponVo);
                        }
                    }
                 }else if(couponMap.getCateType()==6){ //6.主题  theme_id
@@ -497,7 +497,7 @@ public class OrderMid {
                                 if(checkLimitQuotaByInvId(settleOrderDTO,idList,couponVo.getLimitQuota())){
                                     return true;
                                 }else{
-                                    Logger.info("该购物券不满足限额"+couponMap);
+                                    Logger.debug("该购物券不满足限额"+couponMap+",couponVo="+couponVo);
                                 }
                             }
                         }
@@ -530,7 +530,7 @@ public class OrderMid {
                         if(checkLimitQuotaByItemId(settleOrderDTO,idList,couponVo.getLimitQuota())){
                             return true;
                         }else{
-                            Logger.info("该购物券不满足限额"+couponMap);
+                            Logger.debug("该购物券不满足限额"+couponMap+",couponVo="+couponVo);
                         }
                     }
                 }
@@ -550,6 +550,9 @@ public class OrderMid {
      * @return
      */
     private boolean checkLimitQuotaByItemId(SettleOrderDTO settleOrderDTO,List<Long> itemIdList,BigDecimal limitQuota){
+        if(null==itemIdList||itemIdList.size()<=0){
+            return false;
+        }
         BigDecimal total=new BigDecimal(0);
         for(SettleDTO settleDTO:settleOrderDTO.getSettleDTOs()){
             for(CartDto cartDto:settleDTO.getCartDtos()){
