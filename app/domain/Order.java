@@ -60,6 +60,9 @@ public class Order implements Serializable {
     @JsonIgnore
     private Boolean             orDel;//是否删除
 
+    @JsonIgnore
+    private String              adSource;//广告来源：0118亿起发
+
     public Order() {
     }
 
@@ -318,6 +321,14 @@ public class Order implements Serializable {
         this.orDel = orDel;
     }
 
+    public String getAdSource() {
+        return adSource;
+    }
+
+    public void setAdSource(String adSource) {
+        this.adSource = adSource;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -349,6 +360,7 @@ public class Order implements Serializable {
                 ", remark='" + remark + '\'' +
                 ", payMethodSub='" + payMethodSub + '\'' +
                 ", orDel=" + orDel +
+                ", adSource='" + adSource + '\'' +
                 '}';
     }
 }

@@ -46,7 +46,8 @@
         ${alias}.pin_active_id         ,
         ${alias}.order_type            ,
         ${alias}.pay_method_sub,
-        ${alias}.or_del
+        ${alias}.or_del,
+        ${alias}.ad_source
     </sql>
 
     <!---  获取用户购物车,以用户ID或者CartID    -->
@@ -414,6 +415,9 @@
         <if test="pinActiveId!=null and pinActiveId!=''">
             ,pin_active_id
         </if>
+        <if test="adSource!=null and adSource!=''">
+            ,ad_source
+        </if>
         )values(
         #{userId},
         #{payTotal} ,
@@ -439,6 +443,9 @@
         #{orderType}
         <if test="pinActiveId!=null and pinActiveId!=''">
             ,#{pinActiveId}
+        </if>
+        <if test="adSource!=null and adSource!=''">
+            ,#{adSource}
         </if>
         )
     </insert>
