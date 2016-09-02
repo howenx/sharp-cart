@@ -62,6 +62,8 @@ public class Order implements Serializable {
 
     @JsonIgnore
     private String              adSource;//广告来源：0118亿起发
+    @JsonIgnore
+    private String              subAdSource;//每个广告的不同的推广方式
 
     public Order() {
     }
@@ -329,6 +331,14 @@ public class Order implements Serializable {
         this.adSource = adSource;
     }
 
+    public String getSubAdSource() {
+        return subAdSource;
+    }
+
+    public void setSubAdSource(String subAdSource) {
+        this.subAdSource = subAdSource;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -361,6 +371,7 @@ public class Order implements Serializable {
                 ", payMethodSub='" + payMethodSub + '\'' +
                 ", orDel=" + orDel +
                 ", adSource='" + adSource + '\'' +
+                ", subAdSource='" + subAdSource + '\'' +
                 '}';
     }
 }

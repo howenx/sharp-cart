@@ -47,7 +47,8 @@
         ${alias}.order_type            ,
         ${alias}.pay_method_sub,
         ${alias}.or_del,
-        ${alias}.ad_source
+        ${alias}.ad_source,
+        ${alias}.sub_ad_source
     </sql>
 
     <!---  获取用户购物车,以用户ID或者CartID    -->
@@ -418,6 +419,9 @@
         <if test="adSource!=null and adSource!=''">
             ,ad_source
         </if>
+        <if test="subAdSource!=null and subAdSource!=''">
+            ,sub_ad_source
+        </if>
         )values(
         #{userId},
         #{payTotal} ,
@@ -446,6 +450,9 @@
         </if>
         <if test="adSource!=null and adSource!=''">
             ,#{adSource}
+        </if>
+        <if test="subAdSource!=null and subAdSource!=''">
+            ,#{subAdSource}
         </if>
         )
     </insert>

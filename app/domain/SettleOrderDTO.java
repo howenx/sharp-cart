@@ -19,6 +19,7 @@ public class SettleOrderDTO {
     private Integer buyNow;         //1.立即支付,2.购物车结算
     private Long pinActiveId;       //拼购活动ID
     private String adSource;        //广告来源
+    private String subAdSource;     //每个广告的不同的推广方式
 
     public SettleOrderDTO() {
     }
@@ -125,6 +126,14 @@ public class SettleOrderDTO {
         this.adSource = adSource;
     }
 
+    public String getSubAdSource() {
+        return subAdSource;
+    }
+
+    public void setSubAdSource(String subAdSource) {
+        this.subAdSource = subAdSource;
+    }
+
     @Override
     public String toString() {
         return "SettleOrderDTO{" +
@@ -139,6 +148,7 @@ public class SettleOrderDTO {
                 ", buyNow=" + buyNow +
                 ", pinActiveId=" + pinActiveId +
                 ", adSource='" + adSource + '\'' +
+                ", subAdSource='" + subAdSource + '\'' +
                 '}';
     }
 }
