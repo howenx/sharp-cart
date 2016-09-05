@@ -170,6 +170,7 @@ public class Application extends Controller {
             Long userId = (Long) ctx().args.get("userId");
             Cart cart = new Cart();
             cart.setCartId(cartId);
+            cart.setUserId(userId); //加入人的判断
             cart.setStatus("N");
             cartService.updateCart(cart);
 

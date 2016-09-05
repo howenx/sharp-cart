@@ -42,8 +42,8 @@
         when ${alias}.inv_area='SZ' then '上海保税区直邮'
         when ${alias}.inv_area='GZ' then '广州保税仓直邮'
         when ${alias}.inv_area='HZ' then '杭州保税仓直邮'
-        when ${alias}.inv_area='K' then '海外直邮'
-        when ${alias}.inv_area='NK' then '国内仓直邮'
+        when ${alias}.inv_area='K' then '韩国直邮'
+        when ${alias}.inv_area='NK' then '境内发货'
         else '其它'
         end as inv_area_nm,
         ${alias}.restrict_amount ,
@@ -104,8 +104,8 @@
         when ${alias}.inv_area='SZ' then '上海保税区直邮'
         when ${alias}.inv_area='GZ' then '广州保税仓直邮'
         when ${alias}.inv_area='HZ' then '杭州保税仓直邮'
-        when ${alias}.inv_area='K' then '海外直邮'
-        when ${alias}.inv_area='NK' then '国内仓直邮'
+        when ${alias}.inv_area='K' then '韩国直邮'
+        when ${alias}.inv_area='NK' then '境内发货'
         else '其它'
         end as inv_area_nm,
         ${alias}.restrict_amount,

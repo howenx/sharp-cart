@@ -87,11 +87,11 @@ public class OrderMid {
     private Address selectAddress(Long addressId, Long userId) throws Exception {
 
         Address address = new Address();
+        address.setUserId(userId); //加人判断
         //如果没有用户地址ID,那么就查找用户默认地址,否则就去查找用户指定的地址
         if (addressId != null && addressId != 0) {
             address.setAddId(addressId);
         } else {
-            address.setUserId(userId);
             address.setOrDefault(true);
         }
 
@@ -665,8 +665,12 @@ public class OrderMid {
         //取用户地址
         Optional<Address> addressOptional = Optional.ofNullable(selectAddress(settleOrderDTO.getAddressId(), userId));
 
-        if (addressOptional.isPresent()) {
+        if (addressOptional.isPresent()&&null!=addressOptional.get()) {
             settleVo.setAddress(addressOptional.get());
+        }else{
+            Logger.error("创建订单地址异常settleOrderDTO="+settleOrderDTO+",userId="+userId);
+            settleVo.setMessageCode(Message.ErrorCode.CREATE_ORDER_EXCEPTION.getIndex());
+            return settleVo;
         }
 
         settleVo = calOrderFee(settleOrderDTO.getSettleDTOs(), userId, settleVo.getAddress());

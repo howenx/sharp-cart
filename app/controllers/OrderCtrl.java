@@ -18,6 +18,7 @@ import play.libs.F;
 import play.libs.Json;
 import play.libs.ws.WSClient;
 import play.mvc.*;
+import scala.concurrent.Future;
 import service.CartService;
 import service.PromotionService;
 import service.SkuService;
@@ -184,19 +185,38 @@ public class OrderCtrl extends Controller {
      * @param orderId 订单ID
      * @return promise
      */
+    @Security.Authenticated(UserAuth.class)
     public F.Promise<Result> cancelOrder(Long orderId) {
+        //取消订单加入人的判断
         ObjectNode result = newObject();
-        return F.Promise.wrap(ask(cancelOrderActor, orderId, 3000)
-        ).map(response -> {
-            Logger.info("取消订单:" + orderId);
-            if (((Integer) response) == 200) {
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
-                return ok(result);
-            } else {
-                result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
-                return ok(result);
+        Long userId = (Long) ctx().args.get("userId");
+        if (orderId>0&&null!=userId) {
+            Order order = new Order();
+            order.setOrderId(orderId);
+            order.setUserId(userId);
+            Optional<List<Order>> listOptional = null;
+            try {
+                listOptional = Optional.ofNullable(cartService.getOrderBy(order));
+                if (listOptional.isPresent() && listOptional.get().size() > 0) {
+                    return F.Promise.wrap(ask(cancelOrderActor, orderId, 3000)
+                    ).map(response -> {
+                        Logger.info("取消订单:" + orderId);
+                        if (((Integer) response) == 200) {
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.SUCCESS.getIndex()), Message.ErrorCode.SUCCESS.getIndex())));
+                            return ok(result);
+                        } else {
+                            result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
+                            return ok(result);
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        });
+        }
+
+        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.ERROR.getIndex()), Message.ErrorCode.ERROR.getIndex())));
+        return F.Promise.promise((F.Function0<Result>) () -> ok(result));
     }
 
     /**
@@ -238,8 +258,10 @@ public class OrderCtrl extends Controller {
     @Security.Authenticated(UserAuth.class)
     public F.Promise<Result> express(Long orderId) {
         ObjectNode result = newObject();
+        Long userId = (Long) ctx().args.get("userId");
         Order order = new Order();
         order.setOrderId(orderId);
+        order.setUserId(userId); //加入人的判断
         try {
             Optional<List<Order>> orderList = Optional.ofNullable(cartService.getOrderBy(order));
 
@@ -463,15 +485,30 @@ public class OrderCtrl extends Controller {
         } else {
             try {
                 Refund refund = userForm.get();
+                Long orderId=refund.getOrderId();
+
+                if (null!=orderId&&orderId>0) {
+                    Order order = new Order();
+                    order.setOrderId(orderId);
+                    order.setUserId(userId);
+                    Optional<List<Order>> listOptional = Optional.ofNullable(cartService.getOrderBy(order));
+                    if (!listOptional.isPresent()) {
+                        Logger.error("退货申请订单不存在,refund="+refund+",userId="+userId);
+                        result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.REFUND_EXISTS.getIndex()), Message.ErrorCode.REFUND_EXISTS.getIndex())));
+                        return ok(result);
+                    }
+                }
 
                 Refund tempRefund=new Refund();
-                tempRefund.setOrderId(refund.getOrderId());
+                tempRefund.setOrderId(orderId);
                 List<Refund> list=cartService.selectRefund(tempRefund);
                 //已经申请过退款
                 if(null!=list&&list.size()>0){
                     result.putPOJO("message", Json.toJson(new Message(Message.ErrorCode.getName(Message.ErrorCode.REFUND_EXISTS.getIndex()), Message.ErrorCode.REFUND_EXISTS.getIndex())));
                     return ok(result);
                 }
+
+
                 if (refund.getOrderId() != null && refund.getSkuId() != null) {
                     OrderLine orderLine = new OrderLine();
                     orderLine.setOrderId(refund.getOrderId());
