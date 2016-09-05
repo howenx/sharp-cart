@@ -191,4 +191,14 @@ public class CartServiceImpl implements CartService {
     public List<CouponMap> getCouponMap(CouponMap couponMap) {
         return shoppingCartMapper.getCouponMap(couponMap);
     }
+
+    @Override
+    public Boolean insertAd(Ad ad) {
+        return shoppingCartMapper.insertAd(ad)>0;
+    }
+
+    @Override
+    public List<Order> getOrderByAd(Order order) throws Exception {
+        return shoppingCartMapper.getOrderByAd(order);
+    }
 }

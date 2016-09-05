@@ -47,8 +47,7 @@
         ${alias}.order_type            ,
         ${alias}.pay_method_sub,
         ${alias}.or_del,
-        ${alias}.ad_source,
-        ${alias}.sub_ad_source
+        ${alias}.ad_id
     </sql>
 
     <!---  获取用户购物车,以用户ID或者CartID    -->
@@ -302,6 +301,13 @@
         <if test="pgTradeNo!=null and pgTradeNo !=''">
             and t.pg_trade_no = #{pgTradeNo}
         </if>
+        <if test="startAt!=null">
+            and order_create_at &gt;=#{startAt}::timestamp
+        </if>
+        <if test="endAt!=null">
+            and order_create_at &lt;=#{endAt}::timestamp
+        </if>
+
         and or_del =false
         order by t.order_create_at DESC
     </select>
@@ -416,11 +422,8 @@
         <if test="pinActiveId!=null and pinActiveId!=''">
             ,pin_active_id
         </if>
-        <if test="adSource!=null and adSource!=''">
-            ,ad_source
-        </if>
-        <if test="subAdSource!=null and subAdSource!=''">
-            ,sub_ad_source
+        <if test="adId!=null and adId!=''">
+            ,ad_id
         </if>
         )values(
         #{userId},
@@ -448,11 +451,8 @@
         <if test="pinActiveId!=null and pinActiveId!=''">
             ,#{pinActiveId}
         </if>
-        <if test="adSource!=null and adSource!=''">
-            ,#{adSource}
-        </if>
-        <if test="subAdSource!=null and subAdSource!=''">
-            ,#{subAdSource}
+        <if test="adId!=null and adId!=''">
+            ,#{adId}
         </if>
         )
     </insert>
@@ -1249,6 +1249,53 @@
             and t.cate_type_id = #{cateTypeId}
         </if>
 
+    </select>
+
+    <sql id="adColumns">
+        ${alias}.id
+        ,${alias}.ad_source
+        ,${alias}.sub_ad_source
+        ,${alias}.ad_param
+    </sql>
+    <insert id="insertAd" parameterType="domain.Ad" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into sp_ad (ad_source,sub_ad_source,ad_param) values(#{adSource},#{subAdSource},#{adParam});
+    </insert>
+
+    <select id="getOrderByAd" parameterType="domain.Order" resultType="domain.Order">
+        select
+        <include refid="orderColumns">
+            <property name="alias" value="t"/>
+        </include>
+        ,
+        <include refid="adColumns">
+            <property name="alias" value="a"/>
+        </include>
+        from sp_order t ,sp_ad a
+        where 1=1 and t.ad_id=a.id
+        <if test="userId!=null and userId !=''">
+            and t.user_id = #{userId}
+        </if>
+        <if test="orderId!=null and orderId !=''">
+            and t.order_id = #{orderId}
+        </if>
+        <if test="pgTradeNo!=null and pgTradeNo !=''">
+            and t.pg_trade_no = #{pgTradeNo}
+        </if>
+        <if test="adSource!=null and adSource !=''">
+            and a.ad_source = #{adSource}
+        </if>
+        <if test="subAdSource!=null and subAdSource !=''">
+            and a.sub_ad_source = #{subAdSource}
+        </if>
+        <if test="startAt!=null">
+            and t.order_create_at &gt;=#{startAt}::timestamp
+        </if>
+        <if test="endAt!=null">
+            and t.order_create_at &lt;=#{endAt}::timestamp
+        </if>
+
+        and or_del =false
+        order by t.order_create_at DESC
     </select>
 
 </mapper>

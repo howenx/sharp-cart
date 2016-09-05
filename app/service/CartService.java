@@ -109,4 +109,19 @@ public interface CartService {
      * @return
      */
     List<CouponMap> getCouponMap(CouponMap couponMap);
+
+    /**
+     * 插入广告信息
+     * @param ad
+     * @return
+     */
+    Boolean insertAd(Ad ad);
+
+    /**
+     * 根据广告获取订单
+     * @param order
+     * @return
+     * @throws Exception
+     */
+    List<Order> getOrderByAd(Order order) throws Exception;
 }

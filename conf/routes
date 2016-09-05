@@ -73,3 +73,6 @@ GET         /client/alipay/pay/orderquery/$orderId<[0-9]+>                      
 
 #领取优惠券
 GET         /client/coupon/rec/$coupCateId<[0-9]+>                                        controllers.OrderCtrl.couponRec(coupCateId:Long)
+
+#广告查询订单
+GET         /client/ad/query/order/$adSource<[0-9]+>/$subAdSource<[0-9]+>/$date<[0-9]+>   controllers.AdCtrl.adQueryOrder(adSource:String,subAdSource:String,date:String)

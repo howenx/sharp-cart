@@ -20,6 +20,7 @@ public class SettleOrderDTO {
     private Long pinActiveId;       //拼购活动ID
     private String adSource;        //广告来源
     private String subAdSource;     //每个广告的不同的推广方式
+    private String adParam;         //广告参数
 
     public SettleOrderDTO() {
     }
@@ -134,6 +135,14 @@ public class SettleOrderDTO {
         this.subAdSource = subAdSource;
     }
 
+    public String getAdParam() {
+        return adParam;
+    }
+
+    public void setAdParam(String adParam) {
+        this.adParam = adParam;
+    }
+
     @Override
     public String toString() {
         return "SettleOrderDTO{" +
@@ -149,6 +158,7 @@ public class SettleOrderDTO {
                 ", pinActiveId=" + pinActiveId +
                 ", adSource='" + adSource + '\'' +
                 ", subAdSource='" + subAdSource + '\'' +
+                ", adParam='" + adParam + '\'' +
                 '}';
     }
 }

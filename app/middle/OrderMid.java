@@ -628,8 +628,15 @@ public class OrderMid {
         order.setTotalFee(settleVo.getTotalFee());
         order.setOrderIp(settleOrderDTO.getClientIp());
         order.setClientType(settleOrderDTO.getClientType());
-        order.setAdSource(settleOrderDTO.getAdSource()); //广告来源
-        order.setSubAdSource(settleOrderDTO.getSubAdSource()); //广告来源
+        if(null!=settleOrderDTO.getAdSource()&&!"".equals(settleOrderDTO.getAdSource())){
+            Ad ad=new Ad();
+            ad.setAdSource(settleOrderDTO.getAdSource()); //广告来源
+            ad.setSubAdSource(settleOrderDTO.getSubAdSource());
+            ad.setAdParam(settleOrderDTO.getAdParam());
+            if(cartService.insertAd(ad)){
+                order.setAdId(ad.getId());
+            }
+        }
         if (settleVo.getSkuTypeList().contains("pin")) {
             order.setOrderType(2);//1:正常购买订单，2：拼购订单
             order.setOrderStatus("PI");

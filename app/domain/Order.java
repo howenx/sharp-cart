@@ -61,9 +61,18 @@ public class Order implements Serializable {
     private Boolean             orDel;//是否删除
 
     @JsonIgnore
+    private Long                adId;//广告ID
+    @JsonIgnore
     private String              adSource;//广告来源：0118亿起发
     @JsonIgnore
     private String              subAdSource;//每个广告的不同的推广方式
+    @JsonIgnore
+    private String              adParam;//参数
+    @JsonIgnore
+    private Timestamp           startAt;// 暂存的订单查询开始时间
+    @JsonIgnore
+    private Timestamp           endAt;// 暂存的订单查询结束时间
+
 
     public Order() {
     }
@@ -339,6 +348,38 @@ public class Order implements Serializable {
         this.subAdSource = subAdSource;
     }
 
+    public Long getAdId() {
+        return adId;
+    }
+
+    public void setAdId(Long adId) {
+        this.adId = adId;
+    }
+
+    public Timestamp getStartAt() {
+        return startAt;
+    }
+
+    public void setStartAt(Timestamp startAt) {
+        this.startAt = startAt;
+    }
+
+    public Timestamp getEndAt() {
+        return endAt;
+    }
+
+    public void setEndAt(Timestamp endAt) {
+        this.endAt = endAt;
+    }
+
+    public String getAdParam() {
+        return adParam;
+    }
+
+    public void setAdParam(String adParam) {
+        this.adParam = adParam;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -370,8 +411,12 @@ public class Order implements Serializable {
                 ", remark='" + remark + '\'' +
                 ", payMethodSub='" + payMethodSub + '\'' +
                 ", orDel=" + orDel +
+                ", adId=" + adId +
                 ", adSource='" + adSource + '\'' +
                 ", subAdSource='" + subAdSource + '\'' +
+                ", adParam='" + adParam + '\'' +
+                ", startAt=" + startAt +
+                ", endAt=" + endAt +
                 '}';
     }
 }
