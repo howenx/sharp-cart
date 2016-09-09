@@ -111,7 +111,7 @@ public class AdCtrl extends Controller {
         paramMap.put("payment_type",order.getPayMethod()); //支付方式
         paramMap.put("fare",0+"");//运费
         paramMap.put("favorable",order.getDiscount()+"");//优惠金额
-        paramMap.put("favorable_code","coupleId");//优惠券编号或积分卡卡号 TODO...
+    //    paramMap.put("favorable_code","coupleId");//优惠券编号或积分卡卡号 TODO...
 
         StringBuffer sb=new StringBuffer();
         sb.append("<order>");
