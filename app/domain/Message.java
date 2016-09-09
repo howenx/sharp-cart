@@ -59,7 +59,7 @@ public class Message implements Serializable{
         CREATE_ORDER_EXCEPTION("创建订单异常", 1006),
         REFUND_SUCCESS("退款成功",1007),
         REFUND_FAILED("退款失败",1008),
-        ORDER_CANCEL_AUTO("未支付订单超过24小时,已被自动取消",1009),
+        ORDER_CANCEL_AUTO("未支付订单超时,已被自动取消",1009),
         ORDER_DEL("交易未完成不能删除订单",1010),
         SLIDER_NULL_EXCEPTION("获取滚动条数据空", 1011),
         THEME_NULL_EXCEPTION("获取主题数据空", 1012),
