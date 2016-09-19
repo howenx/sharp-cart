@@ -76,3 +76,5 @@ GET         /client/coupon/rec/$coupCateId<[0-9]+>                              
 
 #广告查询订单
 GET         /client/ad/query/order/$adSource<[0-9]+>/$subAdSource<[0-9]+>/$date<[0-9]+>   controllers.AdCtrl.adQueryOrder(adSource:String,subAdSource:String,date:String)
+
+GET         /test                                                                         controllers.TestCtrl.test()
